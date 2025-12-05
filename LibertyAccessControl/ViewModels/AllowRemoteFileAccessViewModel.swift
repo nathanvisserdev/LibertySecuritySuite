@@ -37,13 +37,17 @@ class AllowRemoteFileAccessViewModel: ObservableObject {
         setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
         
         // DARWIN: Prepare sockaddr_in structure for IPv4 addressing
+        // creates a structure that holds IPv4 socket address information.
         var serverAddr = sockaddr_in()
+        
+        // sets address famiy to ipv4
         serverAddr.sin_family = sa_family_t(AF_INET)
         serverAddr.sin_port = port.bigEndian
         serverAddr.sin_addr.s_addr = INADDR_ANY.bigEndian
         serverAddr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         
         // DARWIN: bind() syscall - bind socket to port and address via XNU kernel
+        // Grants Access
         let bindResult = withUnsafePointer(to: &serverAddr) { ptr in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
                 Darwin.bind(serverSocket, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
@@ -62,6 +66,7 @@ class AllowRemoteFileAccessViewModel: ObservableObject {
         }
         
         // DARWIN: listen() syscall - mark socket as passive, ready to accept connections
+        // Grants Access
         let listenResult = listen(serverSocket, 5)
         
         guard listenResult >= 0 else {
@@ -115,6 +120,7 @@ class AllowRemoteFileAccessViewModel: ObservableObject {
             // DARWIN: accept() syscall - blocks until client connects, returns new socket FD
             let clientSocket = withUnsafeMutablePointer(to: &clientAddr) { ptr in
                 ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                    // Grants access - accepts each individual connection from remote clients
                     Darwin.accept(serverSocket, sockaddrPtr, &clientAddrLen)
                 }
             }
@@ -264,3 +270,20 @@ class AllowRemoteFileAccessViewModel: ObservableObject {
         revokeAccess()
     }
 }
+
+/*
+The order is:
+
+Setup phase (happens once when you click "Grant Access"):
+
+socket() - Creates the socket
+bind() - Binds socket to port 9999
+listen() - Marks socket as ready to accept connections
+Per-client connection (happens each time a client connects):
+4. accept() - Blocks until a client connects, then returns a new socket for that client
+5. recv() - Reads data from the client
+6. send() - Sends response back to client
+7. close() - Closes the client socket
+
+Key point: bind() and listen() happen once at startup. Then accept() is called repeatedly in a loop - once for each incoming client connection. Each accept() call blocks (waits) until a new client connects.
+*/
