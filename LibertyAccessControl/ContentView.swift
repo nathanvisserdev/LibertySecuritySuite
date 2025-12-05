@@ -51,6 +51,12 @@ struct ContentView: View {
                     Label("Location", systemImage: "location.fill")
                 }
                 
+                NavigationLink {
+                    MicrophoneView()
+                } label: {
+                    Label("Microphone", systemImage: "mic.fill")
+                }
+                
                 ForEach(items) { item in
                     NavigationLink {
                         Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")

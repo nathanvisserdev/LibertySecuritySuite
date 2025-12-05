@@ -6,5 +6,7 @@
 	<string>This app needs access to your location to demonstrate location services.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to demonstrate location services.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone to demonstrate microphone permissions management.</string>
 </dict>
 </plist>
