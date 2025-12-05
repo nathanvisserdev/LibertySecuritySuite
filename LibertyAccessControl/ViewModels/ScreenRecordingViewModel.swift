@@ -1,0 +1,13 @@
+//
+//  ScreenRecordingViewModel.swift
+//  LibertyAccessControl
+//
+//  Created by Nathan Visser on 2025-12-05.
+//
+
+import Foundation
+import Combine
+
+class ScreenRecordingViewModel: ObservableObject {
+    @Published var statusMessage: String = "Screen Recording permissions management"
+}

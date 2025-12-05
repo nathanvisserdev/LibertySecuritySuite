@@ -57,6 +57,78 @@ struct ContentView: View {
                     Label("Microphone", systemImage: "mic.fill")
                 }
                 
+                NavigationLink {
+                    CameraView()
+                } label: {
+                    Label("Camera", systemImage: "camera.fill")
+                }
+                
+                NavigationLink {
+                    ScreenRecordingView()
+                } label: {
+                    Label("Screen Recording", systemImage: "record.circle.fill")
+                }
+                
+                NavigationLink {
+                    FullDiskAccessView()
+                } label: {
+                    Label("Full Disk Access", systemImage: "internaldrive.fill")
+                }
+                
+                NavigationLink {
+                    AccessibilityView()
+                } label: {
+                    Label("Accessibility", systemImage: "accessibility.fill")
+                }
+                
+                NavigationLink {
+                    FilesAndFoldersView()
+                } label: {
+                    Label("Files and Folders", systemImage: "folder.fill")
+                }
+                
+                NavigationLink {
+                    PhotosView()
+                } label: {
+                    Label("Photos", systemImage: "photo.fill")
+                }
+                
+                NavigationLink {
+                    CalendarView()
+                } label: {
+                    Label("Calendar", systemImage: "calendar")
+                }
+                
+                NavigationLink {
+                    ContactsView()
+                } label: {
+                    Label("Contacts", systemImage: "person.crop.circle.fill")
+                }
+                
+                NavigationLink {
+                    BluetoothView()
+                } label: {
+                    Label("Bluetooth", systemImage: "dot.radiowaves.left.and.right")
+                }
+                
+                NavigationLink {
+                    RemindersView()
+                } label: {
+                    Label("Reminders", systemImage: "checklist")
+                }
+                
+                NavigationLink {
+                    SpeechRecognitionView()
+                } label: {
+                    Label("Speech Recognition", systemImage: "waveform")
+                }
+                
+                NavigationLink {
+                    AppleEventsView()
+                } label: {
+                    Label("Apple Events", systemImage: "applescript.fill")
+                }
+                
                 ForEach(items) { item in
                     NavigationLink {
                         Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
