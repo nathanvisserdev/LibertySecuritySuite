@@ -39,6 +39,18 @@ struct ContentView: View {
                     Label("SSH Access", systemImage: "terminal.fill")
                 }
                 
+                NavigationLink {
+                    TSSView()
+                } label: {
+                    Label("TSS", systemImage: "checkmark.seal.fill")
+                }
+                
+                NavigationLink {
+                    LocationView()
+                } label: {
+                    Label("Location", systemImage: "location.fill")
+                }
+                
                 ForEach(items) { item in
                     NavigationLink {
                         Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
