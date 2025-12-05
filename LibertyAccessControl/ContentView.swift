@@ -21,6 +21,24 @@ struct ContentView: View {
                     Label("Grant Remote File Access", systemImage: "shield.checkered")
                 }
                 
+                NavigationLink {
+                    ScreenSharingView()
+                } label: {
+                    Label("Screen Sharing", systemImage: "rectangle.on.rectangle")
+                }
+                
+                NavigationLink {
+                    RemoteManagementView()
+                } label: {
+                    Label("Remote Management", systemImage: "desktopcomputer")
+                }
+                
+                NavigationLink {
+                    SSHView()
+                } label: {
+                    Label("SSH Access", systemImage: "terminal.fill")
+                }
+                
                 ForEach(items) { item in
                     NavigationLink {
                         Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
