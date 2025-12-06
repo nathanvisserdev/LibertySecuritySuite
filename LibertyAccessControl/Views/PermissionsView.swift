@@ -387,6 +387,8 @@ struct PermissionEntryView: View {
     
     @State private var isExpanded = false
     @State private var isEnabled: Bool
+    @State private var statusMessage: String?
+    @State private var isSuccess: Bool = true
     
     init(client: String, service: String, authValue: Int, source: String, details: Any, viewModel: PermissionsViewModel) {
         self.client = client
@@ -424,18 +426,26 @@ struct PermissionEntryView: View {
                         let newAuthValue = newValue ? 2 : 0
                         let isSystemDB = (source == "System")
                         
+                        statusMessage = "Updating..."
+                        isSuccess = true
+                        
                         viewModel.updatePermission(
                             service: service,
                             client: client,
                             authValue: newAuthValue,
                             isSystemDB: isSystemDB
                         ) { success, message in
-                            if success {
-                                print("✅ \(message)")
-                            } else {
-                                print("❌ \(message)")
+                            isSuccess = success
+                            statusMessage = message
+                            
+                            if !success {
                                 // Revert toggle on failure
                                 isEnabled = oldValue
+                            }
+                            
+                            // Clear message after 3 seconds
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                statusMessage = nil
                             }
                         }
                     }
@@ -459,6 +469,18 @@ struct PermissionEntryView: View {
             .padding(10)
             .background(Color.gray.opacity(0.08))
             .cornerRadius(8)
+            
+            // Status message
+            if let message = statusMessage {
+                Text(isSuccess ? "Success: \(message)" : "Failure: \(message)")
+                    .font(.caption)
+                    .foregroundColor(isSuccess ? .green : .red)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(isSuccess ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
+                    .cornerRadius(6)
+                    .padding(.leading, 20)
+            }
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 6) {

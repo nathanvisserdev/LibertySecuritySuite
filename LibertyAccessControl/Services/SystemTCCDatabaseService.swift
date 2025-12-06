@@ -110,9 +110,13 @@ class SystemTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             
             defer { sqlite3_close(db) }
             
+            // Update the auth_value and last_modified for the existing entry
             let updateQuery = """
-            INSERT OR REPLACE INTO access (service, client, client_type, auth_value, auth_reason, auth_version, flags, last_modified)
-            VALUES (?, ?, 0, ?, 1, 1, 0, ?)
+            UPDATE access 
+            SET auth_value = ?, 
+                auth_reason = 1, 
+                last_modified = ?
+            WHERE service = ? AND client = ?
             """
             
             var statement: OpaquePointer?
@@ -129,17 +133,24 @@ class SystemTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             
             let currentTime = Int64(Date().timeIntervalSince1970)
             
-            sqlite3_bind_text(statement, 1, service, -1, nil)
-            sqlite3_bind_text(statement, 2, client, -1, nil)
-            sqlite3_bind_int(statement, 3, Int32(authValue))
-            sqlite3_bind_int64(statement, 4, currentTime)
+            sqlite3_bind_int(statement, 1, Int32(authValue))
+            sqlite3_bind_int64(statement, 2, currentTime)
+            sqlite3_bind_text(statement, 3, service, -1, nil)
+            sqlite3_bind_text(statement, 4, client, -1, nil)
             
             let stepResult = sqlite3_step(statement)
             
             if stepResult == SQLITE_DONE {
-                self.restartTCCD()
-                DispatchQueue.main.async {
-                    completion(true, "Successfully updated system permission")
+                let changes = sqlite3_changes(db)
+                if changes > 0 {
+                    self.restartTCCD()
+                    DispatchQueue.main.async {
+                        completion(true, "Successfully updated system permission to \(authValue == 2 ? "ALLOWED" : "DENIED")")
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        completion(false, "No matching entry found to update")
+                    }
                 }
             } else {
                 let errorMsg = String(cString: sqlite3_errmsg(db))
