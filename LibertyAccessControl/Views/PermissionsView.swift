@@ -58,47 +58,60 @@ struct PermissionsView: View {
         return serviceCategories[service] ?? "Other"
     }
     
-    // Combine and group all entries
-    private var allEntriesGrouped: [String: [(entry: Any, source: String)]] {
-        var groups: [String: [(entry: Any, source: String)]] = [:]
+    // Group system entries by category
+    private var systemEntriesGrouped: [String: [TCCSystemEntry]] {
+        var groups: [String: [TCCSystemEntry]] = [:]
         
         for entry in viewModel.systemEntries {
             let category = categoryForService(entry.service)
             if groups[category] == nil {
                 groups[category] = []
             }
-            groups[category]?.append((entry: entry, source: "System"))
+            groups[category]?.append(entry)
         }
+        
+        return groups
+    }
+    
+    // Group user entries by category
+    private var userEntriesGrouped: [String: [TCCUserEntry]] {
+        var groups: [String: [TCCUserEntry]] = [:]
         
         for entry in viewModel.userEntries {
             let category = categoryForService(entry.service)
             if groups[category] == nil {
                 groups[category] = []
             }
-            groups[category]?.append((entry: entry, source: "User"))
+            groups[category]?.append(entry)
         }
         
         return groups
     }
     
-    private var sortedCategories: [String] {
-        allEntriesGrouped.keys.sorted()
+    private var sortedSystemCategories: [String] {
+        systemEntriesGrouped.keys.sorted()
     }
     
-    private func allowedCount(for category: String) -> Int {
-        guard let entries = allEntriesGrouped[category] else { return 0 }
-        return entries.filter { item in
-            if let systemEntry = item.entry as? TCCSystemEntry {
-                return systemEntry.auth_value == 2
-            } else if let userEntry = item.entry as? TCCUserEntry {
-                return userEntry.auth_value == 2
-            }
-            return false
-        }.count
+    private var sortedUserCategories: [String] {
+        userEntriesGrouped.keys.sorted()
     }
     
-    private func totalCount(for category: String) -> Int {
-        allEntriesGrouped[category]?.count ?? 0
+    private func allowedCountSystem(for category: String) -> Int {
+        guard let entries = systemEntriesGrouped[category] else { return 0 }
+        return entries.filter { $0.auth_value == 2 }.count
+    }
+    
+    private func totalCountSystem(for category: String) -> Int {
+        systemEntriesGrouped[category]?.count ?? 0
+    }
+    
+    private func allowedCountUser(for category: String) -> Int {
+        guard let entries = userEntriesGrouped[category] else { return 0 }
+        return entries.filter { $0.auth_value == 2 }.count
+    }
+    
+    private func totalCountUser(for category: String) -> Int {
+        userEntriesGrouped[category]?.count ?? 0
     }
     
     var body: some View {
@@ -150,21 +163,66 @@ struct PermissionsView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(sortedCategories, id: \.self) { category in
-                            CategorySection(
-                                category: category,
-                                entries: allEntriesGrouped[category] ?? [],
-                                isExpanded: expandedCategories.contains(category),
-                                allowedCount: allowedCount(for: category),
-                                totalCount: totalCount(for: category),
-                                toggleExpansion: {
-                                    if expandedCategories.contains(category) {
-                                        expandedCategories.remove(category)
-                                    } else {
-                                        expandedCategories.insert(category)
+                        // System Permissions Header & Categories
+                        if !viewModel.systemEntries.isEmpty {
+                            HStack {
+                                Image(systemName: "server.rack")
+                                    .foregroundColor(.green)
+                                Text("System Permissions")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                            
+                            ForEach(sortedSystemCategories, id: \.self) { category in
+                                SystemCategorySection(
+                                    category: category,
+                                    entries: systemEntriesGrouped[category] ?? [],
+                                    isExpanded: expandedCategories.contains("system-\(category)"),
+                                    allowedCount: allowedCountSystem(for: category),
+                                    totalCount: totalCountSystem(for: category),
+                                    toggleExpansion: {
+                                        if expandedCategories.contains("system-\(category)") {
+                                            expandedCategories.remove("system-\(category)")
+                                        } else {
+                                            expandedCategories.insert("system-\(category)")
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
+                        }
+                        
+                        // User Permissions Header & Categories
+                        if !viewModel.userEntries.isEmpty {
+                            HStack {
+                                Image(systemName: "person.circle")
+                                    .foregroundColor(.blue)
+                                Text("User Permissions")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, viewModel.systemEntries.isEmpty ? 8 : 24)
+                            
+                            ForEach(sortedUserCategories, id: \.self) { category in
+                                UserCategorySection(
+                                    category: category,
+                                    entries: userEntriesGrouped[category] ?? [],
+                                    isExpanded: expandedCategories.contains("user-\(category)"),
+                                    allowedCount: allowedCountUser(for: category),
+                                    totalCount: totalCountUser(for: category),
+                                    toggleExpansion: {
+                                        if expandedCategories.contains("user-\(category)") {
+                                            expandedCategories.remove("user-\(category)")
+                                        } else {
+                                            expandedCategories.insert("user-\(category)")
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -176,10 +234,10 @@ struct PermissionsView: View {
     }
 }
 
-// MARK: - Category Section View
-struct CategorySection: View {
+// MARK: - System Category Section View
+struct SystemCategorySection: View {
     let category: String
-    let entries: [(entry: Any, source: String)]
+    let entries: [TCCSystemEntry]
     let isExpanded: Bool
     let allowedCount: Int
     let totalCount: Int
@@ -224,58 +282,78 @@ struct CategorySection: View {
             // Entries
             if isExpanded {
                 LazyVStack(spacing: 8) {
-                    // Group entries by source
-                    let systemEntries = entries.filter { $0.source == "System" }
-                    let userEntries = entries.filter { $0.source == "User" }
-                    
-                    // System Permissions Section
-                    if !systemEntries.isEmpty {
-                        HStack {
-                            Text("System Permissions")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.green)
-                            Spacer()
-                        }
-                        .padding(.top, 4)
-                        
-                        ForEach(systemEntries.indices, id: \.self) { index in
-                            let item = systemEntries[index]
-                            if let systemEntry = item.entry as? TCCSystemEntry {
-                                PermissionEntryView(
-                                    client: systemEntry.client,
-                                    service: systemEntry.service,
-                                    authValue: systemEntry.auth_value,
-                                    source: item.source,
-                                    details: systemEntry
-                                )
-                            }
-                        }
+                    ForEach(entries) { entry in
+                        PermissionEntryView(
+                            client: entry.client,
+                            service: entry.service,
+                            authValue: entry.auth_value,
+                            source: "System",
+                            details: entry
+                        )
                     }
+                }
+                .padding(.leading, 32)
+            }
+        }
+    }
+}
+
+// MARK: - User Category Section View
+struct UserCategorySection: View {
+    let category: String
+    let entries: [TCCUserEntry]
+    let isExpanded: Bool
+    let allowedCount: Int
+    let totalCount: Int
+    let toggleExpansion: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Category Header
+            Button(action: toggleExpansion) {
+                HStack {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .foregroundColor(.secondary)
+                        .frame(width: 20)
                     
-                    // User Permissions Section
-                    if !userEntries.isEmpty {
-                        HStack {
-                            Text("User Permissions")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                            Spacer()
-                        }
-                        .padding(.top, systemEntries.isEmpty ? 4 : 12)
-                        
-                        ForEach(userEntries.indices, id: \.self) { index in
-                            let item = userEntries[index]
-                            if let userEntry = item.entry as? TCCUserEntry {
-                                PermissionEntryView(
-                                    client: userEntry.client,
-                                    service: userEntry.service,
-                                    authValue: userEntry.auth_value,
-                                    source: item.source,
-                                    details: userEntry
-                                )
-                            }
-                        }
+                    Text(category)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    
+                    Spacer()
+                    
+                    // Count badge
+                    HStack(spacing: 4) {
+                        Text("\(allowedCount)")
+                            .foregroundColor(.green)
+                        Text("/")
+                            .foregroundColor(.secondary)
+                        Text("\(totalCount)")
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                .padding(12)
+                .background(Color.cyan.opacity(0.1))
+                .cornerRadius(10)
+            }
+            .buttonStyle(.plain)
+            
+            // Entries
+            if isExpanded {
+                LazyVStack(spacing: 8) {
+                    ForEach(entries) { entry in
+                        PermissionEntryView(
+                            client: entry.client,
+                            service: entry.service,
+                            authValue: entry.auth_value,
+                            source: "User",
+                            details: entry
+                        )
                     }
                 }
                 .padding(.leading, 32)
