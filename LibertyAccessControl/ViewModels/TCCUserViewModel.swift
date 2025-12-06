@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SQLite3
 
-struct TCCUserEntry: Identifiable {
+struct TCCUserEntry: Identifiable, Equatable {
     let id = UUID()
     let service: String
     let client: String
@@ -28,6 +28,10 @@ struct TCCUserEntry: Identifiable {
     let pid_version: Int?
     let boot_uuid: String
     let last_reminded: Date?
+    
+    static func == (lhs: TCCUserEntry, rhs: TCCUserEntry) -> Bool {
+        lhs.id == rhs.id
+    }
     
     // Computed properties for parsed CSReq data
     var parsedBundleID: String? {
