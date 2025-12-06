@@ -16,10 +16,10 @@ class PermissionsViewModel: ObservableObject {
     @Published var userEntries: [TCCUserEntry] = []
     @Published var isLoading: Bool = false
     
-    private let systemDBService: TCCDatabaseService
-    private let userDBService: TCCDatabaseService
+    private let systemDBService: SystemTCCDatabaseService
+    private let userDBService: UserTCCDatabaseService
     
-    init(systemDBService: TCCDatabaseService, userDBService: TCCDatabaseService) {
+    init(systemDBService: SystemTCCDatabaseService, userDBService: UserTCCDatabaseService) {
         self.systemDBService = systemDBService
         self.userDBService = userDBService
     }
@@ -45,8 +45,11 @@ class PermissionsViewModel: ObservableObject {
     }
     
     func updatePermission(service: String, client: String, authValue: Int, isSystemDB: Bool, completion: @escaping (Bool, String) -> Void) {
-        let dbService = isSystemDB ? systemDBService : userDBService
-        dbService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
+        if isSystemDB {
+            systemDBService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
+        } else {
+            userDBService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
+        }
     }
     
     private func querySystemTCCDatabase() -> [TCCSystemEntry] {
