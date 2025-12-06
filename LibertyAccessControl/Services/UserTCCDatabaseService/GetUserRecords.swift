@@ -29,13 +29,11 @@ extension UserTCCDatabaseService {
             if db != nil {
                 sqlite3_close(db)
             }
-            restartUserTCCD()
             return []
         }
         
         defer {
             sqlite3_close(db)
-            restartUserTCCD()
         }
         
         sqlite3_busy_timeout(db, 5000)
@@ -59,14 +57,6 @@ extension UserTCCDatabaseService {
         try? killTask.run()
         killTask.waitUntilExit()
         Thread.sleep(forTimeInterval: 0.5)
-    }
-    
-    /// Restart the user tccd process
-    private func restartUserTCCD() {
-        let restartTask = Process()
-        restartTask.launchPath = "/bin/launchctl"
-        restartTask.arguments = ["kickstart", "-k", "user/\(getuid())/com.apple.tccd"]
-        try? restartTask.run()
     }
     
     /// Execute the SQL query and parse results into TCCUserEntry objects
