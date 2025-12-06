@@ -95,49 +95,4 @@ class SystemTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             }
         }
     }
-    
-    func deletePermission(service: String, client: String, completion: @escaping (Bool, String) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            
-            guard let db = self.openDatabase(readOnly: false) else {
-                DispatchQueue.main.async {
-                    completion(false, "Failed to open system TCC database. Requires root privileges.")
-                }
-                return
-            }
-            
-            defer { sqlite3_close(db) }
-            
-            let deleteQuery = "DELETE FROM access WHERE service = ? AND client = ?"
-            var statement: OpaquePointer?
-            
-            guard sqlite3_prepare_v2(db, deleteQuery, -1, &statement, nil) == SQLITE_OK else {
-                let errorMsg = String(cString: sqlite3_errmsg(db))
-                DispatchQueue.main.async {
-                    completion(false, "Failed to prepare statement: \(errorMsg)")
-                }
-                return
-            }
-            
-            defer { sqlite3_finalize(statement) }
-            
-            sqlite3_bind_text(statement, 1, service, -1, nil)
-            sqlite3_bind_text(statement, 2, client, -1, nil)
-            
-            let stepResult = sqlite3_step(statement)
-            
-            if stepResult == SQLITE_DONE {
-                self.restartTCCD()
-                DispatchQueue.main.async {
-                    completion(true, "Successfully deleted system permission")
-                }
-            } else {
-                let errorMsg = String(cString: sqlite3_errmsg(db))
-                DispatchQueue.main.async {
-                    completion(false, "Failed to delete: \(errorMsg)")
-                }
-            }
-        }
-    }
 }

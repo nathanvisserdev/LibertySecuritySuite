@@ -1,0 +1,89 @@
+//
+//  DeleteSystemRecords.swift
+//  LibertyAccessControl
+//
+//  Created by Nathan Visser on 2025-12-06.
+//
+
+import Foundation
+import SQLite3
+
+// MARK: - System TCC Database Delete Functions
+extension SystemTCCDatabaseService {
+    
+    /// Delete a permission from the system TCC database
+    func deletePermission(service: String, client: String, completion: @escaping (Bool, String) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            guard let db = self.openDatabase(readOnly: false) else {
+                DispatchQueue.main.async {
+                    completion(false, "Failed to open system TCC database. Requires root privileges.")
+                }
+                return
+            }
+            
+            defer { sqlite3_close(db) }
+            
+            let success = self.executeDelete(db: db, service: service, client: client)
+            
+            if success {
+                self.restartTCCD()
+                DispatchQueue.main.async {
+                    completion(true, "Successfully deleted system permission")
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(false, "Failed to delete permission")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    /// Execute a DELETE query
+    private func executeDelete(db: OpaquePointer?, service: String, client: String) -> Bool {
+        let deleteQuery = "DELETE FROM access WHERE service = ? AND client = ?"
+        var statement: OpaquePointer?
+        
+        guard sqlite3_prepare_v2(db, deleteQuery, -1, &statement, nil) == SQLITE_OK else {
+            let errorMsg = String(cString: sqlite3_errmsg(db))
+            print("❌ Failed to prepare delete statement: \(errorMsg)")
+            return false
+        }
+        
+        defer { sqlite3_finalize(statement) }
+        
+        sqlite3_bind_text(statement, 1, service, -1, nil)
+        sqlite3_bind_text(statement, 2, client, -1, nil)
+        
+        let stepResult = sqlite3_step(statement)
+        
+        if stepResult == SQLITE_DONE {
+            let changes = sqlite3_changes(db)
+            print("✅ DELETE RESULT: \(changes) row(s) deleted")
+            return changes > 0
+        } else {
+            let errorMsg = String(cString: sqlite3_errmsg(db))
+            print("❌ Failed to delete: \(errorMsg)")
+            return false
+        }
+    }
+    
+    /// Restart the system tccd process
+    private func restartTCCD() {
+        let script = "do shell script \"launchctl kickstart -k system/com.apple.tccd\" with administrator privileges"
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        process.arguments = ["-e", script]
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            print("♻️ tccd restarted (exit code: \(process.terminationStatus))")
+        } catch {
+            print("❌ Failed to restart tccd: \(error)")
+        }
+    }
+}
