@@ -36,7 +36,11 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Allow Remote File Access", icon: "arrow.down.doc", status: viewModel.permissionStatuses["Allow Remote File Access"] ?? "Not Checked", isConfigured: false, configNote: "Check via system preferences or MDM queries", action: { viewModel.checkRemoteFileAccess() })
                     PermissionStatusRow(title: "Apple Events", icon: "applescript", status: viewModel.permissionStatuses["Apple Events"] ?? "Not Checked", isConfigured: false, configNote: "Query TCC database or attempt to send Apple Events to target app", action: { viewModel.checkAppleEvents() })
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
-                    PermissionStatusRow(title: "Calendar", icon: "calendar", status: viewModel.permissionStatuses["Calendar"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkCalendar() })
+                    PermissionStatusRow(title: "Calendar", icon: "calendar", status: viewModel.permissionStatuses["Calendar"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { 
+                        viewModel.checkCalendar { status in
+                            viewModel.permissionStatuses["Calendar"] = status
+                        }
+                    })
                     PermissionStatusRow(title: "Camera", icon: "camera.fill", status: viewModel.permissionStatuses["Camera"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkCamera() })
                     PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkContacts() })
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
@@ -49,7 +53,11 @@ struct AppPermissionsView: View {
                         }
                     })
                     PermissionStatusRow(title: "Photos", icon: "photo.fill", status: viewModel.permissionStatuses["Photos"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkPhotos() })
-                    PermissionStatusRow(title: "Reminders", icon: "checklist", status: viewModel.permissionStatuses["Reminders"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkReminders() })
+                    PermissionStatusRow(title: "Reminders", icon: "checklist", status: viewModel.permissionStatuses["Reminders"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { 
+                        viewModel.checkReminders { status in
+                            viewModel.permissionStatuses["Reminders"] = status
+                        }
+                    })
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
                     PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkScreenRecording() })
                     PermissionStatusRow(title: "Speech Recognition", icon: "waveform", status: viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkSpeechRecognition() })

@@ -26,12 +26,10 @@ struct AppPermissionsViewModel {
         checkMicrophone()
         checkLocation()
         checkContacts()
-        checkCalendar()
-        checkReminders()
         checkPhotos()
         checkSpeechRecognition()
         checkScreenRecording()
-        // Note: checkNotifications() must be called separately with a completion handler
+        // Note: checkCalendar(), checkReminders(), and checkNotifications() must be called separately with completion handlers
     }
     
     mutating func checkAccessibility() {
@@ -59,14 +57,48 @@ struct AppPermissionsViewModel {
         permissionStatuses["Contacts"] = contactsStatusString(from: status)
     }
     
-    mutating func checkCalendar() {
-        let status = EKEventStore.authorizationStatus(for: .event)
-        permissionStatuses["Calendar"] = eventKitStatusString(from: status)
+    func checkCalendar(completion: @escaping (String) -> Void) {
+        if #available(macOS 14.0, *) {
+            let store = EKEventStore()
+            Task {
+                do {
+                    let granted = try await store.requestFullAccessToEvents()
+                    let status = granted ? "Authorized" : "Denied"
+                    DispatchQueue.main.async {
+                        completion(status)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        completion("Error: \(error.localizedDescription)")
+                    }
+                }
+            }
+        } else {
+            let status = EKEventStore.authorizationStatus(for: .event)
+            completion(eventKitStatusString(from: status))
+        }
     }
     
-    mutating func checkReminders() {
-        let status = EKEventStore.authorizationStatus(for: .reminder)
-        permissionStatuses["Reminders"] = eventKitStatusString(from: status)
+    func checkReminders(completion: @escaping (String) -> Void) {
+        if #available(macOS 14.0, *) {
+            let store = EKEventStore()
+            Task {
+                do {
+                    let granted = try await store.requestFullAccessToReminders()
+                    let status = granted ? "Authorized" : "Denied"
+                    DispatchQueue.main.async {
+                        completion(status)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        completion("Error: \(error.localizedDescription)")
+                    }
+                }
+            }
+        } else {
+            let status = EKEventStore.authorizationStatus(for: .reminder)
+            completion(eventKitStatusString(from: status))
+        }
     }
     
     mutating func checkPhotos() {
