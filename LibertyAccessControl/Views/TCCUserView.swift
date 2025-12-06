@@ -84,24 +84,17 @@ struct TCCUserView: View {
     }
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            VStack(spacing: 10) {
-                Image(systemName: "person.circle")
-                    .font(.system(size: 60))
-                    .foregroundColor(.blue)
-                
+        VStack(spacing: 12) {
+            // Compact Header
+            VStack(spacing: 8) {
                 Text("User TCC Database")
-                    .font(.title)
+                    .font(.title2)
                     .fontWeight(.bold)
                 
-                Text(viewModel.statusMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                if let errorMessage = viewModel.errorMessage {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .font(.caption)
                         .foregroundColor(.red)
@@ -110,17 +103,7 @@ struct TCCUserView: View {
                         .textSelection(.enabled)
                 }
             }
-            
-            // Load Button
-            Button(action: {
-                viewModel.loadTCCData()
-            }) {
-                Label(viewModel.isLoading ? "Loading..." : "Load User TCC Permissions", systemImage: "arrow.clockwise")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isLoading)
-            .padding(.horizontal)
+            .padding(.top, 8)
             
             Divider()
             
@@ -183,6 +166,11 @@ struct TCCUserView: View {
         }
         .padding()
         .navigationTitle("TCC User")
+        .onAppear {
+            if viewModel.entries.isEmpty && !viewModel.isLoading {
+                viewModel.loadTCCData()
+            }
+        }
     }
     
     @ViewBuilder

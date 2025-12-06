@@ -389,7 +389,6 @@ struct PermissionEntryView: View {
     @State private var isEnabled: Bool
     @State private var statusMessage: String?
     @State private var isSuccess: Bool = true
-    @State private var isUpdating: Bool = false
     
     init(client: String, service: String, authValue: Int, source: String, details: Any, viewModel: PermissionsViewModel) {
         self.client = client
@@ -424,9 +423,6 @@ struct PermissionEntryView: View {
                     .toggleStyle(.switch)
                     .labelsHidden()
                     .onChange(of: isEnabled) { oldValue, newValue in
-                        guard !isUpdating else { return }
-                        
-                        isUpdating = true
                         let newAuthValue = newValue ? 2 : 0
                         let isSystemDB = (source == "System")
                         
@@ -446,8 +442,6 @@ struct PermissionEntryView: View {
                                 // Revert toggle on failure
                                 isEnabled = oldValue
                             }
-                            
-                            isUpdating = false
                             
                             // Clear message after 3 seconds
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
