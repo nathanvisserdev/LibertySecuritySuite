@@ -114,44 +114,48 @@ struct PermissionsView: View {
         userEntriesGrouped[category]?.count ?? 0
     }
     
+    private var totalSystemAllowed: Int {
+        viewModel.systemEntries.filter { $0.auth_value == 2 }.count
+    }
+    
+    private var totalUserAllowed: Int {
+        viewModel.userEntries.filter { $0.auth_value == 2 }.count
+    }
+    
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            VStack(spacing: 10) {
-                Image(systemName: "checklist")
-                    .font(.system(size: 60))
-                    .foregroundColor(.cyan)
-                
+        VStack(spacing: 12) {
+            // Compact Header
+            VStack(spacing: 8) {
                 Text("All Permissions")
-                    .font(.title)
+                    .font(.title2)
                     .fontWeight(.bold)
                 
-                Text(viewModel.statusMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                if let errorMessage = viewModel.errorMessage {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .font(.caption)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                         .textSelection(.enabled)
+                } else if !viewModel.systemEntries.isEmpty || !viewModel.userEntries.isEmpty {
+                    HStack(spacing: 16) {
+                        if !viewModel.systemEntries.isEmpty {
+                            Text("\(totalSystemAllowed)/\(viewModel.systemEntries.count) system entries")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        if !viewModel.userEntries.isEmpty {
+                            Text("\(totalUserAllowed)/\(viewModel.userEntries.count) user entries")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
-            
-            // Load Button
-            Button(action: {
-                viewModel.loadTCCData()
-            }) {
-                Label(viewModel.isLoading ? "Loading..." : "Load All Permissions", systemImage: "arrow.clockwise")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isLoading)
-            .padding(.horizontal)
+            .padding(.top, 8)
             
             Divider()
             
@@ -231,6 +235,11 @@ struct PermissionsView: View {
         }
         .padding()
         .navigationTitle("Permissions")
+        .onAppear {
+            if viewModel.systemEntries.isEmpty && viewModel.userEntries.isEmpty && !viewModel.isLoading {
+                viewModel.loadTCCData()
+            }
+        }
     }
 }
 
