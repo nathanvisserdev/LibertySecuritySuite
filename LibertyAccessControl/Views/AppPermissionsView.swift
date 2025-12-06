@@ -36,11 +36,7 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Allow Remote File Access", icon: "arrow.down.doc", status: viewModel.permissionStatuses["Allow Remote File Access"] ?? "Not Checked", isConfigured: false, configNote: "Check via system preferences or MDM queries", action: { viewModel.checkRemoteFileAccess() })
                     PermissionStatusRow(title: "Apple Events", icon: "applescript", status: viewModel.permissionStatuses["Apple Events"] ?? "Not Checked", isConfigured: false, configNote: "Query TCC database or attempt to send Apple Events to target app", action: { viewModel.checkAppleEvents() })
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
-                    PermissionStatusRow(title: "Calendar", icon: "calendar", status: viewModel.permissionStatuses["Calendar"] ?? "Not Checked", isConfigured: true, configNote: "⚠️ On macOS 14+: Checking status requires requesting permission.", action: {
-                        viewModel.checkCalendar { status in
-                            viewModel.permissionStatuses["Calendar"] = status
-                        }
-                    })
+                    CalendarPermissionRow(viewModel: $viewModel)
                     CameraPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkContacts() })
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
@@ -53,11 +49,7 @@ struct AppPermissionsView: View {
                         }
                     })
                     PermissionStatusRow(title: "Photos", icon: "photo.fill", status: viewModel.permissionStatuses["Photos"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkPhotos() })
-                    PermissionStatusRow(title: "Reminders", icon: "checklist", status: viewModel.permissionStatuses["Reminders"] ?? "Not Checked", isConfigured: true, configNote: "⚠️ On macOS 14+: Checking status requires requesting permission", action: { 
-                        viewModel.checkReminders { status in
-                            viewModel.permissionStatuses["Reminders"] = status
-                        }
-                    })
+                    RemindersPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
                     PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkScreenRecording() })
                     PermissionStatusRow(title: "Speech Recognition", icon: "waveform", status: viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkSpeechRecognition() })
@@ -118,12 +110,18 @@ struct CameraPermissionRow: View {
                     .cornerRadius(8)
                 
                 if status == "Not yet requested" {
-                    Button("Request Camera Permission") {
+                    Button("Request") {
                         viewModel.requestCameraPermission { newStatus in
                             viewModel.permissionStatuses["Camera"] = newStatus
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    
+                    Button(action: { viewModel.checkCamera() }) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
                 } else {
                     Button(action: { viewModel.checkCamera() }) {
                         Image(systemName: "arrow.clockwise")
@@ -132,6 +130,132 @@ struct CameraPermissionRow: View {
                     .buttonStyle(.plain)
                 }
             }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct CalendarPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Calendar"] ?? "Indeterminable upon request"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case "Authorized", "Full Access":
+            return .green
+        case "Denied", "Restricted":
+            return .red
+        case "Not Determined", "Not Checked", "Indeterminable upon request":
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "calendar")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Calendar")
+                    .font(.body)
+                
+                Text("✅")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                Button("Request") {
+                    viewModel.checkCalendar { newStatus in
+                        viewModel.permissionStatuses["Calendar"] = newStatus
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            
+            Text("⚠️ On macOS 14+: Checking status requires requesting permission.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.leading, 38)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct RemindersPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Reminders"] ?? "Indeterminable upon request"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case "Authorized", "Full Access":
+            return .green
+        case "Denied", "Restricted":
+            return .red
+        case "Not Determined", "Not Checked", "Indeterminable upon request":
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "checklist")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Reminders")
+                    .font(.body)
+                
+                Text("✅")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                Button("Request") {
+                    viewModel.checkReminders { newStatus in
+                        viewModel.permissionStatuses["Reminders"] = newStatus
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            
+            Text("⚠️ On macOS 14+: Checking status requires requesting permission")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.leading, 38)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
