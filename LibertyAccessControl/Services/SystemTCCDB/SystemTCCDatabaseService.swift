@@ -8,11 +8,11 @@
 import Foundation
 import SQLite3
 
+let systemDBPath = "/Library/Application Support/com.apple.TCC/TCC.db"
+
 class SystemTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
     
     init() {
-        super.init(dbPath: "/Library/Application Support/com.apple.TCC/TCC.db")
+        super.init(dbPath: systemDBPath)
     }
-    
-
 }
