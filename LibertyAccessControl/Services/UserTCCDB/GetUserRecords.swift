@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 // MARK: - User TCC Database Query Functions
-extension UserTCCDatabaseService {
+extension UserTCCDBService {
     
     /// Query entries from the user TCC database using the real home directory path
     func queryEntries() -> [Any] {

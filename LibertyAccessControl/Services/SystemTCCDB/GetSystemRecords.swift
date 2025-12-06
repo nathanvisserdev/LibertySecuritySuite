@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 // MARK: - System TCC Database Query Functions
-extension SystemTCCDatabaseService {
+extension SystemTCCDBService {
     
     /// Query entries from the system TCC database
     func queryEntries() -> [Any] {

@@ -1,5 +1,5 @@
 //
-//  TCCView.swift (System TCC Database)
+//  SystemPermissionsView.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TCCSystemView: View {
-    @StateObject private var viewModel = TCCSystemViewModel()
+struct SystemPermissionsView: View {
+    @StateObject private var viewModel = SystemPermissionsViewModel()
     @State private var expandedEntries: Set<UUID> = []
     
     private let serviceCategories = [
@@ -228,7 +228,7 @@ struct TCCSystemView: View {
             }
         }
         .padding()
-        .navigationTitle("TCC System")
+        .navigationTitle("System Permissions")
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
@@ -276,6 +276,6 @@ struct TCCSystemView: View {
 
 #Preview {
     NavigationStack {
-        TCCSystemView()
+        SystemPermissionsView()
     }
 }

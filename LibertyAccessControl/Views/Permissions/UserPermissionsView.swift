@@ -1,5 +1,5 @@
 //
-//  TCCUserView.swift
+//  UserPermissionsView.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TCCUserView: View {
-    @StateObject private var viewModel = TCCUserViewModel()
+struct UserPermissionsView: View {
+    @StateObject private var viewModel = UserPermissionsViewModel()
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
     
@@ -165,7 +165,7 @@ struct TCCUserView: View {
             }
         }
         .padding()
-        .navigationTitle("TCC User")
+        .navigationTitle("User Permissions")
         .onAppear {
             if viewModel.entries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()
@@ -344,6 +344,6 @@ struct TCCUserView: View {
 
 #Preview {
     NavigationStack {
-        TCCUserView()
+        UserPermissionsView()
     }
 }

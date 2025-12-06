@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 // MARK: - User TCC Database Delete Functions
-extension UserTCCDatabaseService {
+extension UserTCCDBService {
     
     /// Delete a permission from the user TCC database
     func deletePermission(service: String, client: String, completion: @escaping (Bool, String) -> Void) {

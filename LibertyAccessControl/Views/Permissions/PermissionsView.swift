@@ -12,8 +12,8 @@ struct PermissionsView: View {
     @State private var expandedCategories: Set<String> = []
     
     init() {
-        let systemService = SystemTCCDatabaseService()
-        let userService = UserTCCDatabaseService()
+        let systemService = SystemTCCDBService()
+        let userService = UserTCCDBService()
         _viewModel = StateObject(wrappedValue: PermissionsViewModel(systemDBService: systemService, userDBService: userService))
     }
     

@@ -1,5 +1,5 @@
 //
-//  TCCViewModel.swift (System TCC Database)
+//  SystemPermissionsViewModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SQLite3
 
-class TCCSystemViewModel: ObservableObject {
+class SystemPermissionsViewModel: ObservableObject {
     @Published var statusMessage: String = "System TCC Database - Ready to query"
     @Published var errorMessage: String?
     @Published var entries: [TCCSystemEntry] = []

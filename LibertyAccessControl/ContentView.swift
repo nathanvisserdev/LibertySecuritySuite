@@ -37,15 +37,15 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    TCCUserView()
+                    UserPermissionsView()
                 } label: {
-                    Label("TCC User", systemImage: "person.circle")
+                    Label("User Permissions", systemImage: "person.circle")
                 }
                 
                 NavigationLink {
-                    TCCSystemView()
+                    SystemPermissionsView()
                 } label: {
-                    Label("TCC System", systemImage: "server.rack")
+                    Label("System Permissions", systemImage: "server.rack")
                 }
                 
                 NavigationLink {

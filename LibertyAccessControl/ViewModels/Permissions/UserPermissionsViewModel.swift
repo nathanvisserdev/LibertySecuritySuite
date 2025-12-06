@@ -1,5 +1,5 @@
 //
-//  TCCUserViewModel.swift
+//  UserPermissionsViewModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SQLite3
 
-class TCCUserViewModel: ObservableObject {
+class UserPermissionsViewModel: ObservableObject {
     @Published var statusMessage: String = "User TCC Database - Ready to query"
     @Published var errorMessage: String?
     @Published var entries: [TCCUserEntry] = []
