@@ -75,29 +75,30 @@ struct REGView: View {
                                             .foregroundColor(.secondary)
                                             .font(.caption)
                                         
-                                        Image(systemName: "app.fill")
-                                            .foregroundColor(.purple)
+                                        Image(systemName: entry.isTrusted ? "checkmark.shield.fill" : "xmark.shield.fill")
+                                            .foregroundColor(entry.isTrusted ? .green : .red)
                                         
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("client: \(entry.client)")
+                                            Text(entry.abs_path)
                                                 .font(.body)
                                                 .fontWeight(.medium)
+                                                .lineLimit(1)
                                             
-                                            Text("service: \(entry.service)")
+                                            Text("Last seen: \(entry.last_seen.formatted(date: .abbreviated, time: .shortened))")
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
                                         
                                         Spacer()
                                         
-                                        // Show auth value badge
-                                        Text(authValueText(entry.auth_value))
+                                        // Show trusted badge
+                                        Text(entry.isTrusted ? "Trusted" : "Untrusted")
                                             .font(.caption)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 8)
                                             .padding(.vertical, 4)
-                                            .background(authValueColor(entry.auth_value))
+                                            .background(entry.isTrusted ? Color.green : Color.red)
                                             .cornerRadius(6)
                                     }
                                 }
@@ -106,76 +107,10 @@ struct REGView: View {
                                 // Expanded details
                                 if expandedEntries.contains(entry.id) {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        fieldRow("client_type", value: "\(entry.client_type)")
-                                        fieldRow("auth_value", value: "\(entry.auth_value)")
-                                        fieldRow("auth_reason", value: "\(entry.auth_reason)")
-                                        fieldRow("auth_version", value: "\(entry.auth_version)")
-                                        
-                                        if let csreq = entry.csreq {
-                                            fieldRow("csreq", value: "\(csreq.count) bytes")
-                                            
-                                            if let bundleID = entry.parsedBundleID {
-                                                fieldRow("  ↳ parsed_bundle_id", value: bundleID)
-                                            }
-                                            
-                                            if let teamID = entry.parsedTeamID {
-                                                fieldRow("  ↳ parsed_team_id", value: teamID)
-                                            }
-                                        } else {
-                                            fieldRow("csreq", value: "nil")
-                                        }
-                                        
-                                        if let policy_id = entry.policy_id {
-                                            fieldRow("policy_id", value: "\(policy_id)")
-                                        } else {
-                                            fieldRow("policy_id", value: "nil")
-                                        }
-                                        
-                                        if let type = entry.indirect_object_identifier_type {
-                                            fieldRow("indirect_object_identifier_type", value: "\(type)")
-                                        } else {
-                                            fieldRow("indirect_object_identifier_type", value: "nil")
-                                        }
-                                        
-                                        fieldRow("indirect_object_identifier", value: entry.indirect_object_identifier)
-                                        
-                                        if let identity = entry.indirect_object_code_identity {
-                                            fieldRow("indirect_object_code_identity", value: "\(identity.count) bytes")
-                                        } else {
-                                            fieldRow("indirect_object_code_identity", value: "nil")
-                                        }
-                                        
-                                        if let flags = entry.flags {
-                                            fieldRow("flags", value: "\(flags)")
-                                        } else {
-                                            fieldRow("flags", value: "nil")
-                                        }
-                                        
-                                        if let last_modified = entry.last_modified {
-                                            fieldRow("last_modified", value: last_modified.formatted(date: .abbreviated, time: .shortened))
-                                        } else {
-                                            fieldRow("last_modified", value: "nil")
-                                        }
-                                        
-                                        if let pid = entry.pid {
-                                            fieldRow("pid", value: "\(pid)")
-                                        } else {
-                                            fieldRow("pid", value: "nil")
-                                        }
-                                        
-                                        if let pid_version = entry.pid_version {
-                                            fieldRow("pid_version", value: "\(pid_version)")
-                                        } else {
-                                            fieldRow("pid_version", value: "nil")
-                                        }
-                                        
-                                        fieldRow("boot_uuid", value: entry.boot_uuid)
-                                        
-                                        if let last_reminded = entry.last_reminded {
-                                            fieldRow("last_reminded", value: last_reminded.formatted(date: .abbreviated, time: .shortened))
-                                        } else {
-                                            fieldRow("last_reminded", value: "nil")
-                                        }
+                                        fieldRow("abs_path", value: entry.abs_path)
+                                        fieldRow("first_seen", value: entry.first_seen.formatted(date: .abbreviated, time: .shortened))
+                                        fieldRow("last_seen", value: entry.last_seen.formatted(date: .abbreviated, time: .shortened))
+                                        fieldRow("trusted", value: "\(entry.trusted)")
                                     }
                                     .padding(.top, 4)
                                     .padding(.leading, 24)
@@ -199,33 +134,13 @@ struct REGView: View {
             Text(label + ":")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 220, alignment: .trailing)
+                .frame(width: 100, alignment: .trailing)
             
             Text(value)
                 .font(.caption)
                 .textSelection(.enabled)
             
             Spacer()
-        }
-    }
-    
-    private func authValueText(_ value: Int) -> String {
-        switch value {
-        case 0: return "Denied"
-        case 1: return "Unknown"
-        case 2: return "Allowed"
-        case 3: return "Limited"
-        default: return "Unknown (\(value))"
-        }
-    }
-    
-    private func authValueColor(_ value: Int) -> Color {
-        switch value {
-        case 0: return .red
-        case 1: return .orange
-        case 2: return .green
-        case 3: return .blue
-        default: return .gray
         }
     }
 }

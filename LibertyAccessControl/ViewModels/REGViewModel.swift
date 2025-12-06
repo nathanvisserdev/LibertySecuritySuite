@@ -11,111 +11,13 @@ import SQLite3
 
 struct REGEntry: Identifiable {
     let id = UUID()
-    let service: String
-    let client: String
-    let client_type: Int
-    let auth_value: Int
-    let auth_reason: Int
-    let auth_version: Int
-    let csreq: Data?
-    let policy_id: Int?
-    let indirect_object_identifier_type: Int?
-    let indirect_object_identifier: String
-    let indirect_object_code_identity: Data?
-    let flags: Int?
-    let last_modified: Date?
-    let pid: Int?
-    let pid_version: Int?
-    let boot_uuid: String
-    let last_reminded: Date?
+    let abs_path: String
+    let first_seen: Date
+    let last_seen: Date
+    let trusted: Int
     
-    // Computed properties for parsed CSReq data
-    var parsedBundleID: String? {
-        guard let csreq = csreq else { return nil }
-        return Self.parseCSReqBundleID(from: csreq)
-    }
-    
-    var parsedTeamID: String? {
-        guard let csreq = csreq else { return nil }
-        return Self.parseCSReqTeamID(from: csreq)
-    }
-    
-    // Parse bundle identifier from CSReq blob
-    private static func parseCSReqBundleID(from data: Data) -> String? {
-        guard data.count >= 8 else { return nil }
-        
-        var offset = 8
-        
-        while offset + 8 < data.count {
-            let op = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }.bigEndian
-            
-            if op == 0x00000002 {
-                offset += 4
-                let length = Int(data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }.bigEndian)
-                offset += 4
-                
-                if offset + length <= data.count {
-                    let stringData = data.subdata(in: offset..<(offset + length))
-                    if let bundleID = String(data: stringData, encoding: .utf8) {
-                        return bundleID
-                    }
-                }
-                break
-            }
-            offset += 4
-        }
-        
-        return nil
-    }
-    
-    // Parse Team ID from CSReq blob
-    private static func parseCSReqTeamID(from data: Data) -> String? {
-        guard data.count >= 8 else { return nil }
-        
-        let hexString = data.map { String(format: "%02X", $0) }.joined()
-        
-        if let range = hexString.range(of: "7375626A6563742E4F55") {
-            let startIndex = hexString.distance(from: hexString.startIndex, to: range.upperBound)
-            
-            var searchIndex = startIndex
-            while searchIndex + 16 < hexString.count {
-                let chunk = String(hexString[hexString.index(hexString.startIndex, offsetBy: searchIndex)..<hexString.index(hexString.startIndex, offsetBy: searchIndex + 8)])
-                
-                if chunk == "00000001" {
-                    let lengthStart = searchIndex + 8
-                    if lengthStart + 8 <= hexString.count {
-                        let lengthHex = String(hexString[hexString.index(hexString.startIndex, offsetBy: lengthStart)..<hexString.index(hexString.startIndex, offsetBy: lengthStart + 8)])
-                        
-                        if let length = UInt32(lengthHex, radix: 16) {
-                            let teamIDStart = lengthStart + 8
-                            let teamIDEnd = teamIDStart + Int(length) * 2
-                            
-                            if teamIDEnd <= hexString.count {
-                                let teamIDHex = String(hexString[hexString.index(hexString.startIndex, offsetBy: teamIDStart)..<hexString.index(hexString.startIndex, offsetBy: teamIDEnd)])
-                                
-                                var teamIDBytes = [UInt8]()
-                                var index = teamIDHex.startIndex
-                                while index < teamIDHex.endIndex {
-                                    let nextIndex = teamIDHex.index(index, offsetBy: 2)
-                                    if let byte = UInt8(teamIDHex[index..<nextIndex], radix: 16) {
-                                        teamIDBytes.append(byte)
-                                    }
-                                    index = nextIndex
-                                }
-                                
-                                if let teamID = String(bytes: teamIDBytes, encoding: .utf8) {
-                                    return teamID.trimmingCharacters(in: .controlCharacters.union(.whitespaces))
-                                }
-                            }
-                        }
-                    }
-                    break
-                }
-                searchIndex += 8
-            }
-        }
-        
-        return nil
+    var isTrusted: Bool {
+        trusted != 0
     }
 }
 
@@ -170,14 +72,11 @@ class REGViewModel: ObservableObject {
             }
         }
         
-        // Query the access table
+        // Query the registry table
         let query = """
-        SELECT service, client, client_type, auth_value, auth_reason, auth_version, 
-               csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier, 
-               indirect_object_code_identity, flags, last_modified, pid, pid_version, 
-               boot_uuid, last_reminded
-        FROM access 
-        ORDER BY last_modified DESC
+        SELECT abs_path, first_seen, last_seen, trusted
+        FROM registry 
+        ORDER BY last_seen DESC
         """
         
         var statement: OpaquePointer?
@@ -193,56 +92,16 @@ class REGViewModel: ObservableObject {
         
         // Execute query and collect results
         while sqlite3_step(statement) == SQLITE_ROW {
-            let service = String(cString: sqlite3_column_text(statement, 0))
-            let client = String(cString: sqlite3_column_text(statement, 1))
-            let client_type = Int(sqlite3_column_int(statement, 2))
-            let auth_value = Int(sqlite3_column_int(statement, 3))
-            let auth_reason = Int(sqlite3_column_int(statement, 4))
-            let auth_version = Int(sqlite3_column_int(statement, 5))
-            
-            var csreq: Data?
-            if let blob = sqlite3_column_blob(statement, 6) {
-                let size = Int(sqlite3_column_bytes(statement, 6))
-                csreq = Data(bytes: blob, count: size)
-            }
-            
-            let policy_id = sqlite3_column_type(statement, 7) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 7)) : nil
-            let indirect_object_identifier_type = sqlite3_column_type(statement, 8) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 8)) : nil
-            let indirect_object_identifier = String(cString: sqlite3_column_text(statement, 9))
-            
-            var indirect_object_code_identity: Data?
-            if let blob = sqlite3_column_blob(statement, 10) {
-                let size = Int(sqlite3_column_bytes(statement, 10))
-                indirect_object_code_identity = Data(bytes: blob, count: size)
-            }
-            
-            let flags = sqlite3_column_type(statement, 11) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 11)) : nil
-            let last_modified_int = sqlite3_column_int64(statement, 12)
-            let last_modified = last_modified_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_modified_int)) : nil
-            let pid = sqlite3_column_type(statement, 13) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 13)) : nil
-            let pid_version = sqlite3_column_type(statement, 14) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 14)) : nil
-            let boot_uuid = String(cString: sqlite3_column_text(statement, 15))
-            let last_reminded_int = sqlite3_column_int64(statement, 16)
-            let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
+            let abs_path = String(cString: sqlite3_column_text(statement, 0))
+            let first_seen = Date(timeIntervalSince1970: sqlite3_column_double(statement, 1))
+            let last_seen = Date(timeIntervalSince1970: sqlite3_column_double(statement, 2))
+            let trusted = Int(sqlite3_column_int(statement, 3))
             
             let entry = REGEntry(
-                service: service,
-                client: client,
-                client_type: client_type,
-                auth_value: auth_value,
-                auth_reason: auth_reason,
-                auth_version: auth_version,
-                csreq: csreq,
-                policy_id: policy_id,
-                indirect_object_identifier_type: indirect_object_identifier_type,
-                indirect_object_identifier: indirect_object_identifier,
-                indirect_object_code_identity: indirect_object_code_identity,
-                flags: flags,
-                last_modified: last_modified,
-                pid: pid,
-                pid_version: pid_version,
-                boot_uuid: boot_uuid,
-                last_reminded: last_reminded
+                abs_path: abs_path,
+                first_seen: first_seen,
+                last_seen: last_seen,
+                trusted: trusted
             )
             entries.append(entry)
         }
