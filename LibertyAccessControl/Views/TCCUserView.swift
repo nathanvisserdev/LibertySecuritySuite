@@ -177,45 +177,53 @@ struct TCCUserView: View {
     private func entryView(_ entry: TCCUserEntry) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             // Header - Always visible, clickable
-            Button(action: {
-                if expandedEntries.contains(entry.id) {
-                    expandedEntries.remove(entry.id)
-                } else {
-                    expandedEntries.insert(entry.id)
-                }
-            }) {
-                HStack {
-                    Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
-                        .foregroundColor(.secondary)
-                        .font(.caption)
-                    
-                    Image(systemName: "app.fill")
-                        .foregroundColor(.blue)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("client: \(entry.client)")
-                            .font(.body)
-                            .fontWeight(.medium)
-                        
-                        Text("service: \(entry.service)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+            HStack {
+                Button(action: {
+                    if expandedEntries.contains(entry.id) {
+                        expandedEntries.remove(entry.id)
+                    } else {
+                        expandedEntries.insert(entry.id)
                     }
-                    
-                    Spacer()
-                    
-                    // Show auth value badge
-                    Text(authValueText(entry.auth_value))
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(authValueColor(entry.auth_value))
-                        .cornerRadius(6)
+                }) {
+                    HStack {
+                        Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                        
+                        Image(systemName: "app.fill")
+                            .foregroundColor(.blue)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("client: \(entry.client)")
+                                .font(.body)
+                                .fontWeight(.medium)
+                            
+                            Text("service: \(entry.service)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                    }
                 }
+                .buttonStyle(.plain)
+                
+                // Toggle Switch (read-only, shows permission state)
+                Toggle("", isOn: .constant(entry.auth_value == 2))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .disabled(true)
+                
+                // Show auth value badge
+                Text(authValueText(entry.auth_value))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(authValueColor(entry.auth_value))
+                    .cornerRadius(6)
             }
-            .buttonStyle(.plain)
             
             // Expanded details
             if expandedEntries.contains(entry.id) {
