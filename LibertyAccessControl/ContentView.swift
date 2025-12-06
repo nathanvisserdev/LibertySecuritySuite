@@ -49,6 +49,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    REGView()
+                } label: {
+                    Label("TCC Registry", systemImage: "doc.text.fill")
+                }
+                
+                NavigationLink {
                     NotificationsView()
                 } label: {
                     Label("Notifications", systemImage: "bell.badge.fill")

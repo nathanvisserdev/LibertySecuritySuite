@@ -1,5 +1,5 @@
 //
-//  TCCUserViewModel.swift
+//  REGViewModel.swift (System TCC Registry Database)
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SQLite3
 
-struct TCCUserEntry: Identifiable {
+struct REGEntry: Identifiable {
     let id = UUID()
     let service: String
     let client: String
@@ -119,68 +119,48 @@ struct TCCUserEntry: Identifiable {
     }
 }
 
-class TCCUserViewModel: ObservableObject {
-    @Published var statusMessage: String = "User TCC Database - Ready to query"
+class REGViewModel: ObservableObject {
+    @Published var statusMessage: String = "System TCC Registry Database - Ready to query"
     @Published var errorMessage: String?
-    @Published var entries: [TCCUserEntry] = []
+    @Published var entries: [REGEntry] = []
     @Published var isLoading: Bool = false
     
-    func loadTCCData() {
+    func loadREGData() {
         isLoading = true
-        statusMessage = "Querying user TCC database..."
+        statusMessage = "Loading system TCC registry database..."
         errorMessage = nil
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let results = self?.queryTCCDatabase() ?? []
+            let results = self?.queryREGDatabase() ?? []
             
             DispatchQueue.main.async {
                 self?.entries = results
                 self?.isLoading = false
                 if results.isEmpty {
-                    self?.statusMessage = "No user TCC entries found"
+                    self?.statusMessage = "No registry entries found"
                 } else {
-                    let withTeamID = results.filter { $0.parsedTeamID != nil }.count
-                    let withCSReq = results.filter { $0.csreq != nil }.count
-                    self?.statusMessage = "Loaded \(results.count) user TCC entries (\(withCSReq) with csreq, \(withTeamID) with Team ID)"
+                    self?.statusMessage = "Loaded \(results.count) registry entries"
                 }
             }
         }
     }
     
-    private func queryTCCDatabase() -> [TCCUserEntry] {
-        // Get the real home directory, not the sandboxed one
-        let homeDir = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
-        let userTCCPath = "\(homeDir)/Library/Application Support/com.apple.TCC/TCC.db"
-        
-        print("Attempting to access: \(userTCCPath)")
-        
-        // Kill the user tccd process to release the database lock (no sudo needed for user process)
-        let killTask = Process()
-        killTask.launchPath = "/usr/bin/pkill"
-        killTask.arguments = ["-u", NSUserName(), "tccd"]
-        try? killTask.run()
-        killTask.waitUntilExit()
-        
-        // Wait a moment for the process to fully terminate
-        Thread.sleep(forTimeInterval: 0.5)
+    private func queryREGDatabase() -> [REGEntry] {
+        let regDBPath = "/Library/Application Support/com.apple.TCC/REG.db"
         
         var db: OpaquePointer?
-        var entries: [TCCUserEntry] = []
+        var entries: [REGEntry] = []
         
-        // Try to open with SQLITE_OPEN_READONLY and handle database lock
-        let openResult = sqlite3_open_v2(userTCCPath, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOFOLLOW, nil)
+        let openResult = sqlite3_open_v2(regDBPath, &db, SQLITE_OPEN_READONLY, nil)
         
         guard openResult == SQLITE_OK, db != nil else {
             let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Failed to open database"
             DispatchQueue.main.async { [weak self] in
-                self?.errorMessage = "Failed to open user TCC database at \(userTCCPath): \(errorMsg). Make sure the app has Full Disk Access permission."
+                self?.errorMessage = "Failed to open registry database at \(regDBPath): \(errorMsg). Make sure the app has Full Disk Access permission."
             }
             if db != nil {
                 sqlite3_close(db)
             }
-            
-            // Restart tccd
-            restartTCCD()
             return []
         }
         
@@ -188,12 +168,7 @@ class TCCUserViewModel: ObservableObject {
             if db != nil {
                 sqlite3_close(db)
             }
-            // Restart tccd after closing the database
-            restartTCCD()
         }
-        
-        // Set a busy timeout to wait for locks
-        sqlite3_busy_timeout(db, 5000) // 5 seconds
         
         // Query the access table
         let query = """
@@ -250,7 +225,7 @@ class TCCUserViewModel: ObservableObject {
             let last_reminded_int = sqlite3_column_int64(statement, 16)
             let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
             
-            let entry = TCCUserEntry(
+            let entry = REGEntry(
                 service: service,
                 client: client,
                 client_type: client_type,
@@ -273,13 +248,5 @@ class TCCUserViewModel: ObservableObject {
         }
         
         return entries
-    }
-    
-    private func restartTCCD() {
-        // Restart the user tccd process
-        let restartTask = Process()
-        restartTask.launchPath = "/bin/launchctl"
-        restartTask.arguments = ["kickstart", "-k", "user/\(getuid())/com.apple.tccd"]
-        try? restartTask.run()
     }
 }
