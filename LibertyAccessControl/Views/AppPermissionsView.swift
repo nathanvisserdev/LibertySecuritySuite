@@ -47,7 +47,7 @@ struct AppPermissionsView: View {
                     PhotosPermissionRow(viewModel: $viewModel)
                     RemindersPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
-                    PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    ScreenRecordingPermissionRow(viewModel: $viewModel)
                     SpeechRecognitionPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "SSH", icon: "terminal", status: viewModel.permissionStatuses["SSH"] ?? "Not Checked", isConfigured: false, configNote: "Check if SSH daemon is enabled via system configuration", action: { viewModel.checkSSH() })
                 }
@@ -231,6 +231,59 @@ struct RemindersPermissionRow: View {
             }
             
             Text("⚠️ On macOS 14+: Checking status requires requesting permission")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.leading, 38)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct ScreenRecordingPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case "Authorized", "Full Access":
+            return .green
+        case "Denied", "Restricted":
+            return .red
+        case "Not Determined", "Not Checked":
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "record.circle")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Screen Recording")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+            }
+            
+            Text("⚠️ Returns true or false. Does not indicate if previous request was made.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.leading, 38)
