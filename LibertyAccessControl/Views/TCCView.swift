@@ -11,6 +11,29 @@ struct TCCSystemView: View {
     @StateObject private var viewModel = TCCSystemViewModel()
     @State private var expandedEntries: Set<UUID> = []
     
+    private let serviceCategories = [
+        ("Calendar", ["Calendar"]),
+        ("Contacts", ["Contacts", "AddressBook"]),
+        ("Files & Folders", ["SystemPolicyDesktopFolder", "SystemPolicyDocumentsFolder", "SystemPolicyDownloadsFolder", "SystemPolicyNetworkVolumes", "SystemPolicyRemovableVolumes"]),
+        ("Full Disk Access", ["SystemPolicyAllFiles"]),
+        ("Accessibility", ["Accessibility"]),
+        ("Bluetooth", ["Bluetooth"]),
+        ("Camera", ["Camera"]),
+        ("Focus", ["Focus"]),
+        ("Microphone", ["Microphone"]),
+        ("Photos", ["Photos"]),
+        ("Reminders", ["Reminders"]),
+        ("Screen Recording", ["ScreenCapture"]),
+        ("Location", ["Location"]),
+        ("Speech Recognition", ["SpeechRecognition"])
+    ]
+    
+    private func entriesForCategory(_ keywords: [String]) -> [TCCSystemEntry] {
+        viewModel.entries.filter { entry in
+            keywords.contains(where: { entry.service.contains($0) })
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 20) {
             // Header
@@ -58,126 +81,149 @@ struct TCCSystemView: View {
                     .padding()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(viewModel.entries) { entry in
-                            VStack(alignment: .leading, spacing: 6) {
-                                // Header - Always visible, clickable
-                                Button(action: {
-                                    if expandedEntries.contains(entry.id) {
-                                        expandedEntries.remove(entry.id)
-                                    } else {
-                                        expandedEntries.insert(entry.id)
-                                    }
-                                }) {
+                    LazyVStack(alignment: .leading, spacing: 20) {
+                        ForEach(serviceCategories, id: \.0) { category in
+                            let entries = entriesForCategory(category.1)
+                            
+                            if !entries.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    // Category Header
                                     HStack {
-                                        Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
+                                        Text(category.0)
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                        
+                                        Text("(\(entries.count))")
+                                            .font(.subheadline)
                                             .foregroundColor(.secondary)
-                                            .font(.caption)
-                                        
-                                        Image(systemName: "app.fill")
-                                            .foregroundColor(.blue)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("client: \(entry.client)")
-                                                .font(.body)
-                                                .fontWeight(.medium)
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.top, 8)
+                                    
+                                    // Category Entries
+                                    ForEach(entries) { entry in
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            // Header - Always visible, clickable
+                                            Button(action: {
+                                                if expandedEntries.contains(entry.id) {
+                                                    expandedEntries.remove(entry.id)
+                                                } else {
+                                                    expandedEntries.insert(entry.id)
+                                                }
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
+                                                        .foregroundColor(.secondary)
+                                                        .font(.caption)
+                                                    
+                                                    Image(systemName: "app.fill")
+                                                        .foregroundColor(.blue)
+                                                    
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text("client: \(entry.client)")
+                                                            .font(.body)
+                                                            .fontWeight(.medium)
+                                                        
+                                                        Text("service: \(entry.service)")
+                                                            .font(.caption)
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                    
+                                                    Spacer()
+                                                    
+                                                    // Show auth value badge
+                                                    Text(authValueText(entry.auth_value))
+                                                        .font(.caption)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(.white)
+                                                        .padding(.horizontal, 8)
+                                                        .padding(.vertical, 4)
+                                                        .background(authValueColor(entry.auth_value))
+                                                        .cornerRadius(6)
+                                                }
+                                            }
+                                            .buttonStyle(.plain)
                                             
-                                            Text("service: \(entry.service)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                            // Expanded details
+                                            if expandedEntries.contains(entry.id) {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    fieldRow("client_type", value: "\(entry.client_type)")
+                                                    fieldRow("auth_value", value: "\(entry.auth_value)")
+                                                    fieldRow("auth_reason", value: "\(entry.auth_reason)")
+                                                    fieldRow("auth_version", value: "\(entry.auth_version)")
+                                                    
+                                                    if let csreq = entry.csreq {
+                                                        fieldRow("csreq", value: "\(csreq.count) bytes")
+                                                    } else {
+                                                        fieldRow("csreq", value: "nil")
+                                                    }
+                                                    
+                                                    if let policy_id = entry.policy_id {
+                                                        fieldRow("policy_id", value: "\(policy_id)")
+                                                    } else {
+                                                        fieldRow("policy_id", value: "nil")
+                                                    }
+                                                    
+                                                    if let type = entry.indirect_object_identifier_type {
+                                                        fieldRow("indirect_object_identifier_type", value: "\(type)")
+                                                    } else {
+                                                        fieldRow("indirect_object_identifier_type", value: "nil")
+                                                    }
+                                                    
+                                                    fieldRow("indirect_object_identifier", value: entry.indirect_object_identifier)
+                                                    
+                                                    if let identity = entry.indirect_object_code_identity {
+                                                        fieldRow("indirect_object_code_identity", value: "\(identity.count) bytes")
+                                                    } else {
+                                                        fieldRow("indirect_object_code_identity", value: "nil")
+                                                    }
+                                                    
+                                                    if let flags = entry.flags {
+                                                        fieldRow("flags", value: "\(flags)")
+                                                    } else {
+                                                        fieldRow("flags", value: "nil")
+                                                    }
+                                                    
+                                                    if let last_modified = entry.last_modified {
+                                                        fieldRow("last_modified", value: last_modified.formatted(date: .abbreviated, time: .shortened))
+                                                    } else {
+                                                        fieldRow("last_modified", value: "nil")
+                                                    }
+                                                    
+                                                    if let pid = entry.pid {
+                                                        fieldRow("pid", value: "\(pid)")
+                                                    } else {
+                                                        fieldRow("pid", value: "nil")
+                                                    }
+                                                    
+                                                    if let pid_version = entry.pid_version {
+                                                        fieldRow("pid_version", value: "\(pid_version)")
+                                                    } else {
+                                                        fieldRow("pid_version", value: "nil")
+                                                    }
+                                                    
+                                                    fieldRow("boot_uuid", value: entry.boot_uuid)
+                                                    
+                                                    if let last_reminded = entry.last_reminded {
+                                                        fieldRow("last_reminded", value: last_reminded.formatted(date: .abbreviated, time: .shortened))
+                                                    } else {
+                                                        fieldRow("last_reminded", value: "nil")
+                                                    }
+                                                }
+                                                .padding(.top, 4)
+                                                .padding(.leading, 24)
+                                            }
                                         }
-                                        
-                                        Spacer()
-                                        
-                                        // Show auth value badge
-                                        Text(authValueText(entry.auth_value))
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(authValueColor(entry.auth_value))
-                                            .cornerRadius(6)
+                                        .padding(12)
+                                        .background(Color(nsColor: .controlBackgroundColor))
+                                        .cornerRadius(8)
+                                        .padding(.horizontal)
                                     }
-                                }
-                                .buttonStyle(.plain)
-                                
-                                // Expanded details
-                                if expandedEntries.contains(entry.id) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        fieldRow("client_type", value: "\(entry.client_type)")
-                                        fieldRow("auth_value", value: "\(entry.auth_value)")
-                                        fieldRow("auth_reason", value: "\(entry.auth_reason)")
-                                        fieldRow("auth_version", value: "\(entry.auth_version)")
-                                        
-                                        if let csreq = entry.csreq {
-                                            fieldRow("csreq", value: "\(csreq.count) bytes")
-                                        } else {
-                                            fieldRow("csreq", value: "nil")
-                                        }
-                                        
-                                        if let policy_id = entry.policy_id {
-                                            fieldRow("policy_id", value: "\(policy_id)")
-                                        } else {
-                                            fieldRow("policy_id", value: "nil")
-                                        }
-                                        
-                                        if let type = entry.indirect_object_identifier_type {
-                                            fieldRow("indirect_object_identifier_type", value: "\(type)")
-                                        } else {
-                                            fieldRow("indirect_object_identifier_type", value: "nil")
-                                        }
-                                        
-                                        fieldRow("indirect_object_identifier", value: entry.indirect_object_identifier)
-                                        
-                                        if let identity = entry.indirect_object_code_identity {
-                                            fieldRow("indirect_object_code_identity", value: "\(identity.count) bytes")
-                                        } else {
-                                            fieldRow("indirect_object_code_identity", value: "nil")
-                                        }
-                                        
-                                        if let flags = entry.flags {
-                                            fieldRow("flags", value: "\(flags)")
-                                        } else {
-                                            fieldRow("flags", value: "nil")
-                                        }
-                                        
-                                        if let last_modified = entry.last_modified {
-                                            fieldRow("last_modified", value: last_modified.formatted(date: .abbreviated, time: .shortened))
-                                        } else {
-                                            fieldRow("last_modified", value: "nil")
-                                        }
-                                        
-                                        if let pid = entry.pid {
-                                            fieldRow("pid", value: "\(pid)")
-                                        } else {
-                                            fieldRow("pid", value: "nil")
-                                        }
-                                        
-                                        if let pid_version = entry.pid_version {
-                                            fieldRow("pid_version", value: "\(pid_version)")
-                                        } else {
-                                            fieldRow("pid_version", value: "nil")
-                                        }
-                                        
-                                        fieldRow("boot_uuid", value: entry.boot_uuid)
-                                        
-                                        if let last_reminded = entry.last_reminded {
-                                            fieldRow("last_reminded", value: last_reminded.formatted(date: .abbreviated, time: .shortened))
-                                        } else {
-                                            fieldRow("last_reminded", value: "nil")
-                                        }
-                                    }
-                                    .padding(.top, 4)
-                                    .padding(.leading, 24)
                                 }
                             }
-                            .padding(12)
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(8)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.vertical)
                 }
             }
         }

@@ -127,18 +127,17 @@ class TCCUserViewModel: ObservableObject {
     
     func loadTCCData() {
         isLoading = true
-        statusMessage = "Loading user TCC database..."
+        statusMessage = "Querying user TCC database..."
         errorMessage = nil
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let results = self?.queryTCCDatabase() ?? []
+            let results = self?.queryTCCDatabaseViaScript() ?? []
             
             DispatchQueue.main.async {
                 self?.entries = results
                 self?.isLoading = false
                 if results.isEmpty {
-                    self?.statusMessage = "No TCC entries found"
-                    self?.errorMessage = "Make sure the app has Full Disk Access permission"
+                    self?.statusMessage = "No user TCC entries found"
                 } else {
                     let withTeamID = results.filter { $0.parsedTeamID != nil }.count
                     let withCSReq = results.filter { $0.csreq != nil }.count
@@ -148,78 +147,67 @@ class TCCUserViewModel: ObservableObject {
         }
     }
     
-    private func queryTCCDatabase() -> [TCCUserEntry] {
-        // Use actual home directory path, not sandboxed path
-        let username = NSUserName()
-        let userTCCPath = "/Users/\(username)/Library/Application Support/com.apple.TCC/TCC.db"
-        var db: OpaquePointer?
+    private func queryTCCDatabaseViaScript() -> [TCCUserEntry] {
+        // Try to get script from app bundle, fall back to development path
+        let scriptPath: String
+        if let bundlePath = Bundle.main.path(forResource: "query_tcc", ofType: "sh") {
+            scriptPath = bundlePath
+        } else {
+            scriptPath = "/Users/nathanvisser/Code/test/LibertyAccessControl/query_tcc.sh"
+        }
+        
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: scriptPath)
+        task.arguments = ["user"]
+        
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        task.standardOutput = outputPipe
+        task.standardError = errorPipe
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            
+            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: outputData, encoding: .utf8) ?? ""
+            
+            return parseScriptOutput(output)
+        } catch {
+            DispatchQueue.main.async { [weak self] in
+                self?.errorMessage = "Failed to run query script: \(error.localizedDescription)"
+            }
+            return []
+        }
+    }
+    
+    private func parseScriptOutput(_ output: String) -> [TCCUserEntry] {
         var entries: [TCCUserEntry] = []
         
-        let openResult = sqlite3_open_v2(userTCCPath, &db, SQLITE_OPEN_READONLY, nil)
-        
-        guard openResult == SQLITE_OK else {
-            DispatchQueue.main.async { [weak self] in
-                let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Unknown error"
-                self?.errorMessage = "Failed to open user TCC database: \(errorMsg)"
-            }
-            sqlite3_close(db)
-            return []
-        }
-        
-        defer { sqlite3_close(db) }
-        
-        let query = """
-        SELECT service, client, client_type, auth_value, auth_reason, auth_version, 
-               csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier, 
-               indirect_object_code_identity, flags, last_modified, pid, pid_version, 
-               boot_uuid, last_reminded
-        FROM access 
-        ORDER BY last_modified DESC
-        """
-        
-        var statement: OpaquePointer?
-        
-        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-            DispatchQueue.main.async { [weak self] in
-                self?.errorMessage = "Failed to prepare query"
-            }
-            return []
-        }
-        
-        defer { sqlite3_finalize(statement) }
-        
-        while sqlite3_step(statement) == SQLITE_ROW {
-            let service = String(cString: sqlite3_column_text(statement, 0))
-            let client = String(cString: sqlite3_column_text(statement, 1))
-            let client_type = Int(sqlite3_column_int(statement, 2))
-            let auth_value = Int(sqlite3_column_int(statement, 3))
-            let auth_reason = Int(sqlite3_column_int(statement, 4))
-            let auth_version = Int(sqlite3_column_int(statement, 5))
+        let lines = output.split(separator: "\n")
+        for line in lines {
+            let fields = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
             
-            var csreq: Data?
-            if let blob = sqlite3_column_blob(statement, 6) {
-                let size = Int(sqlite3_column_bytes(statement, 6))
-                csreq = Data(bytes: blob, count: size)
-            }
+            guard fields.count >= 17 else { continue }
             
-            let policy_id = sqlite3_column_type(statement, 7) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 7)) : nil
-            let indirect_object_identifier_type = sqlite3_column_type(statement, 8) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 8)) : nil
-            let indirect_object_identifier = String(cString: sqlite3_column_text(statement, 9))
+            let service = fields[0]
+            let client = fields[1]
+            let client_type = Int(fields[2]) ?? 0
+            let auth_value = Int(fields[3]) ?? 0
+            let auth_reason = Int(fields[4]) ?? 0
+            let auth_version = Int(fields[5]) ?? 0
             
-            var indirect_object_code_identity: Data?
-            if let blob = sqlite3_column_blob(statement, 10) {
-                let size = Int(sqlite3_column_bytes(statement, 10))
-                indirect_object_code_identity = Data(bytes: blob, count: size)
-            }
-            
-            let flags = sqlite3_column_type(statement, 11) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 11)) : nil
-            let last_modified_int = sqlite3_column_int64(statement, 12)
-            let last_modified = last_modified_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_modified_int)) : nil
-            let pid = sqlite3_column_type(statement, 13) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 13)) : nil
-            let pid_version = sqlite3_column_type(statement, 14) != SQLITE_NULL ? Int(sqlite3_column_int(statement, 14)) : nil
-            let boot_uuid = String(cString: sqlite3_column_text(statement, 15))
-            let last_reminded_int = sqlite3_column_int64(statement, 16)
-            let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
+            let csreq: Data? = fields[6].isEmpty ? nil : Data(hex: fields[6])
+            let policy_id: Int? = fields[7].isEmpty ? nil : Int(fields[7])
+            let indirect_object_identifier_type: Int? = fields[8].isEmpty ? nil : Int(fields[8])
+            let indirect_object_identifier = fields[9]
+            let indirect_object_code_identity: Data? = fields[10].isEmpty ? nil : Data(hex: fields[10])
+            let flags: Int? = fields[11].isEmpty ? nil : Int(fields[11])
+            let last_modified: Date? = Int64(fields[12]).flatMap { $0 > 0 ? Date(timeIntervalSince1970: TimeInterval($0)) : nil }
+            let pid: Int? = fields[13].isEmpty ? nil : Int(fields[13])
+            let pid_version: Int? = fields[14].isEmpty ? nil : Int(fields[14])
+            let boot_uuid = fields[15]
+            let last_reminded: Date? = Int64(fields[16]).flatMap { $0 > 0 ? Date(timeIntervalSince1970: TimeInterval($0)) : nil }
             
             let entry = TCCUserEntry(
                 service: service,
@@ -244,5 +232,25 @@ class TCCUserViewModel: ObservableObject {
         }
         
         return entries
+    }
+}
+
+// Extension to convert hex string to Data
+extension Data {
+    init?(hex: String) {
+        let len = hex.count / 2
+        var data = Data(capacity: len)
+        var i = hex.startIndex
+        for _ in 0..<len {
+            let j = hex.index(i, offsetBy: 2)
+            let bytes = hex[i..<j]
+            if var num = UInt8(bytes, radix: 16) {
+                data.append(&num, count: 1)
+            } else {
+                return nil
+            }
+            i = j
+        }
+        self = data
     }
 }

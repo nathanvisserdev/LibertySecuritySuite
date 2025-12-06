@@ -145,8 +145,7 @@ class TCCSystemViewModel: ObservableObject {
                 self?.entries = results
                 self?.isLoading = false
                 if results.isEmpty {
-                    self?.statusMessage = "No TCC entries found"
-                    self?.errorMessage = "Make sure the app has Full Disk Access permission"
+                    self?.statusMessage = "No system TCC entries found"
                 } else {
                     self?.statusMessage = "Loaded \(results.count) system TCC entries"
                 }
@@ -162,16 +161,22 @@ class TCCSystemViewModel: ObservableObject {
         
         let openResult = sqlite3_open_v2(systemTCCPath, &db, SQLITE_OPEN_READONLY, nil)
         
-        guard openResult == SQLITE_OK else {
+        guard openResult == SQLITE_OK, db != nil else {
+            let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Failed to open database"
             DispatchQueue.main.async { [weak self] in
-                let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Unknown error"
-                self?.errorMessage = "Failed to open system TCC database: \(errorMsg)"
+                self?.errorMessage = "Failed to open system TCC database at \(systemTCCPath): \(errorMsg). Make sure the app has Full Disk Access permission."
             }
-            sqlite3_close(db)
+            if db != nil {
+                sqlite3_close(db)
+            }
             return []
         }
         
-        defer { sqlite3_close(db) }
+        defer { 
+            if db != nil {
+                sqlite3_close(db)
+            }
+        }
         
         // Query the access table
         let query = """
