@@ -57,6 +57,16 @@ struct AppPermissionsViewModel {
         permissionStatuses["Microphone"] = statusString(from: status)
     }
     
+    func requestMicrophonePermission(completion: @escaping (String) -> Void) {
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            let status = AVCaptureDevice.authorizationStatus(for: .audio)
+            let statusString = self.statusString(from: status)
+            DispatchQueue.main.async {
+                completion(statusString)
+            }
+        }
+    }
+    
     mutating func checkLocation() {
         let status = CLLocationManager().authorizationStatus
         permissionStatuses["Location"] = locationStatusString(from: status)
@@ -65,6 +75,17 @@ struct AppPermissionsViewModel {
     mutating func checkContacts() {
         let status = CNContactStore.authorizationStatus(for: .contacts)
         permissionStatuses["Contacts"] = contactsStatusString(from: status)
+    }
+    
+    func requestContactsPermission(completion: @escaping (String) -> Void) {
+        let store = CNContactStore()
+        store.requestAccess(for: .contacts) { granted, error in
+            let status = CNContactStore.authorizationStatus(for: .contacts)
+            let statusString = self.contactsStatusString(from: status)
+            DispatchQueue.main.async {
+                completion(statusString)
+            }
+        }
     }
     
     func checkCalendar(completion: @escaping (String) -> Void) {
@@ -116,9 +137,27 @@ struct AppPermissionsViewModel {
         permissionStatuses["Photos"] = photoStatusString(from: status)
     }
     
+    func requestPhotosPermission(completion: @escaping (String) -> Void) {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            let statusString = self.photoStatusString(from: status)
+            DispatchQueue.main.async {
+                completion(statusString)
+            }
+        }
+    }
+    
     mutating func checkSpeechRecognition() {
         let status = SFSpeechRecognizer.authorizationStatus()
         permissionStatuses["Speech Recognition"] = speechStatusString(from: status)
+    }
+    
+    func requestSpeechRecognitionPermission(completion: @escaping (String) -> Void) {
+        SFSpeechRecognizer.requestAuthorization { status in
+            let statusString = self.speechStatusString(from: status)
+            DispatchQueue.main.async {
+                completion(statusString)
+            }
+        }
     }
     
     mutating func checkScreenRecording() {

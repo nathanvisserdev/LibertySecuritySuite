@@ -38,18 +38,17 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
                     CalendarPermissionRow(viewModel: $viewModel)
                     CameraPermissionRow(viewModel: $viewModel)
-                    // Refresh button: Calls CNContactStore.authorizationStatus(for: .contacts) to check current permission status
-                    PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    ContactsPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
                     PermissionStatusRow(title: "Full Disk Access", icon: "internaldrive.fill", status: viewModel.permissionStatuses["Full Disk Access"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to read system-protected files like ~/Library/Safari/History.db", action: { viewModel.checkFullDiskAccess() })
                     PermissionStatusRow(title: "Location", icon: "location.fill", status: viewModel.permissionStatuses["Location"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
-                    PermissionStatusRow(title: "Microphone", icon: "mic.fill", status: viewModel.permissionStatuses["Microphone"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    MicrophonePermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Notifications", icon: "bell.badge.fill", status: viewModel.permissionStatuses["Notifications"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
-                    PermissionStatusRow(title: "Photos", icon: "photo.fill", status: viewModel.permissionStatuses["Photos"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    PhotosPermissionRow(viewModel: $viewModel)
                     RemindersPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
                     PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
-                    PermissionStatusRow(title: "Speech Recognition", icon: "waveform", status: viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    SpeechRecognitionPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "SSH", icon: "terminal", status: viewModel.permissionStatuses["SSH"] ?? "Not Checked", isConfigured: false, configNote: "Check if SSH daemon is enabled via system configuration", action: { viewModel.checkSSH() })
                 }
                 .padding()
@@ -305,6 +304,236 @@ struct PermissionStatusRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.leading, 38)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct ContactsPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Contacts"] ?? "Not Checked"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case _ where status.contains("Authorized"):
+            return .green
+        case _ where status.contains("Denied"), _ where status.contains("Restricted"):
+            return .red
+        case _ where status.contains("Not Determined"), _ where status.contains("Not Checked"):
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Contacts")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                if status.contains("Not Determined") {
+                    Button("Request") {
+                        viewModel.requestContactsPermission { newStatus in
+                            viewModel.permissionStatuses["Contacts"] = newStatus
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct MicrophonePermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Microphone"] ?? "Not Checked"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case _ where status.contains("Authorized"):
+            return .green
+        case _ where status.contains("Denied"), _ where status.contains("Restricted"):
+            return .red
+        case _ where status.contains("Not yet requested"), _ where status.contains("Not Checked"):
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "mic.fill")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Microphone")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                if status.contains("Not yet requested") {
+                    Button("Request") {
+                        viewModel.requestMicrophonePermission { newStatus in
+                            viewModel.permissionStatuses["Microphone"] = newStatus
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct PhotosPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Photos"] ?? "Not Checked"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case _ where status.contains("Authorized"):
+            return .green
+        case _ where status.contains("Denied"), _ where status.contains("Restricted"):
+            return .red
+        case _ where status.contains("Not Determined"), _ where status.contains("Not Checked"):
+            return .orange
+        case _ where status.contains("Limited"):
+            return .yellow
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "photo.fill")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Photos")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                if status.contains("Not Determined") {
+                    Button("Request") {
+                        viewModel.requestPhotosPermission { newStatus in
+                            viewModel.permissionStatuses["Photos"] = newStatus
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(NSColor.controlColor))
+        .cornerRadius(10)
+    }
+}
+
+struct SpeechRecognitionPermissionRow: View {
+    @Binding var viewModel: AppPermissionsViewModel
+    
+    var status: String {
+        viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked"
+    }
+    
+    var statusColor: Color {
+        switch status {
+        case _ where status.contains("Authorized"):
+            return .green
+        case _ where status.contains("Denied"), _ where status.contains("Restricted"):
+            return .red
+        case _ where status.contains("Not Determined"), _ where status.contains("Not Checked"):
+            return .orange
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "waveform")
+                    .font(.title2)
+                    .frame(width: 30)
+                
+                Text("Speech Recognition")
+                    .font(.body)
+                
+                Spacer()
+                
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.2))
+                    .cornerRadius(8)
+                
+                if status.contains("Not Determined") {
+                    Button("Request") {
+                        viewModel.requestSpeechRecognitionPermission { newStatus in
+                            viewModel.permissionStatuses["Speech Recognition"] = newStatus
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
         .padding()
