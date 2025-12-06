@@ -61,9 +61,9 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    CheckPermissionsView()
+                    AppPermissionsView()
                 } label: {
-                    Label("Check Permissions", systemImage: "checkmark.shield.fill")
+                    Label("App Permissions", systemImage: "checkmark.shield.fill")
                 }
                 
                 NavigationLink {
