@@ -34,6 +34,7 @@ struct TCCUserView: View {
         "kTCCServiceSystemPolicyNetworkVolumes": "Files & Folders",
         "kTCCServiceSystemPolicyRemovableVolumes": "Files & Folders",
         "kTCCServiceSystemPolicySysAdminFiles": "Files & Folders",
+        "kTCCServiceSystemPolicyAppBundles": "App Management",
         "kTCCServiceAppleEvents": "Automation",
         "kTCCServiceBluetoothAlways": "Bluetooth",
         "kTCCServiceBluetooth": "Bluetooth",
@@ -48,6 +49,7 @@ struct TCCUserView: View {
         "kTCCServiceFocusStatus": "Focus",
         "kTCCServiceLocalNetwork": "Local Network",
         "kTCCServiceLiverpool": "PassKeys Access",
+        "kTCCServiceWebBrowserPublicKeyCredential": "PassKeys Access",
         "kTCCServiceUbiquity": "App Management",
         "kTCCServiceDeveloperTool": "Developer Tools",
         "kTCCServiceEndpointSecurityClient": "Developer Tools"
@@ -119,14 +121,6 @@ struct TCCUserView: View {
             .buttonStyle(.borderedProminent)
             .disabled(viewModel.isLoading)
             .padding(.horizontal)
-            .onAppear {
-                // Expand all categories by default
-                expandedCategories = Set(sortedCategories)
-            }
-            .onChange(of: viewModel.entries) { _ in
-                // Expand all categories when data loads
-                expandedCategories = Set(sortedCategories)
-            }
             
             Divider()
             
