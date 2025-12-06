@@ -373,43 +373,59 @@ struct PermissionEntryView: View {
     let details: Any
     
     @State private var isExpanded = false
+    @State private var isEnabled: Bool
+    
+    init(client: String, service: String, authValue: Int, source: String, details: Any) {
+        self.client = client
+        self.service = service
+        self.authValue = authValue
+        self.source = source
+        self.details = details
+        self._isEnabled = State(initialValue: authValue == 2)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(action: {
-                isExpanded.toggle()
-            }) {
-                HStack {
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .foregroundColor(.secondary)
-                        .frame(width: 20)
-                    
-                    Text(client)
-                        .fontWeight(.semibold)
-                    
-                    Spacer()
-                    
-                    Text(source)
-                        .font(.caption2)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(source == "System" ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
-                        .cornerRadius(6)
-                    
-                    Text(authValueText(authValue))
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(authValueColor(authValue))
-                        .cornerRadius(6)
+            HStack {
+                Button(action: {
+                    isExpanded.toggle()
+                }) {
+                    HStack {
+                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                            .foregroundColor(.secondary)
+                            .frame(width: 20)
+                        
+                        Text(client)
+                            .fontWeight(.semibold)
+                        
+                        Spacer()
+                    }
                 }
-                .padding(10)
-                .background(Color.gray.opacity(0.08))
-                .cornerRadius(8)
+                .buttonStyle(.plain)
+                
+                Toggle("", isOn: $isEnabled)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                
+                Text(source)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(source == "System" ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
+                    .cornerRadius(6)
+                
+                Text(authValueText(authValue))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(authValueColor(authValue))
+                    .cornerRadius(6)
             }
-            .buttonStyle(.plain)
+            .padding(10)
+            .background(Color.gray.opacity(0.08))
+            .cornerRadius(8)
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 6) {
