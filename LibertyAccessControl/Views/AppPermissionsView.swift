@@ -38,6 +38,7 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
                     CalendarPermissionRow(viewModel: $viewModel)
                     CameraPermissionRow(viewModel: $viewModel)
+                    // Refresh button: Calls CNContactStore.authorizationStatus(for: .contacts) to check current permission status
                     PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkContacts() })
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
                     PermissionStatusRow(title: "Full Disk Access", icon: "internaldrive.fill", status: viewModel.permissionStatuses["Full Disk Access"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to read system-protected files like ~/Library/Safari/History.db", action: { viewModel.checkFullDiskAccess() })
@@ -62,6 +63,9 @@ struct AppPermissionsView: View {
         .background(Color(NSColor.controlBackgroundColor))
         .onAppear {
             viewModel.checkAllPermissions()
+            viewModel.checkNotifications { status in
+                viewModel.permissionStatuses["Notifications"] = status
+            }
         }
     }
 }
@@ -94,9 +98,6 @@ struct CameraPermissionRow: View {
                     .frame(width: 30)
                 
                 Text("Camera")
-                    .font(.body)
-                
-                Text("✅")
                     .font(.body)
                 
                 Spacer()
@@ -168,9 +169,6 @@ struct CalendarPermissionRow: View {
                 Text("Calendar")
                     .font(.body)
                 
-                Text("✅")
-                    .font(.body)
-                
                 Spacer()
                 
                 Text(status)
@@ -229,9 +227,6 @@ struct RemindersPermissionRow: View {
                     .frame(width: 30)
                 
                 Text("Reminders")
-                    .font(.body)
-                
-                Text("✅")
                     .font(.body)
                 
                 Spacer()
@@ -297,8 +292,10 @@ struct PermissionStatusRow: View {
                 Text(title)
                     .font(.body)
                 
-                Text(isConfigured ? "✅" : "❌")
-                    .font(.body)
+                if !isConfigured {
+                    Text("❌")
+                        .font(.body)
+                }
                 
                 Spacer()
                 

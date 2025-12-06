@@ -34,7 +34,7 @@ struct AppPermissionsViewModel {
     
     mutating func checkAccessibility() {
         let trusted = AXIsProcessTrusted()
-        permissionStatuses["Accessibility"] = trusted ? "Authorized" : "Not Authorized"
+        permissionStatuses["Accessibility"] = trusted ? "AXI Authorization Status: Authorized" : "AXI Authorization Status: Not Authorized"
     }
     
     mutating func checkCamera() {
@@ -125,7 +125,7 @@ struct AppPermissionsViewModel {
         // Note: This will prompt the user if not determined
         // For checking only, we can use CGPreflightScreenCaptureAccess
         let hasAccess = CGPreflightScreenCaptureAccess()
-        permissionStatuses["Screen Recording"] = hasAccess ? "Authorized" : "Not Authorized"
+        permissionStatuses["Screen Recording"] = hasAccess ? "CG Authorization Status: Authorized" : "CG Authorization Status: Not Authorized"
     }
     
     func checkNotifications(completion: @escaping (String) -> Void) {
@@ -170,54 +170,54 @@ struct AppPermissionsViewModel {
     // Helper methods to convert status enums to strings
     private func statusString(from status: AVAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not yet requested"
-        case .restricted: return "Restricted"
-        @unknown default: return "Unknown"
+        case .authorized: return "AV Authorization Status: Authorized"
+        case .denied: return "AV Authorization Status: Denied"
+        case .notDetermined: return "AV Authorization Status: Not yet requested"
+        case .restricted: return "AV Authorization Status: Restricted"
+        @unknown default: return "AV Authorization Status: Unknown"
         }
     }
     
     private func locationStatusString(from status: CLAuthorizationStatus) -> String {
         switch status {
-        case .authorizedAlways: return "Authorized Always"
-        case .authorizedWhenInUse: return "Authorized When In Use"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
-        case .restricted: return "Restricted"
-        @unknown default: return "Unknown"
+        case .authorizedAlways: return "CL Authorization Status: Authorized Always"
+        case .authorizedWhenInUse: return "CL Authorization Status: Authorized When In Use"
+        case .denied: return "CL Authorization Status: Denied"
+        case .notDetermined: return "CL Authorization Status: Not Determined"
+        case .restricted: return "CL Authorization Status: Restricted"
+        @unknown default: return "CL Authorization Status: Unknown"
         }
     }
     
     private func photoStatusString(from status: PHAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
-        case .restricted: return "Restricted"
-        case .limited: return "Limited"
-        @unknown default: return "Unknown"
+        case .authorized: return "PH Authorization Status: Authorized"
+        case .denied: return "PH Authorization Status: Denied"
+        case .notDetermined: return "PH Authorization Status: Not Determined"
+        case .restricted: return "PH Authorization Status: Restricted"
+        case .limited: return "PH Authorization Status: Limited"
+        @unknown default: return "PH Authorization Status: Unknown"
         }
     }
     
     private func notificationStatusString(from status: UNAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
-        case .provisional: return "Provisional"
-        case .ephemeral: return "Ephemeral"
-        @unknown default: return "Unknown"
+        case .authorized: return "UN Authorization Status: Authorized"
+        case .denied: return "UN Authorization Status: Denied"
+        case .notDetermined: return "UN Authorization Status: Not Determined"
+        case .provisional: return "UN Authorization Status: Provisional"
+        case .ephemeral: return "UN Authorization Status: Ephemeral"
+        @unknown default: return "UN Authorization Status: Unknown"
         }
     }
     
     private func contactsStatusString(from status: CNAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
-        case .restricted: return "Restricted"
-        @unknown default: return "Unknown"
+        case .authorized: return "CN Authorization Status: Authorized"
+        case .denied: return "CN Authorization Status: Denied"
+        case .notDetermined: return "CN Authorization Status: Not Determined"
+        case .restricted: return "CN Authorization Status: Restricted"
+        @unknown default: return "CN Authorization Status: Unknown"
         }
     }
     
@@ -235,11 +235,11 @@ struct AppPermissionsViewModel {
     
     private func speechStatusString(from status: SFSpeechRecognizerAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "Authorized"
-        case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
-        case .restricted: return "Restricted"
-        @unknown default: return "Unknown"
+        case .authorized: return "SF Authorization Status: Authorized"
+        case .denied: return "SF Authorization Status: Denied"
+        case .notDetermined: return "SF Authorization Status: Not Determined"
+        case .restricted: return "SF Authorization Status: Restricted"
+        @unknown default: return "SF Authorization Status: Unknown"
         }
     }
 }
