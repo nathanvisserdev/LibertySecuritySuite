@@ -55,6 +55,18 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    RequestPermissionsView()
+                } label: {
+                    Label("Request Permissions", systemImage: "hand.raised.fill")
+                }
+                
+                NavigationLink {
+                    CheckPermissionsView()
+                } label: {
+                    Label("Check Permissions", systemImage: "checkmark.shield.fill")
+                }
+                
+                NavigationLink {
                     REGView()
                 } label: {
                     Label("TCC Registry", systemImage: "doc.text.fill")
