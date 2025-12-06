@@ -16,22 +16,37 @@ class PermissionsViewModel: ObservableObject {
     @Published var userEntries: [TCCUserEntry] = []
     @Published var isLoading: Bool = false
     
+    private let systemDBService: TCCDatabaseService
+    private let userDBService: TCCDatabaseService
+    
+    init(systemDBService: TCCDatabaseService, userDBService: TCCDatabaseService) {
+        self.systemDBService = systemDBService
+        self.userDBService = userDBService
+    }
+    
     func loadTCCData() {
         isLoading = true
         statusMessage = "Loading all permissions..."
         errorMessage = nil
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let systemResults = self?.querySystemTCCDatabase() ?? []
-            let userResults = self?.queryUserTCCDatabase() ?? []
+            guard let self = self else { return }
+            
+            let systemResults = self.systemDBService.queryEntries().compactMap { $0 as? TCCSystemEntry }
+            let userResults = self.userDBService.queryEntries().compactMap { $0 as? TCCUserEntry }
             
             DispatchQueue.main.async {
-                self?.systemEntries = systemResults
-                self?.userEntries = userResults
-                self?.isLoading = false
-                self?.statusMessage = "Loaded \(systemResults.count) system entries and \(userResults.count) user entries"
+                self.systemEntries = systemResults
+                self.userEntries = userResults
+                self.isLoading = false
+                self.statusMessage = "Loaded \(systemResults.count) system entries and \(userResults.count) user entries"
             }
         }
+    }
+    
+    func updatePermission(service: String, client: String, authValue: Int, isSystemDB: Bool, completion: @escaping (Bool, String) -> Void) {
+        let dbService = isSystemDB ? systemDBService : userDBService
+        dbService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
     }
     
     private func querySystemTCCDatabase() -> [TCCSystemEntry] {

@@ -8,8 +8,14 @@
 import SwiftUI
 
 struct PermissionsView: View {
-    @StateObject private var viewModel = PermissionsViewModel()
+    @StateObject private var viewModel: PermissionsViewModel
     @State private var expandedCategories: Set<String> = []
+    
+    init() {
+        let systemService = SystemTCCDatabaseService()
+        let userService = UserTCCDatabaseService()
+        _viewModel = StateObject(wrappedValue: PermissionsViewModel(systemDBService: systemService, userDBService: userService))
+    }
     
     // Service name to category mapping
     private let serviceCategories: [String: String] = [
@@ -183,7 +189,8 @@ struct PermissionsView: View {
                                         } else {
                                             expandedCategories.insert("system-\(category)")
                                         }
-                                    }
+                                    },
+                                    viewModel: viewModel
                                 )
                             }
                         }
@@ -217,7 +224,8 @@ struct PermissionsView: View {
                                         } else {
                                             expandedCategories.insert("user-\(category)")
                                         }
-                                    }
+                                    },
+                                    viewModel: viewModel
                                 )
                             }
                         }
@@ -244,6 +252,7 @@ struct SystemCategorySection: View {
     let allowedCount: Int
     let totalCount: Int
     let toggleExpansion: () -> Void
+    let viewModel: PermissionsViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -290,7 +299,8 @@ struct SystemCategorySection: View {
                             service: entry.service,
                             authValue: entry.auth_value,
                             source: "System",
-                            details: entry
+                            details: entry,
+                            viewModel: viewModel
                         )
                     }
                 }
@@ -308,6 +318,7 @@ struct UserCategorySection: View {
     let allowedCount: Int
     let totalCount: Int
     let toggleExpansion: () -> Void
+    let viewModel: PermissionsViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -354,7 +365,8 @@ struct UserCategorySection: View {
                             service: entry.service,
                             authValue: entry.auth_value,
                             source: "User",
-                            details: entry
+                            details: entry,
+                            viewModel: viewModel
                         )
                     }
                 }
@@ -371,16 +383,18 @@ struct PermissionEntryView: View {
     let authValue: Int
     let source: String
     let details: Any
+    let viewModel: PermissionsViewModel
     
     @State private var isExpanded = false
     @State private var isEnabled: Bool
     
-    init(client: String, service: String, authValue: Int, source: String, details: Any) {
+    init(client: String, service: String, authValue: Int, source: String, details: Any, viewModel: PermissionsViewModel) {
         self.client = client
         self.service = service
         self.authValue = authValue
         self.source = source
         self.details = details
+        self.viewModel = viewModel
         self._isEnabled = State(initialValue: authValue == 2)
     }
     
@@ -406,6 +420,25 @@ struct PermissionEntryView: View {
                 Toggle("", isOn: $isEnabled)
                     .toggleStyle(.switch)
                     .labelsHidden()
+                    .onChange(of: isEnabled) { oldValue, newValue in
+                        let newAuthValue = newValue ? 2 : 0
+                        let isSystemDB = (source == "System")
+                        
+                        viewModel.updatePermission(
+                            service: service,
+                            client: client,
+                            authValue: newAuthValue,
+                            isSystemDB: isSystemDB
+                        ) { success, message in
+                            if success {
+                                print("✅ \(message)")
+                            } else {
+                                print("❌ \(message)")
+                                // Revert toggle on failure
+                                isEnabled = oldValue
+                            }
+                        }
+                    }
                 
                 Text(source)
                     .font(.caption2)
