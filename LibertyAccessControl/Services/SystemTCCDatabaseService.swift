@@ -14,6 +14,24 @@ class SystemTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
         super.init(dbPath: "/Library/Application Support/com.apple.TCC/TCC.db")
     }
     
+    private func stopTCCD() {
+        // Kill tccd with sudo to ensure it dies and can't write cache back
+        let script = "do shell script \"killall -9 tccd\" with administrator privileges"
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        process.arguments = ["-e", script]
+        
+        do {
+            try process.run()
+            // User clicks OK after entering credentials here
+            process.waitUntilExit()
+            print("💀 tccd killed with admin privileges (exit code: \(process.terminationStatus))")
+            Thread.sleep(forTimeInterval: 1.0)
+        } catch {
+            print("❌ Failed to kill tccd: \(error)")
+        }
+    }
+    
     func queryEntries() -> [Any] {
         guard let db = openDatabase() else {
             return []

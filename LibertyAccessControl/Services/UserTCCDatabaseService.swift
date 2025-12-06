@@ -14,6 +14,22 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
         super.init(dbPath: "\(NSHomeDirectory())/Library/Application Support/com.apple.TCC/TCC.db")
     }
     
+    private func stopTCCD() {
+        // Kill tccd without admin privileges for user database
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
+        process.arguments = ["-9", "tccd"]
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            print("💀 tccd killed (user-level, exit code: \(process.terminationStatus))")
+            Thread.sleep(forTimeInterval: 1.0)
+        } catch {
+            print("❌ Failed to kill tccd: \(error)")
+        }
+    }
+    
     func queryEntries() -> [Any] {
         guard let db = openDatabase() else {
             return []
@@ -103,14 +119,11 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             
             print("🔍 UPDATE REQUEST: service='\(service)', client='\(client)', authValue=\(authValue)")
             
-            // Stop tccd before modifying the database
-            self.stopTCCD()
-            
+            // User database doesn't require stopping tccd - just open and modify directly
             guard let db = self.openDatabase(readOnly: false) else {
                 DispatchQueue.main.async {
                     completion(false, "Failed to open user TCC database")
                 }
-                self.restartTCCD()
                 return
             }
             
@@ -118,7 +131,6 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             var beginStmt: OpaquePointer?
             guard sqlite3_prepare_v2(db, "BEGIN TRANSACTION", -1, &beginStmt, nil) == SQLITE_OK else {
                 sqlite3_close(db)
-                self.restartTCCD()
                 DispatchQueue.main.async {
                     completion(false, "Failed to begin transaction")
                 }
@@ -141,7 +153,6 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             guard sqlite3_prepare_v2(db, updateQuery, -1, &statement, nil) == SQLITE_OK else {
                 let errorMsg = String(cString: sqlite3_errmsg(db))
                 sqlite3_close(db)
-                self.restartTCCD()
                 DispatchQueue.main.async {
                     completion(false, "Failed to prepare statement: \(errorMsg)")
                 }
@@ -194,14 +205,10 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
                         sqlite3_close(verifyDb)
                     }
                     
-                    // Restart tccd to reload the database
-                    self.restartTCCD()
-                    
                     DispatchQueue.main.async {
                         completion(true, "Successfully updated user permission to \(authValue == 2 ? "ALLOWED" : "DENIED")")
                     }
                 } else {
-                    self.restartTCCD()
                     DispatchQueue.main.async {
                         completion(false, "No matching entry found to update (service: \(service), client: \(client))")
                     }
@@ -212,7 +219,6 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
                 sqlite3_finalize(statement)
                 statement = nil
                 sqlite3_close(db)
-                self.restartTCCD()
                 DispatchQueue.main.async {
                     completion(false, "Failed to update: \(errorMsg)")
                 }
@@ -253,7 +259,6 @@ class UserTCCDatabaseService: BaseTCCDatabaseService, TCCDatabaseService {
             let stepResult = sqlite3_step(statement)
             
             if stepResult == SQLITE_DONE {
-                self.restartTCCD()
                 DispatchQueue.main.async {
                     completion(true, "Successfully deleted user permission")
                 }

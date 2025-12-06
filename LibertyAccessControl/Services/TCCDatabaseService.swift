@@ -21,23 +21,6 @@ class BaseTCCDatabaseService {
         self.dbPath = dbPath
     }
     
-    func stopTCCD() {
-        // Kill tccd with sudo to ensure it dies and can't write cache back
-        let script = "do shell script \"killall -9 tccd\" with administrator privileges"
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            print("💀 tccd killed with admin privileges (exit code: \(process.terminationStatus))")
-            Thread.sleep(forTimeInterval: 1.0)
-        } catch {
-            print("❌ Failed to kill tccd: \(error)")
-        }
-    }
-    
     func restartTCCD() {
         // tccd will auto-restart via launchd, just wait for it
         print("⏳ Waiting for tccd to auto-restart...")
