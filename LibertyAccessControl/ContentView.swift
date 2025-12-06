@@ -37,9 +37,15 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    TCCView()
+                    TCCUserView()
                 } label: {
-                    Label("TCC", systemImage: "checkmark.seal.fill")
+                    Label("TCC User", systemImage: "person.circle")
+                }
+                
+                NavigationLink {
+                    TCCSystemView()
+                } label: {
+                    Label("TCC System", systemImage: "server.rack")
                 }
                 
                 NavigationLink {

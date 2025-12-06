@@ -1,5 +1,5 @@
 //
-//  TCCView.swift (System TCC Database)
+//  TCCUserView.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -7,19 +7,19 @@
 
 import SwiftUI
 
-struct TCCSystemView: View {
-    @StateObject private var viewModel = TCCSystemViewModel()
+struct TCCUserView: View {
+    @StateObject private var viewModel = TCCUserViewModel()
     @State private var expandedEntries: Set<UUID> = []
     
     var body: some View {
         VStack(spacing: 20) {
             // Header
             VStack(spacing: 10) {
-                Image(systemName: "server.rack")
+                Image(systemName: "person.circle")
                     .font(.system(size: 60))
                     .foregroundColor(.blue)
                 
-                Text("System TCC Database")
+                Text("User TCC Database")
                     .font(.title)
                     .fontWeight(.bold)
                 
@@ -42,7 +42,7 @@ struct TCCSystemView: View {
             Button(action: {
                 viewModel.loadTCCData()
             }) {
-                Label(viewModel.isLoading ? "Loading..." : "Load System TCC Permissions", systemImage: "arrow.clockwise")
+                Label(viewModel.isLoading ? "Loading..." : "Load User TCC Permissions", systemImage: "arrow.clockwise")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -112,6 +112,14 @@ struct TCCSystemView: View {
                                         
                                         if let csreq = entry.csreq {
                                             fieldRow("csreq", value: "\(csreq.count) bytes")
+                                            
+                                            if let bundleID = entry.parsedBundleID {
+                                                fieldRow("  ↳ parsed_bundle_id", value: bundleID)
+                                            }
+                                            
+                                            if let teamID = entry.parsedTeamID {
+                                                fieldRow("  ↳ parsed_team_id", value: teamID)
+                                            }
                                         } else {
                                             fieldRow("csreq", value: "nil")
                                         }
@@ -182,7 +190,7 @@ struct TCCSystemView: View {
             }
         }
         .padding()
-        .navigationTitle("TCC System")
+        .navigationTitle("TCC User")
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
@@ -217,19 +225,10 @@ struct TCCSystemView: View {
         default: return .gray
         }
     }
-    
-    private func colorForStatus(_ status: String) -> Color {
-        switch status {
-        case "red": return .red
-        case "green": return .green
-        case "orange": return .orange
-        default: return .gray
-        }
-    }
 }
 
 #Preview {
     NavigationStack {
-        TCCSystemView()
+        TCCUserView()
     }
 }

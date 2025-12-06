@@ -1,5 +1,5 @@
 //
-//  TCCViewModel.swift (System TCC Database)
+//  TCCUserViewModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SQLite3
 
-struct TCCSystemEntry: Identifiable {
+struct TCCUserEntry: Identifiable {
     let id = UUID()
     let service: String
     let client: String
@@ -41,17 +41,15 @@ struct TCCSystemEntry: Identifiable {
     }
     
     // Parse bundle identifier from CSReq blob
-    // CSReq format: FADE0C00 [size] ... [identifier op] [length] [string]
     private static func parseCSReqBundleID(from data: Data) -> String? {
         guard data.count >= 8 else { return nil }
         
-        // Look for identifier operator (0x00000002) followed by length and string
-        var offset = 8 // Skip magic (FADE0C00) and size
+        var offset = 8
         
         while offset + 8 < data.count {
             let op = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }.bigEndian
             
-            if op == 0x00000002 { // Identifier operator
+            if op == 0x00000002 {
                 offset += 4
                 let length = Int(data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }.bigEndian)
                 offset += 4
@@ -71,24 +69,19 @@ struct TCCSystemEntry: Identifiable {
     }
     
     // Parse Team ID from CSReq blob
-    // Team ID appears after subject.OU field (0x0000000B)
     private static func parseCSReqTeamID(from data: Data) -> String? {
         guard data.count >= 8 else { return nil }
         
-        // Convert to hex string for pattern matching
         let hexString = data.map { String(format: "%02X", $0) }.joined()
         
-        // Look for "subject.OU" in hex: 7375626A6563742E4F55
         if let range = hexString.range(of: "7375626A6563742E4F55") {
             let startIndex = hexString.distance(from: hexString.startIndex, to: range.upperBound)
             
-            // Skip padding (usually 00000000) and find operator 0x00000001
             var searchIndex = startIndex
             while searchIndex + 16 < hexString.count {
                 let chunk = String(hexString[hexString.index(hexString.startIndex, offsetBy: searchIndex)..<hexString.index(hexString.startIndex, offsetBy: searchIndex + 8)])
                 
                 if chunk == "00000001" {
-                    // Found match operator, next 4 bytes is length
                     let lengthStart = searchIndex + 8
                     if lengthStart + 8 <= hexString.count {
                         let lengthHex = String(hexString[hexString.index(hexString.startIndex, offsetBy: lengthStart)..<hexString.index(hexString.startIndex, offsetBy: lengthStart + 8)])
@@ -100,7 +93,6 @@ struct TCCSystemEntry: Identifiable {
                             if teamIDEnd <= hexString.count {
                                 let teamIDHex = String(hexString[hexString.index(hexString.startIndex, offsetBy: teamIDStart)..<hexString.index(hexString.startIndex, offsetBy: teamIDEnd)])
                                 
-                                // Convert hex to string
                                 var teamIDBytes = [UInt8]()
                                 var index = teamIDHex.startIndex
                                 while index < teamIDHex.endIndex {
@@ -127,15 +119,15 @@ struct TCCSystemEntry: Identifiable {
     }
 }
 
-class TCCSystemViewModel: ObservableObject {
-    @Published var statusMessage: String = "System TCC Database - Ready to query"
+class TCCUserViewModel: ObservableObject {
+    @Published var statusMessage: String = "User TCC Database - Ready to query"
     @Published var errorMessage: String?
-    @Published var entries: [TCCSystemEntry] = []
+    @Published var entries: [TCCUserEntry] = []
     @Published var isLoading: Bool = false
     
     func loadTCCData() {
         isLoading = true
-        statusMessage = "Loading system TCC database..."
+        statusMessage = "Loading user TCC database..."
         errorMessage = nil
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -148,24 +140,27 @@ class TCCSystemViewModel: ObservableObject {
                     self?.statusMessage = "No TCC entries found"
                     self?.errorMessage = "Make sure the app has Full Disk Access permission"
                 } else {
-                    self?.statusMessage = "Loaded \(results.count) system TCC entries"
+                    let withTeamID = results.filter { $0.parsedTeamID != nil }.count
+                    let withCSReq = results.filter { $0.csreq != nil }.count
+                    self?.statusMessage = "Loaded \(results.count) user TCC entries (\(withCSReq) with csreq, \(withTeamID) with Team ID)"
                 }
             }
         }
     }
     
-    private func queryTCCDatabase() -> [TCCSystemEntry] {
-        let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
-        
+    private func queryTCCDatabase() -> [TCCUserEntry] {
+        // Use actual home directory path, not sandboxed path
+        let username = NSUserName()
+        let userTCCPath = "/Users/\(username)/Library/Application Support/com.apple.TCC/TCC.db"
         var db: OpaquePointer?
-        var entries: [TCCSystemEntry] = []
+        var entries: [TCCUserEntry] = []
         
-        let openResult = sqlite3_open_v2(systemTCCPath, &db, SQLITE_OPEN_READONLY, nil)
+        let openResult = sqlite3_open_v2(userTCCPath, &db, SQLITE_OPEN_READONLY, nil)
         
         guard openResult == SQLITE_OK else {
             DispatchQueue.main.async { [weak self] in
                 let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Unknown error"
-                self?.errorMessage = "Failed to open system TCC database: \(errorMsg)"
+                self?.errorMessage = "Failed to open user TCC database: \(errorMsg)"
             }
             sqlite3_close(db)
             return []
@@ -173,7 +168,6 @@ class TCCSystemViewModel: ObservableObject {
         
         defer { sqlite3_close(db) }
         
-        // Query the access table
         let query = """
         SELECT service, client, client_type, auth_value, auth_reason, auth_version, 
                csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier, 
@@ -194,7 +188,6 @@ class TCCSystemViewModel: ObservableObject {
         
         defer { sqlite3_finalize(statement) }
         
-        // Execute query and collect results
         while sqlite3_step(statement) == SQLITE_ROW {
             let service = String(cString: sqlite3_column_text(statement, 0))
             let client = String(cString: sqlite3_column_text(statement, 1))
@@ -228,7 +221,7 @@ class TCCSystemViewModel: ObservableObject {
             let last_reminded_int = sqlite3_column_int64(statement, 16)
             let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
             
-            let entry = TCCSystemEntry(
+            let entry = TCCUserEntry(
                 service: service,
                 client: client,
                 client_type: client_type,
