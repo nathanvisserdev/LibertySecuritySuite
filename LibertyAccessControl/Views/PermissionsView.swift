@@ -224,24 +224,57 @@ struct CategorySection: View {
             // Entries
             if isExpanded {
                 LazyVStack(spacing: 8) {
-                    ForEach(entries.indices, id: \.self) { index in
-                        let item = entries[index]
-                        if let systemEntry = item.entry as? TCCSystemEntry {
-                            PermissionEntryView(
-                                client: systemEntry.client,
-                                service: systemEntry.service,
-                                authValue: systemEntry.auth_value,
-                                source: item.source,
-                                details: systemEntry
-                            )
-                        } else if let userEntry = item.entry as? TCCUserEntry {
-                            PermissionEntryView(
-                                client: userEntry.client,
-                                service: userEntry.service,
-                                authValue: userEntry.auth_value,
-                                source: item.source,
-                                details: userEntry
-                            )
+                    // Group entries by source
+                    let systemEntries = entries.filter { $0.source == "System" }
+                    let userEntries = entries.filter { $0.source == "User" }
+                    
+                    // System Permissions Section
+                    if !systemEntries.isEmpty {
+                        HStack {
+                            Text("System Permissions")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                        .padding(.top, 4)
+                        
+                        ForEach(systemEntries.indices, id: \.self) { index in
+                            let item = systemEntries[index]
+                            if let systemEntry = item.entry as? TCCSystemEntry {
+                                PermissionEntryView(
+                                    client: systemEntry.client,
+                                    service: systemEntry.service,
+                                    authValue: systemEntry.auth_value,
+                                    source: item.source,
+                                    details: systemEntry
+                                )
+                            }
+                        }
+                    }
+                    
+                    // User Permissions Section
+                    if !userEntries.isEmpty {
+                        HStack {
+                            Text("User Permissions")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.blue)
+                            Spacer()
+                        }
+                        .padding(.top, systemEntries.isEmpty ? 4 : 12)
+                        
+                        ForEach(userEntries.indices, id: \.self) { index in
+                            let item = userEntries[index]
+                            if let userEntry = item.entry as? TCCUserEntry {
+                                PermissionEntryView(
+                                    client: userEntry.client,
+                                    service: userEntry.service,
+                                    authValue: userEntry.auth_value,
+                                    source: item.source,
+                                    details: userEntry
+                                )
+                            }
                         }
                     }
                 }
