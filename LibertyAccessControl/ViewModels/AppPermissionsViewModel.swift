@@ -42,6 +42,16 @@ struct AppPermissionsViewModel {
         permissionStatuses["Camera"] = statusString(from: status)
     }
     
+    func requestCameraPermission(completion: @escaping (String) -> Void) {
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            let statusString = self.statusString(from: status)
+            DispatchQueue.main.async {
+                completion(statusString)
+            }
+        }
+    }
+    
     mutating func checkMicrophone() {
         let status = AVCaptureDevice.authorizationStatus(for: .audio)
         permissionStatuses["Microphone"] = statusString(from: status)
@@ -162,7 +172,7 @@ struct AppPermissionsViewModel {
         switch status {
         case .authorized: return "Authorized"
         case .denied: return "Denied"
-        case .notDetermined: return "Not Determined"
+        case .notDetermined: return "Not yet requested"
         case .restricted: return "Restricted"
         @unknown default: return "Unknown"
         }
