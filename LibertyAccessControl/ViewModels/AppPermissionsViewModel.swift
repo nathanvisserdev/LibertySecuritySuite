@@ -167,6 +167,15 @@ struct AppPermissionsViewModel {
         permissionStatuses["Screen Recording"] = hasAccess ? "CG Authorization Status: Authorized" : "CG Authorization Status: Not Authorized"
     }
     
+    func requestScreenRecordingPermission(completion: @escaping (String) -> Void) {
+        // CGRequestScreenCaptureAccess will prompt the user for screen recording permission
+        let hasAccess = CGRequestScreenCaptureAccess()
+        let statusString = hasAccess ? "CG Authorization Status: Authorized" : "CG Authorization Status: Not Authorized"
+        DispatchQueue.main.async {
+            completion(statusString)
+        }
+    }
+    
     func checkNotifications(completion: @escaping (String) -> Void) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             let status = self.notificationStatusString(from: settings.authorizationStatus)

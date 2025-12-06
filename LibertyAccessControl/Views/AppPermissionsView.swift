@@ -281,6 +281,15 @@ struct ScreenRecordingPermissionRow: View {
                     .padding(.vertical, 5)
                     .background(statusColor.opacity(0.2))
                     .cornerRadius(8)
+                
+                if status.contains("Not Authorized") {
+                    Button("Request") {
+                        viewModel.requestScreenRecordingPermission { newStatus in
+                            viewModel.permissionStatuses["Screen Recording"] = newStatus
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
             
             Text("⚠️ Returns true or false. Does not indicate if previous request was made.")
