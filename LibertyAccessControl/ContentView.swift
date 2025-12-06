@@ -49,6 +49,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    PermissionsView()
+                } label: {
+                    Label("Permissions", systemImage: "checklist")
+                }
+                
+                NavigationLink {
                     REGView()
                 } label: {
                     Label("TCC Registry", systemImage: "doc.text.fill")
