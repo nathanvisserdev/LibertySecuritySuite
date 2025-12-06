@@ -35,6 +35,7 @@ struct TCCUserView: View {
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                        .textSelection(.enabled)
                 }
             }
             
