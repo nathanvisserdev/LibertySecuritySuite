@@ -32,28 +32,24 @@ struct AppPermissionsView: View {
             
             ScrollView {
                 VStack(spacing: 15) {
-                    PermissionStatusRow(title: "Accessibility", icon: "accessibility", status: viewModel.permissionStatuses["Accessibility"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkAccessibility() })
+                    PermissionStatusRow(title: "Accessibility", icon: "accessibility", status: viewModel.permissionStatuses["Accessibility"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     PermissionStatusRow(title: "Allow Remote File Access", icon: "arrow.down.doc", status: viewModel.permissionStatuses["Allow Remote File Access"] ?? "Not Checked", isConfigured: false, configNote: "Check via system preferences or MDM queries", action: { viewModel.checkRemoteFileAccess() })
                     PermissionStatusRow(title: "Apple Events", icon: "applescript", status: viewModel.permissionStatuses["Apple Events"] ?? "Not Checked", isConfigured: false, configNote: "Query TCC database or attempt to send Apple Events to target app", action: { viewModel.checkAppleEvents() })
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
                     CalendarPermissionRow(viewModel: $viewModel)
                     CameraPermissionRow(viewModel: $viewModel)
                     // Refresh button: Calls CNContactStore.authorizationStatus(for: .contacts) to check current permission status
-                    PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkContacts() })
+                    PermissionStatusRow(title: "Contacts", icon: "person.crop.circle.fill", status: viewModel.permissionStatuses["Contacts"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
                     PermissionStatusRow(title: "Full Disk Access", icon: "internaldrive.fill", status: viewModel.permissionStatuses["Full Disk Access"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to read system-protected files like ~/Library/Safari/History.db", action: { viewModel.checkFullDiskAccess() })
-                    PermissionStatusRow(title: "Location", icon: "location.fill", status: viewModel.permissionStatuses["Location"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkLocation() })
-                    PermissionStatusRow(title: "Microphone", icon: "mic.fill", status: viewModel.permissionStatuses["Microphone"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkMicrophone() })
-                    PermissionStatusRow(title: "Notifications", icon: "bell.badge.fill", status: viewModel.permissionStatuses["Notifications"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { 
-                        viewModel.checkNotifications { status in
-                            viewModel.permissionStatuses["Notifications"] = status
-                        }
-                    })
-                    PermissionStatusRow(title: "Photos", icon: "photo.fill", status: viewModel.permissionStatuses["Photos"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkPhotos() })
+                    PermissionStatusRow(title: "Location", icon: "location.fill", status: viewModel.permissionStatuses["Location"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    PermissionStatusRow(title: "Microphone", icon: "mic.fill", status: viewModel.permissionStatuses["Microphone"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    PermissionStatusRow(title: "Notifications", icon: "bell.badge.fill", status: viewModel.permissionStatuses["Notifications"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    PermissionStatusRow(title: "Photos", icon: "photo.fill", status: viewModel.permissionStatuses["Photos"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     RemindersPermissionRow(viewModel: $viewModel)
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
-                    PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkScreenRecording() })
-                    PermissionStatusRow(title: "Speech Recognition", icon: "waveform", status: viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked", isConfigured: true, configNote: nil, action: { viewModel.checkSpeechRecognition() })
+                    PermissionStatusRow(title: "Screen Recording", icon: "record.circle", status: viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
+                    PermissionStatusRow(title: "Speech Recognition", icon: "waveform", status: viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     PermissionStatusRow(title: "SSH", icon: "terminal", status: viewModel.permissionStatuses["SSH"] ?? "Not Checked", isConfigured: false, configNote: "Check if SSH daemon is enabled via system configuration", action: { viewModel.checkSSH() })
                 }
                 .padding()
@@ -79,11 +75,11 @@ struct CameraPermissionRow: View {
     
     var statusColor: Color {
         switch status {
-        case "Authorized":
+        case _ where status.contains("Authorized"):
             return .green
-        case "Denied", "Restricted":
+        case _ where status.contains("Denied"), _ where status.contains("Restricted"):
             return .red
-        case "Not yet requested", "Not Checked":
+        case _ where status.contains("Not yet requested"), _ where status.contains("Not Checked"), _ where status.contains("Not Determined"):
             return .orange
         default:
             return .gray
@@ -110,25 +106,13 @@ struct CameraPermissionRow: View {
                     .background(statusColor.opacity(0.2))
                     .cornerRadius(8)
                 
-                if status == "Not yet requested" {
+                if status == "AV Authorization Status: Not yet requested" {
                     Button("Request") {
                         viewModel.requestCameraPermission { newStatus in
                             viewModel.permissionStatuses["Camera"] = newStatus
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    
-                    Button(action: { viewModel.checkCamera() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.accentColor)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Button(action: { viewModel.checkCamera() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.accentColor)
-                    }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -265,7 +249,7 @@ struct PermissionStatusRow: View {
     let status: String
     let isConfigured: Bool
     let configNote: String?
-    let action: () -> Void
+    let action: (() -> Void)?
     
     var statusColor: Color {
         switch status {
@@ -307,11 +291,13 @@ struct PermissionStatusRow: View {
                     .background(statusColor.opacity(0.2))
                     .cornerRadius(8)
                 
-                Button(action: action) {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundColor(.accentColor)
+                if let action = action {
+                    Button(action: action) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             
             if let note = configNote {
