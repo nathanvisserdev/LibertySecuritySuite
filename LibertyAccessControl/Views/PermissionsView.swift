@@ -140,19 +140,6 @@ struct PermissionsView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                         .textSelection(.enabled)
-                } else if !viewModel.systemEntries.isEmpty || !viewModel.userEntries.isEmpty {
-                    HStack(spacing: 16) {
-                        if !viewModel.systemEntries.isEmpty {
-                            Text("\(totalSystemAllowed)/\(viewModel.systemEntries.count) system entries")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        if !viewModel.userEntries.isEmpty {
-                            Text("\(totalUserAllowed)/\(viewModel.userEntries.count) user entries")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
                 }
             }
             .padding(.top, 8)
@@ -175,6 +162,9 @@ struct PermissionsView: View {
                                 Text("System Permissions")
                                     .font(.title2)
                                     .fontWeight(.bold)
+                                Text("\(totalSystemAllowed) allowed / \(viewModel.systemEntries.count) total")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                                 Spacer()
                             }
                             .padding(.horizontal)
@@ -206,6 +196,9 @@ struct PermissionsView: View {
                                 Text("User Permissions")
                                     .font(.title2)
                                     .fontWeight(.bold)
+                                Text("\(totalUserAllowed) allowed / \(viewModel.userEntries.count) total")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                                 Spacer()
                             }
                             .padding(.horizontal)
