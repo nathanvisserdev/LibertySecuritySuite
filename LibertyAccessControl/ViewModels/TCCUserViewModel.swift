@@ -69,8 +69,6 @@ class TCCUserViewModel: ObservableObject {
                 sqlite3_close(db)
             }
             
-            // Restart tccd
-            restartTCCD()
             return []
         }
         
@@ -78,8 +76,6 @@ class TCCUserViewModel: ObservableObject {
             if db != nil {
                 sqlite3_close(db)
             }
-            // Restart tccd after closing the database
-            restartTCCD()
         }
         
         // Set a busy timeout to wait for locks
@@ -163,13 +159,5 @@ class TCCUserViewModel: ObservableObject {
         }
         
         return entries
-    }
-    
-    private func restartTCCD() {
-        // Restart the user tccd process
-        let restartTask = Process()
-        restartTask.launchPath = "/bin/launchctl"
-        restartTask.arguments = ["kickstart", "-k", "user/\(getuid())/com.apple.tccd"]
-        try? restartTask.run()
     }
 }

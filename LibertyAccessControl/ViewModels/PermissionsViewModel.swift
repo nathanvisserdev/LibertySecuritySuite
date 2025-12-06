@@ -171,7 +171,6 @@ class PermissionsViewModel: ObservableObject {
             if db != nil {
                 sqlite3_close(db)
             }
-            restartTCCD()
             return []
         }
         
@@ -179,7 +178,6 @@ class PermissionsViewModel: ObservableObject {
             if db != nil {
                 sqlite3_close(db)
             }
-            restartTCCD()
         }
         
         sqlite3_busy_timeout(db, 5000)
@@ -257,12 +255,5 @@ class PermissionsViewModel: ObservableObject {
         }
         
         return entries
-    }
-    
-    private func restartTCCD() {
-        let restartTask = Process()
-        restartTask.launchPath = "/bin/launchctl"
-        restartTask.arguments = ["kickstart", "-k", "user/\(getuid())/com.apple.tccd"]
-        try? restartTask.run()
     }
 }

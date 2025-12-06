@@ -21,13 +21,6 @@ class BaseTCCDatabaseService {
         self.dbPath = dbPath
     }
     
-    func restartTCCD() {
-        // tccd will auto-restart via launchd, just wait for it
-        print("⏳ Waiting for tccd to auto-restart...")
-        Thread.sleep(forTimeInterval: 2.0)
-        print("✅ tccd should be restarted now")
-    }
-    
     func openDatabase(readOnly: Bool = true) -> OpaquePointer? {
         var db: OpaquePointer?
         let flags = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE

@@ -28,7 +28,6 @@ extension SystemTCCDatabaseService {
             let success = self.executeDelete(db: db, service: service, client: client)
             
             if success {
-                self.restartTCCD()
                 DispatchQueue.main.async {
                     completion(true, "Successfully deleted system permission")
                 }
@@ -68,22 +67,6 @@ extension SystemTCCDatabaseService {
             let errorMsg = String(cString: sqlite3_errmsg(db))
             print("❌ Failed to delete: \(errorMsg)")
             return false
-        }
-    }
-    
-    /// Restart the system tccd process
-    private func restartTCCD() {
-        let script = "do shell script \"launchctl kickstart -k system/com.apple.tccd\" with administrator privileges"
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            print("♻️ tccd restarted (exit code: \(process.terminationStatus))")
-        } catch {
-            print("❌ Failed to restart tccd: \(error)")
         }
     }
 }
