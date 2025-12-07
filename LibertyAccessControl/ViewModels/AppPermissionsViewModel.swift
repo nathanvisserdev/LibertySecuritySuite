@@ -214,6 +214,7 @@ struct AppPermissionsViewModel {
         
         // Query system TCC database for App Management permissions
         let entries = systemTCCDBService.queryEntries()
+        // Breakpoint here: po entries (to inspect the return result)
         
         // Look for entries with service kTCCServiceSystemPolicyAppBundles and this app's bundle ID
         let appManagementEntries = entries.compactMap { $0 as? TCCSystemEntry }.filter {
