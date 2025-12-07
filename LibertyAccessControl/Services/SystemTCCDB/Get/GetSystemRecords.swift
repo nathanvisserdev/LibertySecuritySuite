@@ -12,7 +12,7 @@ import SQLite3
 extension SystemTCCDBService {
     
     /// Query entries from the system TCC database
-    func queryEntries() -> [Any] {
+    func queryEntries() -> [TCCSystemEntry] {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
         
         var db: OpaquePointer?
