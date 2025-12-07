@@ -203,6 +203,10 @@ struct AppPermissionsViewModel {
         permissionStatuses["Apple Events"] = "Check System Preferences"
     }
     
+    mutating func checkAppManagement() {
+        permissionStatuses["App Management"] = "Check System Preferences"
+    }
+    
     mutating func checkRemoteFileAccess() {
         permissionStatuses["Allow Remote File Access"] = "Check System Preferences"
     }

@@ -35,6 +35,7 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Accessibility", icon: "accessibility", status: viewModel.permissionStatuses["Accessibility"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     PermissionStatusRow(title: "Allow Remote File Access", icon: "arrow.down.doc", status: viewModel.permissionStatuses["Allow Remote File Access"] ?? "Not Checked", isConfigured: false, configNote: "Check via system preferences or MDM queries", action: { viewModel.checkRemoteFileAccess() })
                     PermissionStatusRow(title: "Apple Events", icon: "applescript", status: viewModel.permissionStatuses["Apple Events"] ?? "Not Checked", isConfigured: false, configNote: "Query TCC database or attempt to send Apple Events to target app", action: { viewModel.checkAppleEvents() })
+                    PermissionStatusRow(title: "App Management", icon: "app.badge", status: viewModel.permissionStatuses["App Management"] ?? "Not Checked", isConfigured: false, configNote: "Check TCC database for App Management permissions", action: { viewModel.checkAppManagement() })
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
                     CalendarPermissionRow(viewModel: $viewModel)
                     CameraPermissionRow(viewModel: $viewModel)
