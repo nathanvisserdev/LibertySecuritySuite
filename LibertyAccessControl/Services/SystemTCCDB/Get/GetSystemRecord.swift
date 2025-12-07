@@ -10,18 +10,10 @@ import SQLite3
 
 // MARK: - System TCC Database Specific Query Functions
 extension SystemTCCDBService {
-    
-    /// Query a specific entry from the system TCC database based on service and client
-    /// - Parameters:
-    ///   - service: The TCC service name (e.g., "kTCCServiceSystemPolicyAppBundles")
-    ///   - client: The client bundle identifier (e.g., "Liberty.LibertyAccessControl")
-    /// - Returns: The matching TCCSystemEntry, or nil if not found
     func queryEntry(service: String, client: String) -> TCCSystemEntry? {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
-        
         var db: OpaquePointer?
         let openResult = sqlite3_open_v2(systemTCCPath, &db, SQLITE_OPEN_READONLY, nil)
-        
         guard openResult == SQLITE_OK, db != nil else {
             let errorMsg = db != nil ? String(cString: sqlite3_errmsg(db)) : "Failed to open database"
             print("Failed to open system TCC database: \(errorMsg)")
@@ -30,7 +22,6 @@ extension SystemTCCDBService {
             }
             return nil
         }
-        
         defer {
             sqlite3_close(db)
         }
@@ -39,9 +30,6 @@ extension SystemTCCDBService {
         return entry
     }
     
-    // MARK: - Private Helper Methods
-    
-    /// Execute a specific SQL query and parse result into a TCCSystemEntry object
     private func executeSpecificQueryAndParseEntry(db: OpaquePointer?, service: String, client: String) -> TCCSystemEntry? {
         let query = """
         SELECT service, client, client_type, auth_value, auth_reason, auth_version,
@@ -77,7 +65,6 @@ extension SystemTCCDBService {
         return nil
     }
     
-    /// Parse a single row from the SQLite statement into a TCCSystemEntry
     private func parseEntry(from statement: OpaquePointer?) -> TCCSystemEntry? {
         guard let statement = statement else { return nil }
         

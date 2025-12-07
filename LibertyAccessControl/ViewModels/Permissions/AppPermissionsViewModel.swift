@@ -216,7 +216,6 @@ class AppPermissionsViewModel: ObservableObject {
         }
         
         print("Bundle ID:", bundleIdentifier)
-        
         if let entry = systemTCCDBService.queryEntry(service: "kTCCServiceSystemPolicyAppBundles", client: bundleIdentifier) {
             // auth_value: 0 = denied, 2 = allowed
             let status = entry.auth_value == 2 ? "Authorized" : "Denied"
