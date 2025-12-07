@@ -132,6 +132,10 @@ struct DashboardView: View {
         VStack(spacing: 12) {
             // Stats Row
             VStack(spacing: 8) {
+                Text("Permissions")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
                 Text("Total: \(viewModel.systemEntries.count + viewModel.userEntries.count), Allowed: \(totalSystemAllowed + totalUserAllowed)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -239,14 +243,6 @@ struct DashboardView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack(spacing: 8) {
-                    Text("Permissions")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Text("|")
-                        .foregroundColor(.secondary)
-                        .font(.title2)
-                    
                     Button("All") {
                         // Functionality to be added
                     }
