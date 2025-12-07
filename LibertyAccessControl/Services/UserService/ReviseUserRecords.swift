@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 // MARK: - User TCC Database Update Functions
-extension UserTCCDBService {
+extension UserService {
     
     /// Update a permission in the user TCC database
     func updatePermission(service: String, client: String, authValue: Int, completion: @escaping (Bool, String) -> Void) {

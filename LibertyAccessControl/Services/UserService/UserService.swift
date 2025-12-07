@@ -10,7 +10,7 @@ import SQLite3
 
 let userDBPath = "\(NSHomeDirectory())/Library/Application Support/com.apple.TCC/TCC.db"
 
-class UserTCCDBService {
+class UserService {
     
     func openDatabase(readOnly: Bool = true) -> OpaquePointer? {
         var db: OpaquePointer?

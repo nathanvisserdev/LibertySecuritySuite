@@ -13,7 +13,7 @@ struct PermissionsView: View {
     
     init() {
         let systemService = SystemService()
-        let userService = UserTCCDBService()
+        let userService = UserService()
         _viewModel = StateObject(wrappedValue: PermissionsViewModel(systemDBService: systemService, userDBService: userService))
     }
     

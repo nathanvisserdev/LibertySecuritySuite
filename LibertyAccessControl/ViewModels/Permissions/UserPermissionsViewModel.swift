@@ -16,8 +16,8 @@ class UserPermissionsViewModel: ObservableObject {
     
     private let model: UserPermissionsModel
     
-    init(userTCCDBService: UserTCCDBService = UserTCCDBService()) {
-        self.model = UserPermissionsModel(userTCCDBService: userTCCDBService)
+    init(UserService: UserService = UserService()) {
+        self.model = UserPermissionsModel(UserService: UserService)
     }
     
     func loadTCCData() {

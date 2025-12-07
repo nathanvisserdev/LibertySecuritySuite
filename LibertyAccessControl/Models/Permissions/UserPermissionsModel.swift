@@ -9,14 +9,14 @@ import Foundation
 
 class UserPermissionsModel {
     
-    private let userTCCDBService: UserTCCDBService
+    private let UserService: UserService
     
-    init(userTCCDBService: UserTCCDBService) {
-        self.userTCCDBService = userTCCDBService
+    init(UserService: UserService) {
+        self.UserService = UserService
     }
     
     func queryTCCDatabase() -> (entries: [TCCUserEntry], error: String?) {
-        let result = userTCCDBService.queryEntries()
+        let result = UserService.queryEntries()
         
         guard let entries = result as? [TCCUserEntry] else {
             return ([], "Failed to query user TCC database. Make sure the app has Full Disk Access permission.")
