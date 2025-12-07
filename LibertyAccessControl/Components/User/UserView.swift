@@ -134,9 +134,9 @@ struct UserView: View {
                                     }
                                 }) {
                                     HStack {
-                                        Image(systemName: expandedCategories.contains(category) ? "chevron.down.circle.fill" : "chevron.right.circle.fill")
-                                            .foregroundColor(.blue)
-                                            .font(.title3)
+                                        Image(systemName: expandedCategories.contains(category) ? "chevron.down" : "chevron.right")
+                                            .foregroundColor(.secondary)
+                                            .frame(width: 20)
                                         
                                         Text(category)
                                             .font(.headline)
@@ -144,15 +144,24 @@ struct UserView: View {
                                         
                                         Spacer()
                                         
-                                        Text("\(allowedCount(for: category)) allowed / \(totalCount(for: category)) total")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(Color.secondary.opacity(0.2))
-                                            .cornerRadius(6)
+                                        // Count badge
+                                        HStack(spacing: 4) {
+                                            Text("\(allowedCount(for: category))")
+                                                .foregroundColor(.green)
+                                            Text("/")
+                                                .foregroundColor(.secondary)
+                                            Text("\(totalCount(for: category))")
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(8)
                                     }
-                                    .padding(.vertical, 8)
+                                    .padding(12)
+                                    .background(Color.cyan.opacity(0.1))
+                                    .cornerRadius(10)
                                 }
                                 .buttonStyle(.plain)
                                 
@@ -161,11 +170,9 @@ struct UserView: View {
                                     ForEach(groupedEntries[category] ?? []) { entry in
                                         entryView(entry)
                                     }
+                                    .padding(.leading, 32)
                                 }
                             }
-                            .padding(12)
-                            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                            .cornerRadius(10)
                         }
                     }
                     .padding(.horizontal)
@@ -182,7 +189,7 @@ struct UserView: View {
     
     @ViewBuilder
     private func entryView(_ entry: TCCUserEntry) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             // Header - Always visible, clickable
             HStack {
                 Button(action: {
@@ -195,17 +202,13 @@ struct UserView: View {
                     HStack {
                         Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
                             .foregroundColor(.secondary)
-                            .font(.caption)
-                        
-                        Image(systemName: "app.fill")
-                            .foregroundColor(.blue)
+                            .frame(width: 20)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("client: \(entry.client)")
-                                .font(.body)
-                                .fontWeight(.medium)
+                            Text("Client: \(entry.client)")
+                                .fontWeight(.semibold)
                             
-                            Text("service: \(entry.service)")
+                            Text("Service: \(entry.service)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -231,10 +234,15 @@ struct UserView: View {
                     .background(authValueColor(entry.auth_value))
                     .cornerRadius(6)
             }
+            .padding(10)
+            .background(Color.gray.opacity(0.08))
+            .cornerRadius(8)
             
             // Expanded details
             if expandedEntries.contains(entry.id) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
+                    fieldRow("service", value: entry.service)
+                    fieldRow("client", value: entry.client)
                     fieldRow("client_type", value: "\(entry.client_type)")
                     fieldRow("auth_value", value: "\(entry.auth_value)")
                     fieldRow("auth_reason", value: "\(entry.auth_reason)")
@@ -306,28 +314,23 @@ struct UserView: View {
                         fieldRow("last_reminded", value: "nil")
                     }
                 }
-                .padding(.top, 4)
-                .padding(.leading, 24)
+                .padding(10)
+                .background(Color.gray.opacity(0.04))
+                .cornerRadius(8)
+                .padding(.leading, 20)
             }
         }
-        .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(8)
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top) {
             Text(label + ":")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(width: 200, alignment: .trailing)
-            
+                .fontWeight(.semibold)
+                .frame(width: 140, alignment: .leading)
             Text(value)
-                .font(.caption)
-                .foregroundColor(.primary)
-            
-            Spacer()
+                .textSelection(.enabled)
         }
+        .font(.caption)
     }
     
     private func authValueText(_ value: Int) -> String {
