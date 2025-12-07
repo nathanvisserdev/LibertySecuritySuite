@@ -19,10 +19,10 @@ import ApplicationServices
 
 class AppPermissionsViewModel: ObservableObject {
     @Published var permissionStatuses: [String: String] = [:]
-    let systemTCCDBService: SystemTCCDBService
+    let SystemService: SystemService
     
-    init(systemTCCDBService: SystemTCCDBService) {
-        self.systemTCCDBService = systemTCCDBService
+    init(SystemService: SystemService) {
+        self.SystemService = SystemService
     }
     
     func checkAllPermissions() {
@@ -216,7 +216,7 @@ class AppPermissionsViewModel: ObservableObject {
         }
         
         print("Bundle ID:", bundleIdentifier)
-        if let entry = systemTCCDBService.queryEntry(service: "kTCCServiceSystemPolicyAppBundles", client: bundleIdentifier) {
+        if let entry = SystemService.queryEntry(service: "kTCCServiceSystemPolicyAppBundles", client: bundleIdentifier) {
             // auth_value: 0 = denied, 2 = allowed
             let status = entry.auth_value == 2 ? "Authorized" : "Denied"
             permissionStatuses["App Management"] = status

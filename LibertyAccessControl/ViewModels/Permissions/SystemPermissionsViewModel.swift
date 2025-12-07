@@ -16,7 +16,7 @@ class SystemPermissionsViewModel: ObservableObject {
     
     private let model: SystemPermissionsModel
     
-    init(model: SystemPermissionsModel = SystemPermissionsModel()) {
+    init(model: SystemPermissionsModel = SystemPermissionsModel(SystemService: SystemService())) {
         self.model = model
     }
     

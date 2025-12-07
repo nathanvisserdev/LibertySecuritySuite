@@ -8,14 +8,14 @@
 import Foundation
 
 class SystemPermissionsModel {
-    private let systemTCCDBService: SystemTCCDBService
+    private let SystemService: SystemService
     
-    init(systemTCCDBService: SystemTCCDBService = SystemTCCDBService()) {
-        self.systemTCCDBService = systemTCCDBService
+    init(SystemService: SystemService) {
+        self.SystemService = SystemService
     }
     
     func queryTCCDatabase() -> (entries: [TCCSystemEntry], error: String?) {
-        let entries = systemTCCDBService.queryEntries()
+        let entries = SystemService.queryEntries()
         
         if entries.isEmpty {
             return ([], "Failed to query system TCC database. Make sure the app has Full Disk Access permission.")

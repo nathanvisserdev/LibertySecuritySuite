@@ -15,11 +15,11 @@ class PermissionsViewModel: ObservableObject {
     @Published var userEntries: [TCCUserEntry] = []
     @Published var isLoading: Bool = false
     
-    private let systemDBService: SystemTCCDBService
+    private let systemDBService: SystemService
     private let userDBService: UserTCCDBService
     private let permissionsModel: PermissionsModel
     
-    init(systemDBService: SystemTCCDBService, userDBService: UserTCCDBService, permissionsModel: PermissionsModel = PermissionsModel()) {
+    init(systemDBService: SystemService, userDBService: UserTCCDBService, permissionsModel: PermissionsModel = PermissionsModel()) {
         self.systemDBService = systemDBService
         self.userDBService = userDBService
         self.permissionsModel = permissionsModel

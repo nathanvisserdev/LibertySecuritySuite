@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 // MARK: - System TCC Database Specific Query Functions
-extension SystemTCCDBService {
+extension SystemService {
     func queryEntry(service: String, client: String) -> TCCSystemEntry? {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
         var db: OpaquePointer?

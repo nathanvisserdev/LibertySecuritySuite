@@ -11,8 +11,8 @@ struct AppPermissionsView: View {
     @StateObject private var viewModel: AppPermissionsViewModel
     
     init() {
-        let systemService = SystemTCCDBService()
-        _viewModel = StateObject(wrappedValue: AppPermissionsViewModel(systemTCCDBService: systemService))
+        let systemService = SystemService()
+        _viewModel = StateObject(wrappedValue: AppPermissionsViewModel(SystemService: systemService))
     }
     
     var body: some View {
