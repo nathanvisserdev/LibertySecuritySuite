@@ -206,22 +206,14 @@ struct AppPermissionsViewModel {
     }
     
     mutating func checkAppManagement() {
-        // Get the bundle identifier of this app
         guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
             permissionStatuses["App Management"] = "Unable to determine bundle ID"
             return
         }
         
-        // Query system TCC database for App Management permissions
-        let entries = systemTCCDBService.queryEntries()
-        // Breakpoint here: po entries (to inspect the return result)
+        print("Bundle ID:", bundleIdentifier)
         
-        // Look for entries with service kTCCServiceSystemPolicyAppBundles and this app's bundle ID
-        let appManagementEntries = entries.compactMap { $0 as? TCCSystemEntry }.filter {
-            $0.service == "kTCCServiceSystemPolicyAppBundles" && $0.client == bundleIdentifier
-        }
-        
-        if let entry = appManagementEntries.first {
+        if let entry = systemTCCDBService.queryEntry(service: "kTCCServiceSystemPolicyAppBundles", client: bundleIdentifier) {
             // auth_value: 0 = denied, 2 = allowed
             let status = entry.auth_value == 2 ? "Authorized" : "Denied"
             permissionStatuses["App Management"] = status
