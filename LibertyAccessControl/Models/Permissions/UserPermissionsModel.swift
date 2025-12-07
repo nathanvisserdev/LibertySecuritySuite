@@ -1,5 +1,5 @@
 //
-//  UserPermissionsModel.swift
+//  UserModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-07.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class UserPermissionsModel {
+class UserModel {
     
     private let UserService: UserService
     

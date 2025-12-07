@@ -1,5 +1,5 @@
 //
-//  SystemPermissionsView.swift
+//  SystemView.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct SystemPermissionsView: View {
-    @StateObject private var viewModel = SystemPermissionsViewModel()
+struct SystemView: View {
+    @StateObject private var viewModel = SystemViewModel()
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
     
@@ -296,6 +296,6 @@ struct SystemPermissionsView: View {
 
 #Preview {
     NavigationStack {
-        SystemPermissionsView()
+        SystemView()
     }
 }

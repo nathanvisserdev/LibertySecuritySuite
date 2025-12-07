@@ -1,5 +1,5 @@
 //
-//  UserPermissionsViewModel.swift
+//  SystemViewModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -8,21 +8,21 @@
 import Foundation
 import Combine
 
-class UserPermissionsViewModel: ObservableObject {
-    @Published var statusMessage: String = "User TCC Database - Ready to query"
+class SystemViewModel: ObservableObject {
+    @Published var statusMessage: String = "System TCC Database - Ready to query"
     @Published var errorMessage: String?
-    @Published var entries: [TCCUserEntry] = []
+    @Published var entries: [TCCSystemEntry] = []
     @Published var isLoading: Bool = false
     
-    private let model: UserPermissionsModel
+    private let model: SystemPermissionsModel
     
-    init(UserService: UserService = UserService()) {
-        self.model = UserPermissionsModel(UserService: UserService)
+    init(model: SystemPermissionsModel = SystemPermissionsModel(SystemService: SystemService())) {
+        self.model = model
     }
     
     func loadTCCData() {
         isLoading = true
-        statusMessage = "Querying user TCC database..."
+        statusMessage = "Loading system TCC database..."
         errorMessage = nil
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -39,11 +39,9 @@ class UserPermissionsViewModel: ObservableObject {
                 }
                 
                 if result.entries.isEmpty {
-                    self.statusMessage = "No user TCC entries found"
+                    self.statusMessage = "No system TCC entries found"
                 } else {
-                    let withTeamID = result.entries.filter { $0.parsedTeamID != nil }.count
-                    let withCSReq = result.entries.filter { $0.csreq != nil }.count
-                    self.statusMessage = "Loaded \(result.entries.count) user TCC entries (\(withCSReq) with csreq, \(withTeamID) with Team ID)"
+                    self.statusMessage = "Loaded \(result.entries.count) system TCC entries"
                 }
             }
         }

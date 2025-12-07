@@ -37,13 +37,13 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    UserPermissionsView()
+                    UserView()
                 } label: {
                     Label("User Permissions", systemImage: "person.circle")
                 }
                 
                 NavigationLink {
-                    SystemPermissionsView()
+                    SystemView()
                 } label: {
                     Label("System Permissions", systemImage: "server.rack")
                 }
