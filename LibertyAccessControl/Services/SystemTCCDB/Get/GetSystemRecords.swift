@@ -67,7 +67,6 @@ extension SystemTCCDBService {
         return entries
     }
     
-    /// Parse a single row from the query result into a TCCSystemEntry
     private func parseRowIntoEntry(statement: OpaquePointer?) -> TCCSystemEntry? {
         guard let statement = statement else { return nil }
         

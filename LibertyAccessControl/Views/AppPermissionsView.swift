@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct AppPermissionsView: View {
-    @State private var viewModel: AppPermissionsViewModel
+    @StateObject private var viewModel: AppPermissionsViewModel
     
     init() {
         let systemService = SystemTCCDBService()
-        _viewModel = State(initialValue: AppPermissionsViewModel(systemTCCDBService: systemService))
+        _viewModel = StateObject(wrappedValue: AppPermissionsViewModel(systemTCCDBService: systemService))
     }
     
     var body: some View {
@@ -40,21 +40,21 @@ struct AppPermissionsView: View {
                     PermissionStatusRow(title: "Accessibility", icon: "accessibility", status: viewModel.permissionStatuses["Accessibility"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
                     PermissionStatusRow(title: "Allow Remote File Access", icon: "arrow.down.doc", status: viewModel.permissionStatuses["Allow Remote File Access"] ?? "Not Checked", isConfigured: false, configNote: "Check via system preferences or MDM queries", action: { viewModel.checkRemoteFileAccess() })
                     PermissionStatusRow(title: "Apple Events", icon: "applescript", status: viewModel.permissionStatuses["Apple Events"] ?? "Not Checked", isConfigured: false, configNote: "Query TCC database or attempt to send Apple Events to target app", action: { viewModel.checkAppleEvents() })
-                    AppManagementPermissionRow(viewModel: $viewModel)
+                    AppManagementPermissionRow(viewModel: viewModel)
                     PermissionStatusRow(title: "Bluetooth", icon: "dot.radiowaves.left.and.right", status: viewModel.permissionStatuses["Bluetooth"] ?? "Not Checked", isConfigured: false, configNote: "Initialize CBCentralManager and check its authorization status", action: { viewModel.checkBluetooth() })
-                    CalendarPermissionRow(viewModel: $viewModel)
-                    CameraPermissionRow(viewModel: $viewModel)
-                    ContactsPermissionRow(viewModel: $viewModel)
+                    CalendarPermissionRow(viewModel: viewModel)
+                    CameraPermissionRow(viewModel: viewModel)
+                    ContactsPermissionRow(viewModel: viewModel)
                     PermissionStatusRow(title: "Files and Folders", icon: "folder.fill", status: viewModel.permissionStatuses["Files and Folders"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to access specific protected directories (Documents, Downloads, etc.)", action: { viewModel.checkFilesAndFolders() })
                     PermissionStatusRow(title: "Full Disk Access", icon: "internaldrive.fill", status: viewModel.permissionStatuses["Full Disk Access"] ?? "Not Checked", isConfigured: false, configNote: "Attempt to read system-protected files like ~/Library/Safari/History.db", action: { viewModel.checkFullDiskAccess() })
                     PermissionStatusRow(title: "Location", icon: "location.fill", status: viewModel.permissionStatuses["Location"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
-                    MicrophonePermissionRow(viewModel: $viewModel)
+                    MicrophonePermissionRow(viewModel: viewModel)
                     PermissionStatusRow(title: "Notifications", icon: "bell.badge.fill", status: viewModel.permissionStatuses["Notifications"] ?? "Not Checked", isConfigured: true, configNote: nil, action: nil)
-                    PhotosPermissionRow(viewModel: $viewModel)
-                    RemindersPermissionRow(viewModel: $viewModel)
+                    PhotosPermissionRow(viewModel: viewModel)
+                    RemindersPermissionRow(viewModel: viewModel)
                     PermissionStatusRow(title: "Remote Management", icon: "network", status: viewModel.permissionStatuses["Remote Management"] ?? "Not Checked", isConfigured: false, configNote: "Check MDM enrollment status via IOKit or profiles", action: { viewModel.checkRemoteManagement() })
-                    ScreenRecordingPermissionRow(viewModel: $viewModel)
-                    SpeechRecognitionPermissionRow(viewModel: $viewModel)
+                    ScreenRecordingPermissionRow(viewModel: viewModel)
+                    SpeechRecognitionPermissionRow(viewModel: viewModel)
                     PermissionStatusRow(title: "SSH", icon: "terminal", status: viewModel.permissionStatuses["SSH"] ?? "Not Checked", isConfigured: false, configNote: "Check if SSH daemon is enabled via system configuration", action: { viewModel.checkSSH() })
                 }
                 .padding()
@@ -72,7 +72,7 @@ struct AppPermissionsView: View {
 }
 
 struct CameraPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Camera"] ?? "Not Checked"
@@ -129,7 +129,7 @@ struct CameraPermissionRow: View {
 }
 
 struct CalendarPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Calendar"] ?? "Indeterminable upon request"
@@ -189,7 +189,7 @@ struct CalendarPermissionRow: View {
 }
 
 struct RemindersPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Reminders"] ?? "Indeterminable upon request"
@@ -249,7 +249,7 @@ struct RemindersPermissionRow: View {
 }
 
 struct ScreenRecordingPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked"
@@ -382,7 +382,7 @@ struct PermissionStatusRow: View {
 }
 
 struct ContactsPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Contacts"] ?? "Not Checked"
@@ -439,7 +439,7 @@ struct ContactsPermissionRow: View {
 }
 
 struct MicrophonePermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Microphone"] ?? "Not Checked"
@@ -496,7 +496,7 @@ struct MicrophonePermissionRow: View {
 }
 
 struct PhotosPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Photos"] ?? "Not Checked"
@@ -555,7 +555,7 @@ struct PhotosPermissionRow: View {
 }
 
 struct SpeechRecognitionPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked"
@@ -612,7 +612,7 @@ struct SpeechRecognitionPermissionRow: View {
 }
 
 struct AppManagementPermissionRow: View {
-    @Binding var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsViewModel
     
     var status: String {
         viewModel.permissionStatuses["App Management"] ?? "Not Checked"

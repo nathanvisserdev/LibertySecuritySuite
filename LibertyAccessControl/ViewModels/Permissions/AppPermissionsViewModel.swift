@@ -17,11 +17,15 @@ import Speech
 import UserNotifications
 import ApplicationServices
 
-struct AppPermissionsViewModel {
-    var permissionStatuses: [String: String] = [:]
+class AppPermissionsViewModel: ObservableObject {
+    @Published var permissionStatuses: [String: String] = [:]
     let systemTCCDBService: SystemTCCDBService
     
-    mutating func checkAllPermissions() {
+    init(systemTCCDBService: SystemTCCDBService) {
+        self.systemTCCDBService = systemTCCDBService
+    }
+    
+    func checkAllPermissions() {
         checkAccessibility()
         checkAppManagement()
         checkCamera()
@@ -34,12 +38,12 @@ struct AppPermissionsViewModel {
         // Note: checkCalendar(), checkReminders(), and checkNotifications() must be called separately with completion handlers
     }
     
-    mutating func checkAccessibility() {
+    func checkAccessibility() {
         let trusted = AXIsProcessTrusted()
         permissionStatuses["Accessibility"] = trusted ? "AXI Authorization Status: Authorized" : "AXI Authorization Status: Not Authorized"
     }
     
-    mutating func checkCamera() {
+    func checkCamera() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         permissionStatuses["Camera"] = statusString(from: status)
     }
@@ -54,7 +58,7 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkMicrophone() {
+    func checkMicrophone() {
         let status = AVCaptureDevice.authorizationStatus(for: .audio)
         permissionStatuses["Microphone"] = statusString(from: status)
     }
@@ -69,12 +73,12 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkLocation() {
+    func checkLocation() {
         let status = CLLocationManager().authorizationStatus
         permissionStatuses["Location"] = locationStatusString(from: status)
     }
     
-    mutating func checkContacts() {
+    func checkContacts() {
         let status = CNContactStore.authorizationStatus(for: .contacts)
         permissionStatuses["Contacts"] = contactsStatusString(from: status)
     }
@@ -134,7 +138,7 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkPhotos() {
+    func checkPhotos() {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         permissionStatuses["Photos"] = photoStatusString(from: status)
     }
@@ -148,7 +152,7 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkSpeechRecognition() {
+    func checkSpeechRecognition() {
         let status = SFSpeechRecognizer.authorizationStatus()
         permissionStatuses["Speech Recognition"] = speechStatusString(from: status)
     }
@@ -162,7 +166,7 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkScreenRecording() {
+    func checkScreenRecording() {
         // Note: This will prompt the user if not determined
         // For checking only, we can use CGPreflightScreenCaptureAccess
         let hasAccess = CGPreflightScreenCaptureAccess()
@@ -187,25 +191,25 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkFullDiskAccess() {
+    func checkFullDiskAccess() {
         // Full Disk Access can be checked by trying to access a protected location
         // For now, we'll mark it as requiring manual check
         permissionStatuses["Full Disk Access"] = "Check System Preferences"
     }
     
-    mutating func checkFilesAndFolders() {
+    func checkFilesAndFolders() {
         permissionStatuses["Files and Folders"] = "Check System Preferences"
     }
     
-    mutating func checkBluetooth() {
+    func checkBluetooth() {
         permissionStatuses["Bluetooth"] = "Requires CBCentralManager"
     }
     
-    mutating func checkAppleEvents() {
+    func checkAppleEvents() {
         permissionStatuses["Apple Events"] = "Check System Preferences"
     }
     
-    mutating func checkAppManagement() {
+    func checkAppManagement() {
         guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
             permissionStatuses["App Management"] = "Unable to determine bundle ID"
             return
@@ -254,15 +258,15 @@ struct AppPermissionsViewModel {
         }
     }
     
-    mutating func checkRemoteFileAccess() {
+    func checkRemoteFileAccess() {
         permissionStatuses["Allow Remote File Access"] = "Check System Preferences"
     }
     
-    mutating func checkRemoteManagement() {
+    func checkRemoteManagement() {
         permissionStatuses["Remote Management"] = "Check System Preferences"
     }
     
-    mutating func checkSSH() {
+    func checkSSH() {
         permissionStatuses["SSH"] = "Check System Preferences"
     }
     
