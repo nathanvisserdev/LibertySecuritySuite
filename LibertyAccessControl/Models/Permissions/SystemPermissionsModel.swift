@@ -14,7 +14,7 @@ class SystemPermissionsModel {
         self.SystemService = SystemService
     }
     
-    func queryTCCDatabase() -> (entries: [TCCSystemEntry], error: String?) {
+    func queryTCCDatabase() -> (entries: [SystemEntry], error: String?) {
         let entries = SystemService.queryEntries()
         
         if entries.isEmpty {

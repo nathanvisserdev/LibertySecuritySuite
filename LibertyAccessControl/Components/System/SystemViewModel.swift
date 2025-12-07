@@ -11,7 +11,7 @@ import Combine
 class SystemViewModel: ObservableObject {
     @Published var statusMessage: String = "System TCC Database - Ready to query"
     @Published var errorMessage: String?
-    @Published var entries: [TCCSystemEntry] = []
+    @Published var entries: [SystemEntry] = []
     @Published var isLoading: Bool = false
     
     private let model: SystemPermissionsModel

@@ -11,7 +11,7 @@ import Combine
 class UserViewModel: ObservableObject {
     @Published var statusMessage: String = "User TCC Database - Ready to query"
     @Published var errorMessage: String?
-    @Published var entries: [TCCUserEntry] = []
+    @Published var entries: [UserEntry] = []
     @Published var isLoading: Bool = false
     
     private let model: UserModel

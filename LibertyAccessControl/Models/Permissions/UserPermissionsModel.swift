@@ -15,10 +15,10 @@ class UserModel {
         self.UserService = UserService
     }
     
-    func queryTCCDatabase() -> (entries: [TCCUserEntry], error: String?) {
+    func queryTCCDatabase() -> (entries: [UserEntry], error: String?) {
         let result = UserService.queryEntries()
         
-        guard let entries = result as? [TCCUserEntry] else {
+        guard let entries = result as? [UserEntry] else {
             return ([], "Failed to query user TCC database. Make sure the app has Full Disk Access permission.")
         }
         

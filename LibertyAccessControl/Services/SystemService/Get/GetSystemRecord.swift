@@ -10,7 +10,7 @@ import SQLite3
 
 // MARK: - System TCC Database Specific Query Functions
 extension SystemService {
-    func queryEntry(service: String, client: String) -> TCCSystemEntry? {
+    func queryEntry(service: String, client: String) -> SystemEntry? {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
         var db: OpaquePointer?
         let openResult = sqlite3_open_v2(systemTCCPath, &db, SQLITE_OPEN_READONLY, nil)
@@ -30,7 +30,7 @@ extension SystemService {
         return entry
     }
     
-    private func executeSpecificQueryAndParseEntry(db: OpaquePointer?, service: String, client: String) -> TCCSystemEntry? {
+    private func executeSpecificQueryAndParseEntry(db: OpaquePointer?, service: String, client: String) -> SystemEntry? {
         let query = """
         SELECT service, client, client_type, auth_value, auth_reason, auth_version,
                csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier,
@@ -65,7 +65,7 @@ extension SystemService {
         return nil
     }
     
-    private func parseEntry(from statement: OpaquePointer?) -> TCCSystemEntry? {
+    private func parseEntry(from statement: OpaquePointer?) -> SystemEntry? {
         guard let statement = statement else { return nil }
         
         let service = String(cString: sqlite3_column_text(statement, 0))
@@ -124,7 +124,7 @@ extension SystemService {
             last_reminded = Date(timeIntervalSince1970: TimeInterval(timestamp))
         }
         
-        return TCCSystemEntry(
+        return SystemEntry(
             service: service,
             client: client,
             client_type: client_type,

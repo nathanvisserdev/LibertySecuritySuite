@@ -11,8 +11,8 @@ import Combine
 class DashboardVM: ObservableObject {
     @Published var statusMessage: String = "All Permissions - Ready to query"
     @Published var errorMessage: String?
-    @Published var systemEntries: [TCCSystemEntry] = []
-    @Published var userEntries: [TCCUserEntry] = []
+    @Published var systemEntries: [SystemEntry] = []
+    @Published var userEntries: [UserEntry] = []
     @Published var isLoading: Bool = false
     
     private let systemService: SystemService

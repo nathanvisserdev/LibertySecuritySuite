@@ -65,8 +65,8 @@ struct DashboardView: View {
     }
     
     // Group system entries by category
-    private var systemEntriesGrouped: [String: [TCCSystemEntry]] {
-        var groups: [String: [TCCSystemEntry]] = [:]
+    private var systemEntriesGrouped: [String: [SystemEntry]] {
+        var groups: [String: [SystemEntry]] = [:]
         
         for entry in viewModel.systemEntries {
             let category = categoryForService(entry.service)
@@ -80,8 +80,8 @@ struct DashboardView: View {
     }
     
     // Group user entries by category
-    private var userEntriesGrouped: [String: [TCCUserEntry]] {
-        var groups: [String: [TCCUserEntry]] = [:]
+    private var userEntriesGrouped: [String: [UserEntry]] {
+        var groups: [String: [UserEntry]] = [:]
         
         for entry in viewModel.userEntries {
             let category = categoryForService(entry.service)
@@ -282,7 +282,7 @@ struct DashboardView: View {
 // MARK: - System Category Section View
 struct SystemCategorySection: View {
     let category: String
-    let entries: [TCCSystemEntry]
+    let entries: [SystemEntry]
     let isExpanded: Bool
     let allowedCount: Int
     let totalCount: Int
@@ -348,7 +348,7 @@ struct SystemCategorySection: View {
 // MARK: - User Category Section View
 struct UserCategorySection: View {
     let category: String
-    let entries: [TCCUserEntry]
+    let entries: [UserEntry]
     let isExpanded: Bool
     let allowedCount: Int
     let totalCount: Int
@@ -519,9 +519,9 @@ struct PermissionEntryView: View {
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 6) {
-                    if let systemEntry = details as? TCCSystemEntry {
+                    if let systemEntry = details as? SystemEntry {
                         systemDetailsView(entry: systemEntry)
-                    } else if let userEntry = details as? TCCUserEntry {
+                    } else if let userEntry = details as? UserEntry {
                         userDetailsView(entry: userEntry)
                     }
                 }
@@ -534,7 +534,7 @@ struct PermissionEntryView: View {
     }
     
     @ViewBuilder
-    private func systemDetailsView(entry: TCCSystemEntry) -> some View {
+    private func systemDetailsView(entry: SystemEntry) -> some View {
         detailRow(label: "Service", value: entry.service)
         detailRow(label: "Client", value: entry.client)
         detailRow(label: "Client Type", value: "\(entry.client_type)")
@@ -553,7 +553,7 @@ struct PermissionEntryView: View {
     }
     
     @ViewBuilder
-    private func userDetailsView(entry: TCCUserEntry) -> some View {
+    private func userDetailsView(entry: UserEntry) -> some View {
         detailRow(label: "Service", value: entry.service)
         detailRow(label: "Client", value: entry.client)
         detailRow(label: "Client Type", value: "\(entry.client_type)")

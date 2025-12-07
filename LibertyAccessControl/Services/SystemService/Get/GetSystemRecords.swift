@@ -12,7 +12,7 @@ import SQLite3
 extension SystemService {
     
     /// Query entries from the system TCC database
-    func queryEntries() -> [TCCSystemEntry] {
+    func queryEntries() -> [SystemEntry] {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
         
         var db: OpaquePointer?
@@ -37,8 +37,8 @@ extension SystemService {
     
     // MARK: - Private Helper Methods
     
-    /// Execute the SQL query and parse results into TCCSystemEntry objects
-    private func executeQueryAndParseEntries(db: OpaquePointer?) -> [TCCSystemEntry] {
+    /// Execute the SQL query and parse results into SystemEntry objects
+    private func executeQueryAndParseEntries(db: OpaquePointer?) -> [SystemEntry] {
         let query = """
         SELECT service, client, client_type, auth_value, auth_reason, auth_version,
                csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier,
@@ -56,7 +56,7 @@ extension SystemService {
         
         defer { sqlite3_finalize(statement) }
         
-        var entries: [TCCSystemEntry] = []
+        var entries: [SystemEntry] = []
         
         while sqlite3_step(statement) == SQLITE_ROW {
             if let entry = parseRowIntoEntry(statement: statement) {
@@ -67,7 +67,7 @@ extension SystemService {
         return entries
     }
     
-    private func parseRowIntoEntry(statement: OpaquePointer?) -> TCCSystemEntry? {
+    private func parseRowIntoEntry(statement: OpaquePointer?) -> SystemEntry? {
         guard let statement = statement else { return nil }
         
         let service = String(cString: sqlite3_column_text(statement, 0))
@@ -89,7 +89,7 @@ extension SystemService {
         let boot_uuid = String(cString: sqlite3_column_text(statement, 15))
         let last_reminded = extractOptionalDate(from: statement, column: 16)
         
-        return TCCSystemEntry(
+        return SystemEntry(
             service: service,
             client: client,
             client_type: client_type,

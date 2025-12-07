@@ -10,11 +10,11 @@ import SQLite3
 
 class DashboardModel {
     
-    func querySystemTCCDatabase() -> [TCCSystemEntry] {
+    func querySystemTCCDatabase() -> [SystemEntry] {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
         
         var db: OpaquePointer?
-        var entries: [TCCSystemEntry] = []
+        var entries: [SystemEntry] = []
         
         let openResult = sqlite3_open_v2(systemTCCPath, &db, SQLITE_OPEN_READONLY, nil)
         
@@ -81,7 +81,7 @@ class DashboardModel {
             let last_reminded_int = sqlite3_column_int64(statement, 16)
             let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
             
-            let entry = TCCSystemEntry(
+            let entry = SystemEntry(
                 service: service,
                 client: client,
                 client_type: client_type,
@@ -108,7 +108,7 @@ class DashboardModel {
     
     // MARK: - User TCC Database Query
     
-    func queryUserTCCDatabase() -> [TCCUserEntry] {
+    func queryUserTCCDatabase() -> [UserEntry] {
         let homeDir = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
         let userTCCPath = "\(homeDir)/Library/Application Support/com.apple.TCC/TCC.db"
         
@@ -122,7 +122,7 @@ class DashboardModel {
         Thread.sleep(forTimeInterval: 0.5)
         
         var db: OpaquePointer?
-        var entries: [TCCUserEntry] = []
+        var entries: [UserEntry] = []
         
         let openResult = sqlite3_open_v2(userTCCPath, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOFOLLOW, nil)
         
@@ -191,7 +191,7 @@ class DashboardModel {
             let last_reminded_int = sqlite3_column_int64(statement, 16)
             let last_reminded = last_reminded_int > 0 ? Date(timeIntervalSince1970: TimeInterval(last_reminded_int)) : nil
             
-            let entry = TCCUserEntry(
+            let entry = UserEntry(
                 service: service,
                 client: client,
                 client_type: client_type,

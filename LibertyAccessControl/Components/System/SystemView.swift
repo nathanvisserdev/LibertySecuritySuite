@@ -29,7 +29,7 @@ struct SystemView: View {
         ("Speech Recognition", ["SpeechRecognition"])
     ]
     
-    private func entriesForCategory(_ keywords: [String]) -> [TCCSystemEntry] {
+    private func entriesForCategory(_ keywords: [String]) -> [SystemEntry] {
         viewModel.entries.filter { entry in
             keywords.contains(where: { entry.service.contains($0) })
         }
@@ -89,9 +89,9 @@ struct SystemView: View {
                                         }
                                     }) {
                                         HStack {
-                                            Image(systemName: expandedCategories.contains(category.0) ? "chevron.down.circle.fill" : "chevron.right.circle.fill")
-                                                .foregroundColor(.blue)
-                                                .font(.title3)
+                                            Image(systemName: expandedCategories.contains(category.0) ? "chevron.down" : "chevron.right")
+                                                .foregroundColor(.secondary)
+                                                .frame(width: 20)
                                             
                                             Text(category.0)
                                                 .font(.headline)
@@ -99,66 +99,84 @@ struct SystemView: View {
                                             
                                             Spacer()
                                             
-                                            Text("\(entries.filter { $0.auth_value == 2 }.count) allowed / \(entries.count) total")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.secondary.opacity(0.2))
-                                                .cornerRadius(6)
+                                            // Count badge
+                                            HStack(spacing: 4) {
+                                                Text("\(entries.filter { $0.auth_value == 2 }.count)")
+                                                    .foregroundColor(.green)
+                                                Text("/")
+                                                    .foregroundColor(.secondary)
+                                                Text("\(entries.count)")
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            .font(.caption)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.gray.opacity(0.2))
+                                            .cornerRadius(8)
                                         }
-                                        .padding(.vertical, 8)
+                                        .padding(12)
+                                        .background(Color.cyan.opacity(0.1))
+                                        .cornerRadius(10)
                                     }
                                     .buttonStyle(.plain)
                                     
                                     // Category Entries - Only shown when expanded
                                     if expandedCategories.contains(category.0) {
                                         ForEach(entries) { entry in
-                                        VStack(alignment: .leading, spacing: 6) {
+                                        VStack(alignment: .leading, spacing: 8) {
                                             // Header - Always visible, clickable
-                                            Button(action: {
-                                                if expandedEntries.contains(entry.id) {
-                                                    expandedEntries.remove(entry.id)
-                                                } else {
-                                                    expandedEntries.insert(entry.id)
-                                                }
-                                            }) {
-                                                HStack {
-                                                    Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
-                                                        .foregroundColor(.secondary)
-                                                        .font(.caption)
-                                                    
-                                                    Image(systemName: "app.fill")
-                                                        .foregroundColor(.blue)
-                                                    
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("client: \(entry.client)")
-                                                            .font(.body)
-                                                            .fontWeight(.medium)
-                                                        
-                                                        Text("service: \(entry.service)")
-                                                            .font(.caption)
-                                                            .foregroundColor(.secondary)
+                                            HStack {
+                                                Button(action: {
+                                                    if expandedEntries.contains(entry.id) {
+                                                        expandedEntries.remove(entry.id)
+                                                    } else {
+                                                        expandedEntries.insert(entry.id)
                                                     }
-                                                    
-                                                    Spacer()
-                                                    
-                                                    // Show auth value badge
-                                                    Text(authValueText(entry.auth_value))
-                                                        .font(.caption)
-                                                        .fontWeight(.semibold)
-                                                        .foregroundColor(.white)
-                                                        .padding(.horizontal, 8)
-                                                        .padding(.vertical, 4)
-                                                        .background(authValueColor(entry.auth_value))
-                                                        .cornerRadius(6)
+                                                }) {
+                                                    HStack {
+                                                        Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
+                                                            .foregroundColor(.secondary)
+                                                            .frame(width: 20)
+                                                        
+                                                        VStack(alignment: .leading, spacing: 2) {
+                                                            Text("Client: \(entry.client)")
+                                                                .fontWeight(.semibold)
+                                                            
+                                                            Text("Service: \(entry.service)")
+                                                                .font(.caption)
+                                                                .foregroundColor(.secondary)
+                                                        }
+                                                        
+                                                        Spacer()
+                                                    }
                                                 }
+                                                .buttonStyle(.plain)
+                                                
+                                                // Toggle Switch (read-only, shows permission state)
+                                                Toggle("", isOn: .constant(entry.auth_value == 2))
+                                                    .toggleStyle(.switch)
+                                                    .labelsHidden()
+                                                    .disabled(true)
+                                                
+                                                // Show auth value badge
+                                                Text(authValueText(entry.auth_value))
+                                                    .font(.caption)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(authValueColor(entry.auth_value))
+                                                    .cornerRadius(6)
                                             }
-                                            .buttonStyle(.plain)
+                                            .padding(10)
+                                            .background(Color.gray.opacity(0.08))
+                                            .cornerRadius(8)
                                             
                                             // Expanded details
                                             if expandedEntries.contains(entry.id) {
-                                                VStack(alignment: .leading, spacing: 4) {
+                                                VStack(alignment: .leading, spacing: 6) {
+                                                    fieldRow("service", value: entry.service)
+                                                    fieldRow("client", value: entry.client)
                                                     fieldRow("client_type", value: "\(entry.client_type)")
                                                     fieldRow("auth_value", value: "\(entry.auth_value)")
                                                     fieldRow("auth_reason", value: "\(entry.auth_reason)")
@@ -166,6 +184,14 @@ struct SystemView: View {
                                                     
                                                     if let csreq = entry.csreq {
                                                         fieldRow("csreq", value: "\(csreq.count) bytes")
+                                                        
+                                                        if let bundleID = entry.parsedBundleID {
+                                                            fieldRow("  ↳ parsed_bundle_id", value: bundleID)
+                                                        }
+                                                        
+                                                        if let teamID = entry.parsedTeamID {
+                                                            fieldRow("  ↳ parsed_team_id", value: teamID)
+                                                        }
                                                     } else {
                                                         fieldRow("csreq", value: "nil")
                                                     }
@@ -222,19 +248,16 @@ struct SystemView: View {
                                                         fieldRow("last_reminded", value: "nil")
                                                     }
                                                 }
-                                                .padding(.top, 4)
-                                                .padding(.leading, 24)
+                                                .padding(10)
+                                                .background(Color.gray.opacity(0.04))
+                                                .cornerRadius(8)
+                                                .padding(.leading, 20)
                                             }
                                         }
-                                        .padding(12)
-                                        .background(Color(nsColor: .controlBackgroundColor))
-                                        .cornerRadius(8)
+                                        }
+                                        .padding(.leading, 32)
                                     }
                                 }
-                                }
-                                .padding(12)
-                                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                                .cornerRadius(10)
                             }
                         }
                     }
@@ -252,18 +275,14 @@ struct SystemView: View {
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top) {
             Text(label + ":")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(width: 200, alignment: .trailing)
-            
+                .fontWeight(.semibold)
+                .frame(width: 140, alignment: .leading)
             Text(value)
-                .font(.caption)
-                .foregroundColor(.primary)
-            
-            Spacer()
+                .textSelection(.enabled)
         }
+        .font(.caption)
     }
     
     private func authValueText(_ value: Int) -> String {

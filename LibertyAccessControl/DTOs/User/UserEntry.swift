@@ -1,5 +1,5 @@
 //
-//  TCCUserEntry.swift
+//  UserEntry.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-06.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TCCUserEntry: Identifiable, Equatable {
+struct UserEntry: Identifiable, Equatable {
     let id = UUID()
     let service: String
     let client: String
@@ -27,7 +27,7 @@ struct TCCUserEntry: Identifiable, Equatable {
     let boot_uuid: String
     let last_reminded: Date?
     
-    static func == (lhs: TCCUserEntry, rhs: TCCUserEntry) -> Bool {
+    static func == (lhs: UserEntry, rhs: UserEntry) -> Bool {
         lhs.id == rhs.id
     }
     

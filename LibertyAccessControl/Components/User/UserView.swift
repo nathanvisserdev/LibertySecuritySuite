@@ -59,8 +59,8 @@ struct UserView: View {
         return serviceCategories[service] ?? "Other"
     }
     
-    private var groupedEntries: [String: [TCCUserEntry]] {
-        var groups: [String: [TCCUserEntry]] = [:]
+    private var groupedEntries: [String: [UserEntry]] {
+        var groups: [String: [UserEntry]] = [:]
         for entry in viewModel.entries {
             let category = categoryForService(entry.service)
             if groups[category] == nil {
@@ -188,7 +188,7 @@ struct UserView: View {
     }
     
     @ViewBuilder
-    private func entryView(_ entry: TCCUserEntry) -> some View {
+    private func entryView(_ entry: UserEntry) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             // Header - Always visible, clickable
             HStack {

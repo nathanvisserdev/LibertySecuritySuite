@@ -47,8 +47,8 @@ extension UserService {
         return ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
     }
     
-    /// Execute the SQL query and parse results into TCCUserEntry objects
-    private func executeQueryAndParseEntries(db: OpaquePointer?) -> [TCCUserEntry] {
+    /// Execute the SQL query and parse results into UserEntry objects
+    private func executeQueryAndParseEntries(db: OpaquePointer?) -> [UserEntry] {
         let query = """
         SELECT service, client, client_type, auth_value, auth_reason, auth_version,
                csreq, policy_id, indirect_object_identifier_type, indirect_object_identifier,
@@ -66,7 +66,7 @@ extension UserService {
         
         defer { sqlite3_finalize(statement) }
         
-        var entries: [TCCUserEntry] = []
+        var entries: [UserEntry] = []
         
         while sqlite3_step(statement) == SQLITE_ROW {
             if let entry = parseRowIntoEntry(statement: statement) {
@@ -77,8 +77,8 @@ extension UserService {
         return entries
     }
     
-    /// Parse a single row from the query result into a TCCUserEntry
-    private func parseRowIntoEntry(statement: OpaquePointer?) -> TCCUserEntry? {
+    /// Parse a single row from the query result into a UserEntry
+    private func parseRowIntoEntry(statement: OpaquePointer?) -> UserEntry? {
         guard let statement = statement else { return nil }
         
         let service = String(cString: sqlite3_column_text(statement, 0))
@@ -100,7 +100,7 @@ extension UserService {
         let boot_uuid = String(cString: sqlite3_column_text(statement, 15))
         let last_reminded = extractOptionalDate(from: statement, column: 16)
         
-        return TCCUserEntry(
+        return UserEntry(
             service: service,
             client: client,
             client_type: client_type,
