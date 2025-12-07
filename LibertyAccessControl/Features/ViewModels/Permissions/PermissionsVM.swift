@@ -1,5 +1,5 @@
 //
-//  DashboardVM.swift
+//  PermissionsVM.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-06.
@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-class DashboardVM: ObservableObject {
+class PermissionsVM: ObservableObject {
     @Published var statusMessage: String = "All Permissions - Ready to query"
     @Published var errorMessage: String?
     @Published var systemEntries: [SystemEntry] = []

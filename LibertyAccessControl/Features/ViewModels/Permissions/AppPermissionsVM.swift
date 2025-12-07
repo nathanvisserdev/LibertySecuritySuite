@@ -1,5 +1,5 @@
 //
-//  AppPermissionsViewModel.swift
+//  AppPermissionsVM.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-06.
@@ -17,7 +17,7 @@ import Speech
 import UserNotifications
 import ApplicationServices
 
-class AppPermissionsViewModel: ObservableObject {
+class AppPermissionsVM: ObservableObject {
     @Published var permissionStatuses: [String: String] = [:]
     let SystemService: SystemService
     

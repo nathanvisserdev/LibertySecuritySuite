@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct UserView: View {
-    @StateObject private var viewModel = UserViewModel()
+    @StateObject private var viewModel = UserVM()
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
     

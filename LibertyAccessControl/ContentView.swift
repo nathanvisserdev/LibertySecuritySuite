@@ -49,7 +49,7 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    DashboardView()
+                    PermissionsView()
                 } label: {
                     Label("Permissions", systemImage: "checklist")
                 }
@@ -164,7 +164,7 @@ struct ContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            DashboardView()
+            PermissionsView()
         }
     }
 }

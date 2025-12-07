@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct AppPermissionsView: View {
-    @StateObject private var viewModel: AppPermissionsViewModel
+    @StateObject private var viewModel: AppPermissionsVM
     
     init() {
         let systemService = SystemService()
-        _viewModel = StateObject(wrappedValue: AppPermissionsViewModel(SystemService: systemService))
+        _viewModel = StateObject(wrappedValue: AppPermissionsVM(SystemService: systemService))
     }
     
     var body: some View {
@@ -72,7 +72,7 @@ struct AppPermissionsView: View {
 }
 
 struct CameraPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Camera"] ?? "Not Checked"
@@ -129,7 +129,7 @@ struct CameraPermissionRow: View {
 }
 
 struct CalendarPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Calendar"] ?? "Indeterminable upon request"
@@ -189,7 +189,7 @@ struct CalendarPermissionRow: View {
 }
 
 struct RemindersPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Reminders"] ?? "Indeterminable upon request"
@@ -249,7 +249,7 @@ struct RemindersPermissionRow: View {
 }
 
 struct ScreenRecordingPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Screen Recording"] ?? "Not Checked"
@@ -382,7 +382,7 @@ struct PermissionStatusRow: View {
 }
 
 struct ContactsPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Contacts"] ?? "Not Checked"
@@ -439,7 +439,7 @@ struct ContactsPermissionRow: View {
 }
 
 struct MicrophonePermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Microphone"] ?? "Not Checked"
@@ -496,7 +496,7 @@ struct MicrophonePermissionRow: View {
 }
 
 struct PhotosPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Photos"] ?? "Not Checked"
@@ -555,7 +555,7 @@ struct PhotosPermissionRow: View {
 }
 
 struct SpeechRecognitionPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["Speech Recognition"] ?? "Not Checked"
@@ -612,7 +612,7 @@ struct SpeechRecognitionPermissionRow: View {
 }
 
 struct AppManagementPermissionRow: View {
-    @ObservedObject var viewModel: AppPermissionsViewModel
+    @ObservedObject var viewModel: AppPermissionsVM
     
     var status: String {
         viewModel.permissionStatuses["App Management"] ?? "Not Checked"

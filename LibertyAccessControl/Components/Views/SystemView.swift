@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SystemView: View {
-    @StateObject private var viewModel = SystemViewModel()
+    @StateObject private var viewModel = SystemVM()
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
     
