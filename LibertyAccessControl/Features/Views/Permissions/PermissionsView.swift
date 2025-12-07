@@ -242,40 +242,6 @@ struct PermissionsView: View {
         }
         .padding()
         .navigationTitle("All Permissions")
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 8) {
-                    Button("All") {
-                        // Functionality to be added
-                    }
-                    .buttonStyle(.plain)
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                    
-                    Text("|")
-                        .foregroundColor(.secondary)
-                        .font(.title2)
-                    
-                    Button("User") {
-                        // Functionality to be added
-                    }
-                    .buttonStyle(.plain)
-                    .font(.title2)
-                    .foregroundColor(.primary)
-                    
-                    Text("|")
-                        .foregroundColor(.secondary)
-                        .font(.title2)
-                    
-                    Button("System") {
-                        // Functionality to be added
-                    }
-                    .buttonStyle(.plain)
-                    .font(.title2)
-                    .foregroundColor(.primary)
-                }
-            }
-        }
         .onAppear {
             if viewModel.systemEntries.isEmpty && viewModel.userEntries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()

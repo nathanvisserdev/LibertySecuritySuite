@@ -180,6 +180,7 @@ struct UserView: View {
             }
         }
         .padding()
+        .navigationTitle("User Permissions")
         .onAppear {
             if viewModel.entries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()

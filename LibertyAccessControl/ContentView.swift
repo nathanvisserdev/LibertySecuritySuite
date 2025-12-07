@@ -13,6 +13,12 @@ struct ContentView: View {
         NavigationSplitView {
             List {
                 NavigationLink {
+                    DashboardView()
+                } label: {
+                    Label("Permissions", systemImage: "checklist")
+                }
+                
+                NavigationLink {
                     AllowRemoteFileAccessView()
                 } label: {
                     Label("Grant Remote File Access", systemImage: "shield.checkered")
@@ -34,24 +40,6 @@ struct ContentView: View {
                     SSHView()
                 } label: {
                     Label("SSH Access", systemImage: "terminal.fill")
-                }
-                
-                NavigationLink {
-                    UserView()
-                } label: {
-                    Label("User Permissions", systemImage: "person.circle")
-                }
-                
-                NavigationLink {
-                    SystemView()
-                } label: {
-                    Label("System Permissions", systemImage: "server.rack")
-                }
-                
-                NavigationLink {
-                    PermissionsView()
-                } label: {
-                    Label("Permissions", systemImage: "checklist")
                 }
                 
                 NavigationLink {
@@ -164,7 +152,7 @@ struct ContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            PermissionsView()
+            DashboardView()
         }
     }
 }
