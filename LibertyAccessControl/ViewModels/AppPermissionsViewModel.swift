@@ -19,9 +19,11 @@ import ApplicationServices
 
 struct AppPermissionsViewModel {
     var permissionStatuses: [String: String] = [:]
+    let systemTCCDBService: SystemTCCDBService
     
     mutating func checkAllPermissions() {
         checkAccessibility()
+        checkAppManagement()
         checkCamera()
         checkMicrophone()
         checkLocation()
@@ -204,7 +206,27 @@ struct AppPermissionsViewModel {
     }
     
     mutating func checkAppManagement() {
-        permissionStatuses["App Management"] = "Check System Preferences"
+        // Get the bundle identifier of this app
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            permissionStatuses["App Management"] = "Unable to determine bundle ID"
+            return
+        }
+        
+        // Query system TCC database for App Management permissions
+        let entries = systemTCCDBService.queryEntries()
+        
+        // Look for entries with service kTCCServiceSystemPolicyAppBundles and this app's bundle ID
+        let appManagementEntries = entries.compactMap { $0 as? TCCSystemEntry }.filter {
+            $0.service == "kTCCServiceSystemPolicyAppBundles" && $0.client == bundleIdentifier
+        }
+        
+        if let entry = appManagementEntries.first {
+            // auth_value: 0 = denied, 2 = allowed
+            let status = entry.auth_value == 2 ? "Authorized" : "Denied"
+            permissionStatuses["App Management"] = status
+        } else {
+            permissionStatuses["App Management"] = "TCC Authorization Status: Entry Not Found"
+        }
     }
     
     mutating func checkRemoteFileAccess() {
