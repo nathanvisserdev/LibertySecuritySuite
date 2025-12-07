@@ -34,23 +34,17 @@ struct SystemPermissionsView: View {
         }
     }
     
+    private var allowedCount: Int {
+        viewModel.entries.filter { $0.auth_value == 2 }.count
+    }
+    
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
             // Header
-            VStack(spacing: 10) {
-                Image(systemName: "server.rack")
-                    .font(.system(size: 60))
-                    .foregroundColor(.blue)
-                
-                Text("System TCC Database")
-                    .font(.title)
-                    .fontWeight(.bold)
-                
-                Text(viewModel.statusMessage)
-                    .font(.body)
+            VStack(spacing: 8) {
+                Text("Total: \(viewModel.entries.count), Allowed: \(allowedCount)")
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
                 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
@@ -60,17 +54,7 @@ struct SystemPermissionsView: View {
                         .padding(.horizontal)
                 }
             }
-            
-            // Load Button
-            Button(action: {
-                viewModel.loadTCCData()
-            }) {
-                Label(viewModel.isLoading ? "Loading..." : "Load System TCC Permissions", systemImage: "arrow.clockwise")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isLoading)
-            .padding(.horizontal)
+            .padding(.vertical, 12)
             
             Divider()
             
@@ -229,6 +213,11 @@ struct SystemPermissionsView: View {
         }
         .padding()
         .navigationTitle("System Permissions")
+        .onAppear {
+            if viewModel.entries.isEmpty && !viewModel.isLoading {
+                viewModel.loadTCCData()
+            }
+        }
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
