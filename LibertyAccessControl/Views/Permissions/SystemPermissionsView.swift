@@ -10,6 +10,7 @@ import SwiftUI
 struct SystemPermissionsView: View {
     @StateObject private var viewModel = SystemPermissionsViewModel()
     @State private var expandedEntries: Set<UUID> = []
+    @State private var expandedCategories: Set<String> = []
     
     private let serviceCategories = [
         ("Calendar", ["Calendar"]),
@@ -39,22 +40,30 @@ struct SystemPermissionsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             // Header
             VStack(spacing: 8) {
+                Text("System Permissions")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
                 Text("Total: \(viewModel.entries.count), Allowed: \(allowedCount)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                if let errorMessage = viewModel.errorMessage {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .font(.caption)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                        .textSelection(.enabled)
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.top, 8)
             
             Divider()
             
@@ -65,27 +74,46 @@ struct SystemPermissionsView: View {
                     .padding()
             } else {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 20) {
+                    LazyVStack(spacing: 12) {
                         ForEach(serviceCategories, id: \.0) { category in
                             let entries = entriesForCategory(category.1)
                             
                             if !entries.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    // Category Header
-                                    HStack {
-                                        Text(category.0)
-                                            .font(.headline)
-                                            .fontWeight(.bold)
-                                        
-                                        Text("(\(entries.count))")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
+                                    // Category Header - Expandable
+                                    Button(action: {
+                                        if expandedCategories.contains(category.0) {
+                                            expandedCategories.remove(category.0)
+                                        } else {
+                                            expandedCategories.insert(category.0)
+                                        }
+                                    }) {
+                                        HStack {
+                                            Image(systemName: expandedCategories.contains(category.0) ? "chevron.down.circle.fill" : "chevron.right.circle.fill")
+                                                .foregroundColor(.blue)
+                                                .font(.title3)
+                                            
+                                            Text(category.0)
+                                                .font(.headline)
+                                                .fontWeight(.bold)
+                                            
+                                            Spacer()
+                                            
+                                            Text("\(entries.filter { $0.auth_value == 2 }.count) allowed / \(entries.count) total")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color.secondary.opacity(0.2))
+                                                .cornerRadius(6)
+                                        }
+                                        .padding(.vertical, 8)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.top, 8)
+                                    .buttonStyle(.plain)
                                     
-                                    // Category Entries
-                                    ForEach(entries) { entry in
+                                    // Category Entries - Only shown when expanded
+                                    if expandedCategories.contains(category.0) {
+                                        ForEach(entries) { entry in
                                         VStack(alignment: .leading, spacing: 6) {
                                             // Header - Always visible, clickable
                                             Button(action: {
@@ -201,13 +229,16 @@ struct SystemPermissionsView: View {
                                         .padding(12)
                                         .background(Color(nsColor: .controlBackgroundColor))
                                         .cornerRadius(8)
-                                        .padding(.horizontal)
                                     }
                                 }
+                                }
+                                .padding(12)
+                                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                                .cornerRadius(10)
                             }
                         }
                     }
-                    .padding(.vertical)
+                    .padding(.horizontal)
                 }
             }
         }

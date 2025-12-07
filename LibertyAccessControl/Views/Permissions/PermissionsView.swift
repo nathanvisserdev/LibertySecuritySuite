@@ -132,9 +132,13 @@ struct PermissionsView: View {
         VStack(spacing: 12) {
             // Compact Header
             VStack(spacing: 8) {
-                Text("All Permissions")
+                Text("Permissions")
                     .font(.title2)
                     .fontWeight(.bold)
+                
+                Text("Total: \(viewModel.systemEntries.count + viewModel.userEntries.count), Allowed: \(totalSystemAllowed + totalUserAllowed)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                 
                 if viewModel.isLoading {
                     ProgressView()
@@ -235,7 +239,6 @@ struct PermissionsView: View {
             }
         }
         .padding()
-        .navigationTitle("Permissions")
         .onAppear {
             if viewModel.systemEntries.isEmpty && viewModel.userEntries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()
