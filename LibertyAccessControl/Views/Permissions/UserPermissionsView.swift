@@ -83,13 +83,21 @@ struct UserPermissionsView: View {
         groupedEntries[category]?.count ?? 0
     }
     
+    private var totalAllowedCount: Int {
+        viewModel.entries.filter { $0.auth_value == 2 }.count
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             // Compact Header
             VStack(spacing: 8) {
-                Text("User TCC Database")
+                Text("User Permissions")
                     .font(.title2)
                     .fontWeight(.bold)
+                
+                Text("Total: \(viewModel.entries.count), Allowed: \(totalAllowedCount)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                 
                 if viewModel.isLoading {
                     ProgressView()
@@ -165,7 +173,6 @@ struct UserPermissionsView: View {
             }
         }
         .padding()
-        .navigationTitle("User Permissions")
         .onAppear {
             if viewModel.entries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()
