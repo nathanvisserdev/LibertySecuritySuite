@@ -130,12 +130,8 @@ struct PermissionsView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            // Compact Header
+            // Stats Row
             VStack(spacing: 8) {
-                Text("Permissions")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
                 Text("Total: \(viewModel.systemEntries.count + viewModel.userEntries.count), Allowed: \(totalSystemAllowed + totalUserAllowed)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -239,6 +235,40 @@ struct PermissionsView: View {
             }
         }
         .padding()
+        .navigationTitle("Liberty Access Control")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 8) {
+                    Text("Permissions")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("|")
+                        .foregroundColor(.secondary)
+                    
+                    Button("All") {
+                        // Functionality to be added
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Text("|")
+                        .foregroundColor(.secondary)
+                    
+                    Button("User") {
+                        // Functionality to be added
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Text("|")
+                        .foregroundColor(.secondary)
+                    
+                    Button("System") {
+                        // Functionality to be added
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
         .onAppear {
             if viewModel.systemEntries.isEmpty && viewModel.userEntries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()
