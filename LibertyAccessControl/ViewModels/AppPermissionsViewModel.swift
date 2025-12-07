@@ -229,6 +229,38 @@ struct AppPermissionsViewModel {
         }
     }
     
+    func requestAppManagementPermission(completion: @escaping (String) -> Void) {
+        // App Management permissions can't be requested programmatically like Camera/Microphone
+        // We need to open System Preferences to the Privacy & Security pane
+        // The user must manually grant access there
+        
+        // First, try to trigger the prompt by using the Service Management framework
+        if #available(macOS 13.0, *) {
+            // On macOS 13+, try to use SMAppService to trigger a prompt
+            // This typically only works for login items, but we can try
+            DispatchQueue.main.async {
+                let urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_AppManagement"
+                if let url = URL(string: urlString) {
+                    NSWorkspace.shared.open(url)
+                    completion("Opening System Preferences - Please grant App Management permission manually")
+                } else {
+                    completion("Unable to open System Preferences")
+                }
+            }
+        } else {
+            // On older macOS versions, open the Security & Privacy preference pane
+            DispatchQueue.main.async {
+                let urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_SystemPolicyAppBundles"
+                if let url = URL(string: urlString) {
+                    NSWorkspace.shared.open(url)
+                    completion("Opening System Preferences - Please grant App Management permission manually")
+                } else {
+                    completion("Unable to open System Preferences")
+                }
+            }
+        }
+    }
+    
     mutating func checkRemoteFileAccess() {
         permissionStatuses["Allow Remote File Access"] = "Check System Preferences"
     }

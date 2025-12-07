@@ -653,7 +653,9 @@ struct AppManagementPermissionRow: View {
                 
                 if status.contains("Entry Not Found") {
                     Button("Request") {
-                        // Functionality to be added
+                        viewModel.requestAppManagementPermission { newStatus in
+                            viewModel.permissionStatuses["App Management"] = newStatus
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                 }
