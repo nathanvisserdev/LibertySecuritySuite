@@ -1,5 +1,5 @@
 //
-//  PermissionsViewModel.swift
+//  DashboardVM.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-06.
@@ -8,21 +8,21 @@
 import Foundation
 import Combine
 
-class PermissionsViewModel: ObservableObject {
+class DashboardVM: ObservableObject {
     @Published var statusMessage: String = "All Permissions - Ready to query"
     @Published var errorMessage: String?
     @Published var systemEntries: [TCCSystemEntry] = []
     @Published var userEntries: [TCCUserEntry] = []
     @Published var isLoading: Bool = false
     
-    private let systemDBService: SystemService
-    private let userDBService: UserService
-    private let permissionsModel: PermissionsModel
+    private let systemService: SystemService
+    private let userService: UserService
+    private let dashboardModel: DashboardModel
     
-    init(systemDBService: SystemService, userDBService: UserService, permissionsModel: PermissionsModel = PermissionsModel()) {
-        self.systemDBService = systemDBService
-        self.userDBService = userDBService
-        self.permissionsModel = permissionsModel
+    init(systemService: SystemService, userService: UserService) {
+        self.systemService = systemService
+        self.userService = userService
+        self.dashboardModel = DashboardModel()
     }
     
     func loadTCCData() {
@@ -33,8 +33,8 @@ class PermissionsViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            let systemResults = self.permissionsModel.querySystemTCCDatabase()
-            let userResults = self.permissionsModel.queryUserTCCDatabase()
+            let systemResults = self.dashboardModel.querySystemTCCDatabase()
+            let userResults = self.dashboardModel.queryUserTCCDatabase()
             
             DispatchQueue.main.async {
                 self.systemEntries = systemResults
@@ -47,9 +47,9 @@ class PermissionsViewModel: ObservableObject {
     
     func updatePermission(service: String, client: String, authValue: Int, isSystemDB: Bool, completion: @escaping (Bool, String) -> Void) {
         if isSystemDB {
-            systemDBService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
+            systemService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
         } else {
-            userDBService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
+            userService.updatePermission(service: service, client: client, authValue: authValue, completion: completion)
         }
     }
 }

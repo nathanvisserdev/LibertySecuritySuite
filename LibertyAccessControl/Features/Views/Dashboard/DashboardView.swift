@@ -1,5 +1,5 @@
 //
-//  PermissionsView.swift
+//  DashboardView.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-06.
@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-struct PermissionsView: View {
-    @StateObject private var viewModel: PermissionsViewModel
+struct DashboardView: View {
+    @StateObject private var viewModel: DashboardVM
     @State private var expandedCategories: Set<String> = []
     
     init() {
         let systemService = SystemService()
         let userService = UserService()
-        _viewModel = StateObject(wrappedValue: PermissionsViewModel(systemDBService: systemService, userDBService: userService))
+        _viewModel = StateObject(wrappedValue: DashboardVM(systemService: systemService, userService: userService))
     }
     
     // Service name to category mapping
@@ -245,27 +245,33 @@ struct PermissionsView: View {
                     
                     Text("|")
                         .foregroundColor(.secondary)
+                        .font(.title2)
                     
                     Button("All") {
                         // Functionality to be added
                     }
                     .buttonStyle(.plain)
+                    .font(.title2)
                     
                     Text("|")
                         .foregroundColor(.secondary)
+                        .font(.title2)
                     
                     Button("User") {
                         // Functionality to be added
                     }
                     .buttonStyle(.plain)
+                    .font(.title2)
                     
                     Text("|")
                         .foregroundColor(.secondary)
+                        .font(.title2)
                     
                     Button("System") {
                         // Functionality to be added
                     }
                     .buttonStyle(.plain)
+                    .font(.title2)
                 }
             }
         }
@@ -285,7 +291,7 @@ struct SystemCategorySection: View {
     let allowedCount: Int
     let totalCount: Int
     let toggleExpansion: () -> Void
-    let viewModel: PermissionsViewModel
+    let viewModel: DashboardVM
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -351,7 +357,7 @@ struct UserCategorySection: View {
     let allowedCount: Int
     let totalCount: Int
     let toggleExpansion: () -> Void
-    let viewModel: PermissionsViewModel
+    let viewModel: DashboardVM
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -416,14 +422,14 @@ struct PermissionEntryView: View {
     let authValue: Int
     let source: String
     let details: Any
-    let viewModel: PermissionsViewModel
+    let viewModel: DashboardVM
     
     @State private var isExpanded = false
     @State private var isEnabled: Bool
     @State private var statusMessage: String?
     @State private var isSuccess: Bool = true
     
-    init(client: String, service: String, authValue: Int, source: String, details: Any, viewModel: PermissionsViewModel) {
+    init(client: String, service: String, authValue: Int, source: String, details: Any, viewModel: DashboardVM) {
         self.client = client
         self.service = service
         self.authValue = authValue
@@ -600,5 +606,5 @@ struct PermissionEntryView: View {
 }
 
 #Preview {
-    PermissionsView()
+    DashboardView()
 }

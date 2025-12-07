@@ -1,5 +1,5 @@
 //
-//  PermissionsModel.swift
+//  DashboardModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-07.
@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-class PermissionsModel {
+class DashboardModel {
     
     func querySystemTCCDatabase() -> [TCCSystemEntry] {
         let systemTCCPath = "/Library/Application Support/com.apple.TCC/TCC.db"
