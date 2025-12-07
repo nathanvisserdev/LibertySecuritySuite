@@ -18,8 +18,6 @@ extension UserService {
         
         print("Attempting to access: \(userTCCPath)")
         
-        stopUserTCCD()
-        
         var db: OpaquePointer?
         let openResult = sqlite3_open_v2(userTCCPath, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOFOLLOW, nil)
         
@@ -47,16 +45,6 @@ extension UserService {
     /// Get the real home directory, bypassing sandboxing
     private func getRealHomeDirectory() -> String {
         return ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
-    }
-    
-    /// Stop the user tccd process to release database lock
-    private func stopUserTCCD() {
-        let killTask = Process()
-        killTask.launchPath = "/usr/bin/pkill"
-        killTask.arguments = ["-u", NSUserName(), "tccd"]
-        try? killTask.run()
-        killTask.waitUntilExit()
-        Thread.sleep(forTimeInterval: 0.5)
     }
     
     /// Execute the SQL query and parse results into TCCUserEntry objects
