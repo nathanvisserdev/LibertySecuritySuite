@@ -1,23 +1,23 @@
 //
-//  NotificationsView.swift
+//  ReqMonView.swift
 //  LibertyAccessControl
 //
-//  Created by Nathan Visser on 2025-12-05.
+//  Created by Nathan Visser on 2025-12-08.
 //
 
 import SwiftUI
 
-struct NotificationsView: View {
+struct ReqMonView: View {
     @StateObject private var viewModel = ReqMonVM()
     
     var body: some View {
         VStack(spacing: 20) {
             VStack(spacing: 10) {
-                Image(systemName: viewModel.isNotificationsEnabled ? "bell.badge.fill" : "bell")
+                Image(systemName: viewModel.isNotificationsEnabled ? "bell.badge.fill" : "bell.badge")
                     .font(.system(size: 60))
                     .foregroundColor(viewModel.isNotificationsEnabled ? .blue : .gray)
                 
-                Text("Notifications")
+                Text("Request Monitoring")
                     .font(.title)
                     .fontWeight(.bold)
                 
@@ -38,12 +38,14 @@ struct NotificationsView: View {
             HStack(spacing: 20) {
                 Button(action: {
                     viewModel.requestNotificationPermission()
+                    viewModel.enableMonitoring()
                 }) {
-                    Label("Request Notifications Permission", systemImage: "questionmark.circle.fill")
+                    Label("Enable Monitoring", systemImage: "checkmark.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
+                .disabled(viewModel.isNotificationsEnabled)
                 
                 Button(action: {
                     viewModel.disableMonitoring()
@@ -107,12 +109,12 @@ struct NotificationsView: View {
             }
         }
         .padding()
-        .navigationTitle("Notifications")
+        .navigationTitle("Request Monitoring")
     }
 }
 
 #Preview {
     NavigationStack {
-        NotificationsView()
+        ReqMonView()
     }
 }

@@ -1,5 +1,5 @@
 //
-//  NotificationsViewModel.swift
+//  ReqMonVM.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -10,7 +10,7 @@ import Combine
 import Darwin
 import UserNotifications
 
-class NotificationsViewModel: ObservableObject {
+class ReqMonVM: ObservableObject {
     @Published var isNotificationsEnabled: Bool = false
     @Published var statusMessage: String = "Notifications not enabled"
     @Published var errorMessage: String?

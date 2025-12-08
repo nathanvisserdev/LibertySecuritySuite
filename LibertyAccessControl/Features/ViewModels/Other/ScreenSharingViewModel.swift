@@ -14,14 +14,12 @@ class ScreenSharingViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     func enableSharing() {
-        // Screen sharing implementation will go here
         isSharingEnabled = true
         statusMessage = "Screen sharing enabled"
         errorMessage = nil
     }
     
-    func disableSharing() {
-        // Stop screen sharing
+    func disableSharing() { 
         isSharingEnabled = false
         statusMessage = "Screen sharing disabled"
         errorMessage = nil

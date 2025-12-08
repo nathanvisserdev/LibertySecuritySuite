@@ -25,6 +25,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    ReqMonView()
+                } label: {
+                    Label("Request Monitoring", systemImage: "bell.badge.fill")
+                }
+                
+                NavigationLink {
                     ReqListView()
                 } label: {
                     Label("Request List", systemImage: "list.bullet.rectangle")
