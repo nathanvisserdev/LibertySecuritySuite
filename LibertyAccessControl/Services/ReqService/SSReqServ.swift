@@ -18,22 +18,4 @@ class SSReqServ {
             return (false, "Screen Sharing permission denied: \(error.localizedDescription)")
         }
     }
-    
-
-    
-    func checkSCPermission() async -> Bool {
-        if #available(macOS 12.3, *) {
-            // ScreenCaptureKit is the modern API (macOS 12.3+)
-            do {
-                let availableContent = try await SCShareableContent.current
-                return !availableContent.displays.isEmpty
-            } catch {
-                return false
-            }
-        } else {
-            // Fallback to CoreGraphics
-            return quickScreenRecordingCheck()
-        }
-    }
-
 }

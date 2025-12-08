@@ -8,7 +8,7 @@
 import Foundation
 
 struct ReqListModel {
-    let notificationService: NotReqServ
+    let notificationService: UNReqServ
     let locationService: LocReqServ
     let microphoneService: MicReqServ
     let cameraService: CamReqServ
@@ -25,7 +25,7 @@ struct ReqListModel {
     let appleEventsService: AEReqServ
     
     init(
-        notificationService: NotReqServ = NotReqServ(),
+        notificationService: UNReqServ = UNReqServ(),
         locationService: LocReqServ = LocReqServ(),
         microphoneService: MicReqServ = MicReqServ(),
         cameraService: CamReqServ = CamReqServ(),
@@ -57,9 +57,7 @@ struct ReqListModel {
         self.remindersService = remindersService
         self.appleEventsService = appleEventsService
     }
-    
-    // Request methods that delegate to services
-    // NOTE: 'mutating' keyword causes 'self' to be passed as 'inout', which conflicts with actor isolation in @MainActor contexts
+
     func requestNotificationPermission() async throws -> PermissionRequest {
         let response = try await notificationService.reqPerm()
         return response

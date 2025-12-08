@@ -1,5 +1,5 @@
 //
-//  NotReqServ.swift
+//  UNReqServ.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-08.
@@ -8,7 +8,7 @@
 import Foundation
 import UserNotifications
 
-class NotReqServ {
+class UNReqServ {
     func reqPerm() async throws -> UNAuthorizationStatus {
         return try await withCheckedThrowingContinuation { continuation in
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
