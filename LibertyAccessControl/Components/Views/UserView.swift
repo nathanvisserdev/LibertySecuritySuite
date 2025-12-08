@@ -259,6 +259,10 @@ struct UserView: View {
                         if let teamID = entry.parsedTeamID {
                             fieldRow("  ↳ parsed_team_id", value: teamID)
                         }
+                        
+                        // Display code signature from csreq
+                        let codeSignature = csreq.map { String(format: "%02x", $0) }.joined()
+                        fieldRow("  ↳ code_signature", value: codeSignature)
                     } else {
                         fieldRow("csreq", value: "nil")
                     }

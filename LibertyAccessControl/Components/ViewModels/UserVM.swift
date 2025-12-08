@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Security
 
 class UserVM: ObservableObject {
     @Published var statusMessage: String = "User TCC Database - Ready to query"
@@ -15,9 +16,49 @@ class UserVM: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let model: UserModel
+    private var codeSignature: String?
+    
+    var appCodeSignature: String {
+        return codeSignature ?? "Unable to calculate"
+    }
     
     init(UserService: UserService = UserService()) {
         self.model = UserModel(UserService: UserService)
+        self.codeSignature = calculateCodeSignature()
+    }
+    
+    private func calculateCodeSignature() -> String? {
+        var code: SecCode?
+        var status = SecCodeCopySelf([], &code)
+        
+        guard status == errSecSuccess, let code = code else {
+            print("Failed to get SecCode: \(status)")
+            return nil
+        }
+        
+        // Convert SecCode to SecStaticCode
+        var staticCode: SecStaticCode?
+        status = SecCodeCopyStaticCode(code, [], &staticCode)
+        
+        guard status == errSecSuccess, let staticCode = staticCode else {
+            print("Failed to get SecStaticCode: \(status)")
+            return nil
+        }
+        
+        var signingInfo: CFDictionary?
+        status = SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &signingInfo)
+        
+        guard status == errSecSuccess, let info = signingInfo as? [String: Any] else {
+            print("Failed to get signing information: \(status)")
+            return nil
+        }
+        
+        // Extract code directory hash (cdhash)
+        if let cdhash = info[kSecCodeInfoUnique as String] as? Data {
+            return cdhash.map { String(format: "%02x", $0) }.joined()
+        }
+        
+        return nil
     }
     
     func loadTCCData() {
