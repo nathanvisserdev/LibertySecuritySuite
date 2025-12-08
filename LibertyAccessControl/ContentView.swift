@@ -25,7 +25,7 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    RequestListView()
+                    ReqListView()
                 } label: {
                     Label("Request List", systemImage: "list.bullet.rectangle")
                 }
@@ -58,12 +58,6 @@ struct ContentView: View {
                     RequestPermissionsView()
                 } label: {
                     Label("Request Permissions", systemImage: "hand.raised.fill")
-                }
-                
-                NavigationLink {
-                    NotificationsView()
-                } label: {
-                    Label("Notifications", systemImage: "bell.badge.fill")
                 }
                 
                 NavigationLink {
