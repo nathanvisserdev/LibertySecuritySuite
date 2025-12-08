@@ -3,7 +3,11 @@
  * Decompiled pseudo-code from tccd binary
  * NOTE: This is an approximation, not the original source code
  * Original: Objective-C, Converted to: C pseudo-code
+ * 
+ * THIS FILE IS FOR REFERENCE ONLY - NOT MEANT TO BE COMPILED
  */
+
+#if 0  // Disabled - reference only
 
 #include <Foundation/Foundation.h>
 #include <dispatch/dispatch.h>
@@ -156,3 +160,5 @@ char* tcc_get_system_path(void) {
  * 
  * This file contains only a small subset showing the general structure.
  */
+
+#endif  // End of disabled reference code

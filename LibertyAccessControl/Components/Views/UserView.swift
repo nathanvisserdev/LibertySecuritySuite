@@ -11,6 +11,7 @@ struct UserView: View {
     @StateObject private var viewModel = UserVM()
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
+    @State private var toggleStates: [UUID: Bool] = [:]
     
     // Service name to category mapping
     private let serviceCategories: [String: String] = [
@@ -219,11 +220,16 @@ struct UserView: View {
                 }
                 .buttonStyle(.plain)
                 
-                // Toggle Switch (read-only, shows permission state)
-                Toggle("", isOn: .constant(entry.auth_value == 2))
+                // Toggle Switch
+                Toggle("", isOn: Binding(
+                    get: { toggleStates[entry.id] ?? (entry.auth_value == 2) },
+                    set: { newValue in
+                        toggleStates[entry.id] = newValue
+                        handleToggleChange(entry: entry, newValue: newValue)
+                    }
+                ))
                     .toggleStyle(.switch)
                     .labelsHidden()
-                    .disabled(true)
                 
                 // Show auth value badge
                 Text(authValueText(entry.auth_value))
@@ -353,6 +359,22 @@ struct UserView: View {
         case 2: return .green
         case 3: return .orange
         default: return .gray
+        }
+    }
+    
+    private func handleToggleChange(entry: UserEntry, newValue: Bool) {
+        print("🔄 Toggle changed for \(entry.client) - new value: \(newValue)")
+        
+        // Kill tccd and intercept it when it starts up again
+        CacheInterceptService.shared.restartTCCDWithInterception(targetBundleId: entry.client) { result in
+            switch result {
+            case .success(let info):
+                print("✅ Cache intercepted:\n\(info)")
+                print("📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details")
+                
+            case .failure(let error):
+                print("⚠️ Cache interception failed: \(error.localizedDescription)")
+            }
         }
     }
 }

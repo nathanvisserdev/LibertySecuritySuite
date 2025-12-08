@@ -18,37 +18,63 @@ extension UserService {
             
             print("🔍 UPDATE REQUEST: service='\(service)', client='\(client)', authValue=\(authValue)")
             
-            guard let db = self.openDatabase(readOnly: false) else {
-                DispatchQueue.main.async {
-                    completion(false, "Failed to open user TCC database")
-                }
-                return
-            }
-            
-            defer { sqlite3_close(db) }
-            
-            // Execute update within a transaction
-            let success = self.executeUpdate(
-                db: db,
-                service: service,
-                client: client,
-                authValue: authValue
-            )
-            
-            if success {
-                // Verify the update
-                self.verifyUpdate(service: service, client: client, expectedValue: authValue)
-                
-                DispatchQueue.main.async {
-                    completion(true, "Successfully updated user permission to \(authValue == 2 ? "ALLOWED" : "DENIED")")
-                }
-            } else {
-                DispatchQueue.main.async {
-                    completion(false, "Failed to update permission")
+            // Kill tccd and intercept it when it starts up again
+            print("🎯 Intercepting tccd cache for: \(client)")
+            CacheInterceptService.shared.restartTCCDWithInterception(targetBundleId: client) { result in
+                switch result {
+                case .success(let info):
+                    print("✅ Cache intercepted:\n\(info)")
+                    print("📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details")
+                    
+                    // STOP HERE - don't update database yet
+                    DispatchQueue.main.async {
+                        completion(true, "Cache intercepted. Check logs before proceeding.")
+                    }
+                    
+                case .failure(let error):
+                    print("⚠️ Cache interception failed: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        completion(false, "Cache interception failed: \(error.localizedDescription)")
+                    }
                 }
             }
         }
     }
+    
+    /// Perform the actual database update
+    private func performDatabaseUpdate(service: String, client: String, authValue: Int, completion: @escaping (Bool, String) -> Void) {
+        guard let db = self.openDatabase(readOnly: false) else {
+            DispatchQueue.main.async {
+                completion(false, "Failed to open user TCC database")
+            }
+            return
+        }
+        
+        defer { sqlite3_close(db) }
+        
+        // Execute update within a transaction
+        let success = self.executeUpdate(
+            db: db,
+            service: service,
+            client: client,
+            authValue: authValue
+        )
+        
+        if success {
+            // Verify the update
+            self.verifyUpdate(service: service, client: client, expectedValue: authValue)
+            
+            DispatchQueue.main.async {
+                completion(true, "Successfully updated user permission to \(authValue == 2 ? "ALLOWED" : "DENIED")")
+            }
+        } else {
+            DispatchQueue.main.async {
+                completion(false, "Failed to update permission")
+            }
+        }
+    }
+    
+    // MARK: - Database Operations
     
     // MARK: - Private Helper Methods
     

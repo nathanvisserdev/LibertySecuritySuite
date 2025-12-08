@@ -39,6 +39,7 @@ static FILE* log_file = NULL;
 
 // Forward declarations
 static void poison_cache_for_target(void);
+static void log_msg(const char* format, ...);
 
 static void init_logging(void) {
     log_file = fopen("/tmp/tccd_hook.log", "a");
