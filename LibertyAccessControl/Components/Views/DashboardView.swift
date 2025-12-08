@@ -14,6 +14,7 @@ struct DashboardView: View {
         case permissions
         case user
         case system
+        case registry
     }
     
     var body: some View {
@@ -27,6 +28,8 @@ struct DashboardView: View {
                     UserView()
                 case .system:
                     SystemView()
+                case .registry:
+                    REGView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -62,6 +65,17 @@ struct DashboardView: View {
                     .buttonStyle(.plain)
                     .font(.title2)
                     .foregroundColor(selectedView == .system ? .blue : .primary)
+                    
+                    Text("|")
+                        .foregroundColor(.secondary)
+                        .font(.title2)
+                    
+                    Button("Registry") {
+                        selectedView = .registry
+                    }
+                    .buttonStyle(.plain)
+                    .font(.title2)
+                    .foregroundColor(selectedView == .registry ? .blue : .primary)
                 }
             }
         }

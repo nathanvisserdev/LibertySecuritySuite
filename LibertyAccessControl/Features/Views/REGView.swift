@@ -39,17 +39,6 @@ struct REGView: View {
                 }
             }
             
-            // Load Button
-            Button(action: {
-                viewModel.loadREGData()
-            }) {
-                Label(viewModel.isLoading ? "Loading..." : "Load Registry Database", systemImage: "arrow.clockwise")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isLoading)
-            .padding(.horizontal)
-            
             Divider()
             
             // Entries List
@@ -127,6 +116,9 @@ struct REGView: View {
         }
         .padding()
         .navigationTitle("TCC Registry")
+        .onAppear {
+            viewModel.loadREGData()
+        }
     }
     
     private func fieldRow(_ label: String, value: String) -> some View {
