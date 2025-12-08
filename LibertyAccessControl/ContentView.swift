@@ -25,6 +25,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    RequestListView()
+                } label: {
+                    Label("Request List", systemImage: "list.bullet.rectangle")
+                }
+                
+                NavigationLink {
                     AllowRemoteFileAccessView()
                 } label: {
                     Label("Grant Remote File Access", systemImage: "shield.checkered")
