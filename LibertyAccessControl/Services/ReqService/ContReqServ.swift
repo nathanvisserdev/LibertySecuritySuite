@@ -9,7 +9,7 @@ import Foundation
 import Contacts
 
 class ContReqServ {
-    func reqContPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> CNAuthorizationStatus {
         let store = CNContactStore()
         
         return await withCheckedContinuation { continuation in

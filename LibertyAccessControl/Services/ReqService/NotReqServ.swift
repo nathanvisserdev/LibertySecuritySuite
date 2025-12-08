@@ -9,7 +9,7 @@ import Foundation
 import UserNotifications
 
 class NotReqServ {
-    func reqNotPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> UNAuthorizationStatus {
         return try await withCheckedThrowingContinuation { continuation in
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
                 if let error = error {

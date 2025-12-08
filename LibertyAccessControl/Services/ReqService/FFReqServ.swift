@@ -9,7 +9,7 @@ import Foundation
 import AppKit
 
 class FFReqServ {
-    func reqFFRPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> (granted: Bool, message: String) {
         // Files and Folders permission is granted via file picker
         let openPanel = NSOpenPanel()
         openPanel.canChooseFiles = true

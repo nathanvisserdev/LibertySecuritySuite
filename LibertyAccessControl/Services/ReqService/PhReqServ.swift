@@ -1,5 +1,5 @@
 //
-//  PhoReqServ.swift
+//  PhReqServ.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-08.
@@ -8,8 +8,8 @@
 import Foundation
 import Photos
 
-class PhoReqServ {
-    func reqPhoPerm() async throws -> (granted: Bool, message: String) {
+class PhReqServ {
+    func reqPerm() async throws -> PHAuthorizationStatus {
         return await withCheckedContinuation { continuation in
             PHPhotoLibrary.requestAuthorization { status in
                 switch status {

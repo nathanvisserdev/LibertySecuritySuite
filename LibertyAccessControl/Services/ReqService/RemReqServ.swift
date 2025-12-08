@@ -9,7 +9,7 @@ import Foundation
 import EventKit
 
 class RemReqServ {
-    func reqRemPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> (granted: Bool, message: String) {
         let eventStore = EKEventStore()
         
         if #available(macOS 14.0, *) {

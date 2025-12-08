@@ -7,12 +7,12 @@
 
 import Foundation
 import CoreBluetooth
-
+// TBD Return type
 class BTReqServ: NSObject, CBCentralManagerDelegate {
     private var centralManager: CBCentralManager?
     private var continuation: CheckedContinuation<(granted: Bool, message: String), Never>?
     
-    func reqBTPerm() async -> (granted: Bool, message: String) {
+    func reqPerm() async -> (granted: Bool, message: String) {
         return await withCheckedContinuation { continuation in
             self.continuation = continuation
             

@@ -9,7 +9,7 @@ import Foundation
 import EventKit
 
 class CalReqServ {
-    func reqCalPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> EKAuthorizationStatus {
         let eventStore = EKEventStore()
         
         if #available(macOS 14.0, *) {

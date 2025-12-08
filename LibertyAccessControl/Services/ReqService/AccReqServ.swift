@@ -10,7 +10,7 @@ import ApplicationServices
 import AppKit
 
 class AccReqServ {
-    func reqACPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> (granted: Bool, message: String) {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         let trusted = AXIsProcessTrustedWithOptions(options)
         

@@ -12,7 +12,7 @@ class LocReqServ: NSObject, CLLocationManagerDelegate {
     private var locationManager: CLLocationManager?
     private var continuation: CheckedContinuation<(granted: Bool, message: String), Error>?
     
-    func reqLocPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> CLAuthorizationStatus {
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
             

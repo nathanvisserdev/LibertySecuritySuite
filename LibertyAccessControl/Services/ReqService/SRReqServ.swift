@@ -1,5 +1,5 @@
 //
-//  SRRecServ.swift
+//  SRReqServ.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-08.
@@ -8,8 +8,8 @@
 import Foundation
 import AppKit
 
-class SRRecServ {
-    func reqSRPerm() async throws -> (granted: Bool, message: String) {
+class SRReqServ {
+    func reqPerm() async throws -> SFSpeechRecognizerAuthorizationStatus {
         let hasAccess = CGPreflightScreenCaptureAccess()
         let result = CGRequestScreenCaptureAccess()
         

@@ -8,17 +8,16 @@
 import Foundation
 
 struct ReqListModel {
-    // Service dependencies
     let notificationService: NotReqServ
     let locationService: LocReqServ
     let microphoneService: MicReqServ
     let cameraService: CamReqServ
-    let screenRecordingService: SRRecServ
-    let screenSharingService: SSRecServ
+    let screenRecordingService: SRReqServ
+    let screenSharingService: SSReqServ
     let fullDiskAccessService: FDAReqServ
     let accessibilityService: AccReqServ
     let filesAndFoldersService: FFReqServ
-    let photosService: PhoReqServ
+    let photosService: PhReqServ
     let calendarService: CalReqServ
     let contactsService: ContReqServ
     let bluetoothService: BTReqServ
@@ -30,12 +29,12 @@ struct ReqListModel {
         locationService: LocReqServ = LocReqServ(),
         microphoneService: MicReqServ = MicReqServ(),
         cameraService: CamReqServ = CamReqServ(),
-        screenRecordingService: SRRecServ = SRRecServ(),
-        screenSharingService: SSRecServ = SSRecServ(),
+        screenRecordingService: SRReqServ = SRReqServ(),
+        screenSharingService: SSReqServ = SSReqServ(),
         fullDiskAccessService: FDAReqServ = FDAReqServ(),
         accessibilityService: AccReqServ = AccReqServ(),
         filesAndFoldersService: FFReqServ = FFReqServ(),
-        photosService: PhoReqServ = PhoReqServ(),
+        photosService: PhReqServ = PhReqServ(),
         calendarService: CalReqServ = CalReqServ(),
         contactsService: ContReqServ = ContReqServ(),
         bluetoothService: BTReqServ = BTReqServ(),
@@ -62,193 +61,65 @@ struct ReqListModel {
     // Request methods that delegate to services
     // NOTE: 'mutating' keyword causes 'self' to be passed as 'inout', which conflicts with actor isolation in @MainActor contexts
     func requestNotificationPermission() async throws -> PermissionRequest {
-        let result = try await notificationService.requestPermission()
-        let request = PermissionRequest(
-            type: .notifications,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        let response = try await notificationService.reqPerm()
+        return response
     }
     
     func requestLocationPermission() async throws -> PermissionRequest {
-        let result = try await locationService.requestPermission()
-        let request = PermissionRequest(
-            type: .location,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await locationService.reqPerm()
     }
     
     func requestMicrophonePermission() async throws -> PermissionRequest {
-        let result = try await microphoneService.requestPermission()
-        let request = PermissionRequest(
-            type: .microphone,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await microphoneService.reqPerm()
     }
     
     func requestCameraPermission() async throws -> PermissionRequest {
-        let result = try await cameraService.requestPermission()
-        let request = PermissionRequest(
-            type: .camera,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await cameraService.reqPerm()
     }
     
     func requestScreenRecordingPermission() async throws -> PermissionRequest {
-        let result = try await screenRecordingService.requestPermission()
-        let request = PermissionRequest(
-            type: .screenRecording,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await screenRecordingService.reqPerm()
     }
     
     func requestScreenSharingPermission() async throws -> PermissionRequest {
-        let result = try await screenSharingService.requestPermission()
-        let request = PermissionRequest(
-            type: .screenSharing,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await screenSharingService.reqPerm()
     }
     
     func requestFullDiskAccessPermission() async throws -> PermissionRequest {
-        let result = try await fullDiskAccessService.requestPermission()
-        let request = PermissionRequest(
-            type: .fullDiskAccess,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await fullDiskAccessService.reqPerm()
     }
     
     func requestAccessibilityPermission() async throws -> PermissionRequest {
-        let result = try await accessibilityService.requestPermission()
-        let request = PermissionRequest(
-            type: .accessibility,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await accessibilityService.reqPerm()
     }
     
     func requestFilesAndFoldersPermission() async throws -> PermissionRequest {
-        let result = try await filesAndFoldersService.requestPermission()
-        let request = PermissionRequest(
-            type: .filesAndFolders,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await filesAndFoldersService.reqPerm()
     }
     
-    func requestPhotosPermission() async throws -> PermissionRequest {
-        let result = try await photosService.requestPermission()
-        let request = PermissionRequest(
-            type: .photos,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+    func requestPhotosPermission() async throws -> PHAuthorizationStatus {
+        return try await photosService.reqPerm()
     }
     
     func requestCalendarPermission() async throws -> PermissionRequest {
-        let result = try await calendarService.requestPermission()
-        let request = PermissionRequest(
-            type: .calendar,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await calendarService.reqPerm()
     }
     
     func requestContactsPermission() async throws -> PermissionRequest {
-        let result = try await contactsService.requestPermission()
-        let request = PermissionRequest(
-            type: .contacts,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await contactsService.reqPerm()
     }
     
     func requestBluetoothPermission() async -> PermissionRequest {
-        let result = await bluetoothService.requestPermission()
-        let request = PermissionRequest(
-            type: .bluetooth,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return await bluetoothService.reqPerm()
     }
     
     func requestRemindersPermission() async throws -> PermissionRequest {
-        let result = try await remindersService.requestPermission()
-        let request = PermissionRequest(
-            type: .reminders,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await remindersService.reqPerm()
     }
     
     func requestAppleEventsPermission() async throws -> PermissionRequest {
-        let result = try await appleEventsService.requestPermission()
-        let request = PermissionRequest(
-            type: .appleEvents,
-            granted: result.granted,
-            message: result.message,
-            timestamp: Date()
-        )
-        requestHistory.append(request)
-        return request
+        return try await appleEventsService.reqPerm()
     }
-}
-
-// Supporting types
-struct PermissionRequest: Identifiable {
-    let id = UUID()
-    let type: PermissionType
-    let granted: Bool
-    let message: String
-    let timestamp: Date
 }
 
 enum PermissionType: String {

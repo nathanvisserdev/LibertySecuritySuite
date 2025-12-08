@@ -9,7 +9,7 @@ import Foundation
 import AVFoundation
 
 class MicReqServ {
-    func reqMicPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> AVAuthorizationStatus {
         let granted = await AVCaptureDevice.requestAccess(for: .audio)
         let message = granted ? "Microphone permission granted" : "Microphone permission denied"
         return (granted, message)

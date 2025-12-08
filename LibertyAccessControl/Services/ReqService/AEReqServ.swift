@@ -7,9 +7,9 @@
 
 import Foundation
 import AppKit
-
+// TBD
 class AEReqServ {
-    func reqAEPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> OSStatus {
         // Apple Events (Automation) permission must be manually granted
         // Open System Settings to Privacy & Security > Automation
         let message = "Apple Events (Automation) permission must be manually enabled in System Settings > Privacy & Security > Automation"
