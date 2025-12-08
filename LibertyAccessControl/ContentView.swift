@@ -19,6 +19,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    AppPermissionsView()
+                } label: {
+                    Label("App Permissions", systemImage: "checkmark.shield.fill")
+                }
+                
+                NavigationLink {
                     AllowRemoteFileAccessView()
                 } label: {
                     Label("Grant Remote File Access", systemImage: "shield.checkered")
@@ -46,12 +52,6 @@ struct ContentView: View {
                     RequestPermissionsView()
                 } label: {
                     Label("Request Permissions", systemImage: "hand.raised.fill")
-                }
-                
-                NavigationLink {
-                    AppPermissionsView()
-                } label: {
-                    Label("App Permissions", systemImage: "checkmark.shield.fill")
                 }
                 
                 NavigationLink {
