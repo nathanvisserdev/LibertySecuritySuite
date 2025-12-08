@@ -11,7 +11,6 @@ import SQLite3
 // MARK: - User TCC Database Delete Functions
 extension UserService {
     
-    /// Delete a permission from the user TCC database
     func deletePermission(service: String, client: String, completion: @escaping (Bool, String) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -37,9 +36,6 @@ extension UserService {
         }
     }
     
-    // MARK: - Private Helper Methods
-    
-    /// Execute a DELETE query
     private func executeDelete(db: OpaquePointer?, service: String, client: String) -> Bool {
         let deleteQuery = "DELETE FROM access WHERE service = ? AND client = ?"
         var statement: OpaquePointer?
