@@ -7,7 +7,6 @@
 
 import Foundation
 
-/// Data Transfer Object representing Core Location authorization status
 enum LocAuthStat: Int, Codable {
     case notDetermined = 0
     case restricted = 1

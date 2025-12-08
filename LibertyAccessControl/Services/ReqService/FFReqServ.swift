@@ -9,7 +9,7 @@ import Foundation
 import AppKit
 
 class FFReqServ {
-    func reqPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> Bool {
         // Files and Folders permission is granted via file picker
         let openPanel = NSOpenPanel()
         openPanel.canChooseFiles = true
@@ -19,12 +19,7 @@ class FFReqServ {
         
         return await withCheckedContinuation { continuation in
             openPanel.begin { response in
-                if response == .OK {
-                    let message = "Files and Folders access granted for: \(openPanel.url?.path ?? "unknown")"
-                    continuation.resume(returning: (true, message))
-                } else {
-                    continuation.resume(returning: (false, "Files and Folders access denied"))
-                }
+                continuation.resume(returning: response == .OK)
             }
         }
     }

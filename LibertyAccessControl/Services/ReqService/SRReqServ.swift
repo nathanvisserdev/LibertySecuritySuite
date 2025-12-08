@@ -9,11 +9,9 @@ import Foundation
 import AppKit
 
 class SRReqServ {
-    func reqPerm() async throws -> SFSpeechRecognizerAuthorizationStatus {
-        let hasAccess = CGPreflightScreenCaptureAccess()
+    func reqPerm() async throws -> Bool {
+        _ = CGPreflightScreenCaptureAccess()
         let result = CGRequestScreenCaptureAccess()
-        
-        let message = result ? "Screen Recording permission granted" : "Screen Recording permission denied - Check System Settings > Privacy & Security > Screen Recording"
-        return (result, message)
+        return result
     }
 }

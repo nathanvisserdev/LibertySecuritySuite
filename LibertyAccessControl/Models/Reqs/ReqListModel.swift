@@ -6,9 +6,15 @@
 //
 
 import Foundation
+import UserNotifications
+import CoreLocation
+import AVFoundation
+import Photos
+import EventKit
+import Contacts
 
-struct ReqListModel {
-    let notificationService: UNReqServ
+class ReqListModel {
+    let notificationService: UNReq
     let locationService: LocReqServ
     let microphoneService: MicReqServ
     let cameraService: CamReqServ
@@ -25,7 +31,7 @@ struct ReqListModel {
     let appleEventsService: AEReqServ
     
     init(
-        notificationService: UNReqServ = UNReqServ(),
+        notificationService: UNReq = UNReq(),
         locationService: LocReqServ = LocReqServ(),
         microphoneService: MicReqServ = MicReqServ(),
         cameraService: CamReqServ = CamReqServ(),
@@ -58,65 +64,93 @@ struct ReqListModel {
         self.appleEventsService = appleEventsService
     }
 
-    func requestNotificationPermission() async throws -> PermissionRequest {
-        let response = try await notificationService.reqPerm()
-        return response
+    func requestNotificationPermission() async throws -> UNAuthStatDTO {
+        let status = try await notificationService.reqPerm()
+        let dto = UNAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestLocationPermission() async throws -> PermissionRequest {
-        return try await locationService.reqPerm()
+    func requestLocationPermission() async throws -> CLAuthStatDTO {
+        let status = try await locationService.reqPerm()
+        let dto = CLAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestMicrophonePermission() async throws -> PermissionRequest {
-        return try await microphoneService.reqPerm()
+    func requestMicrophonePermission() async throws -> AVAuthStatDTO {
+        let status = try await microphoneService.reqPerm()
+        let dto = AVAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestCameraPermission() async throws -> PermissionRequest {
-        return try await cameraService.reqPerm()
+    func requestCameraPermission() async throws -> AVAuthStatDTO {
+        let status = try await cameraService.reqPerm()
+        let dto = AVAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestScreenRecordingPermission() async throws -> PermissionRequest {
-        return try await screenRecordingService.reqPerm()
+    func requestScreenRecordingPermission() async throws -> BoolAuthDTO {
+        let granted = try await screenRecordingService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestScreenSharingPermission() async throws -> PermissionRequest {
-        return try await screenSharingService.reqPerm()
+    func requestScreenSharingPermission() async throws -> BoolAuthDTO {
+        let granted = try await screenSharingService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestFullDiskAccessPermission() async throws -> PermissionRequest {
-        return try await fullDiskAccessService.reqPerm()
+    func requestFullDiskAccessPermission() async throws -> BoolAuthDTO {
+        let granted = try await fullDiskAccessService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestAccessibilityPermission() async throws -> PermissionRequest {
-        return try await accessibilityService.reqPerm()
+    func requestAccessibilityPermission() async throws -> BoolAuthDTO {
+        let granted = try await accessibilityService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestFilesAndFoldersPermission() async throws -> PermissionRequest {
-        return try await filesAndFoldersService.reqPerm()
+    func requestFilesAndFoldersPermission() async throws -> BoolAuthDTO {
+        let granted = try await filesAndFoldersService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestPhotosPermission() async throws -> PHAuthorizationStatus {
-        return try await photosService.reqPerm()
+    func requestPhotosPermission() async throws -> PHAuthStatDTO {
+        let status = try await photosService.reqPerm()
+        let dto = PHAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestCalendarPermission() async throws -> PermissionRequest {
-        return try await calendarService.reqPerm()
+    func requestCalendarPermission() async throws -> EKAuthStatDTO {
+        let status = try await calendarService.reqPerm()
+        let dto = EKAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestContactsPermission() async throws -> PermissionRequest {
-        return try await contactsService.reqPerm()
+    func requestContactsPermission() async throws -> CNAuthStatDTO {
+        let status = try await contactsService.reqPerm()
+        let dto = CNAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestBluetoothPermission() async -> PermissionRequest {
-        return await bluetoothService.reqPerm()
+    func requestBluetoothPermission() async -> BoolAuthDTO {
+        let granted = await bluetoothService.reqPerm()
+        let dto = BoolAuthDTO(from: granted)
+        return dto
     }
     
-    func requestRemindersPermission() async throws -> PermissionRequest {
-        return try await remindersService.reqPerm()
+    func requestRemindersPermission() async throws -> EKAuthStatDTO {
+        let status = try await remindersService.reqPerm()
+        let dto = EKAuthStatDTO(from: status)
+        return dto
     }
     
-    func requestAppleEventsPermission() async throws -> PermissionRequest {
-        return try await appleEventsService.reqPerm()
+    func requestAppleEventsPermission() async throws -> OSStatus {
+        let status = try await appleEventsService.reqPerm()
+        return status
     }
 }
 

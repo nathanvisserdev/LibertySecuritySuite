@@ -13,22 +13,13 @@ class CalReqServ {
         let eventStore = EKEventStore()
         
         if #available(macOS 14.0, *) {
-            do {
-                let granted = try await eventStore.requestFullAccessToEvents()
-                let message = granted ? "Calendar permission granted" : "Calendar permission denied"
-                return (granted, message)
-            } catch {
-                return (false, "Calendar permission error: \(error.localizedDescription)")
-            }
+            _ = try await eventStore.requestFullAccessToEvents()
+            return EKEventStore.authorizationStatus(for: .event)
         } else {
             return await withCheckedContinuation { continuation in
-                eventStore.requestAccess(to: .event) { granted, error in
-                    if let error = error {
-                        continuation.resume(returning: (false, "Calendar permission error: \(error.localizedDescription)"))
-                        return
-                    }
-                    let message = granted ? "Calendar permission granted" : "Calendar permission denied"
-                    continuation.resume(returning: (granted, message))
+                eventStore.requestAccess(to: .event) { _, _ in
+                    let status = EKEventStore.authorizationStatus(for: .event)
+                    continuation.resume(returning: status)
                 }
             }
         }

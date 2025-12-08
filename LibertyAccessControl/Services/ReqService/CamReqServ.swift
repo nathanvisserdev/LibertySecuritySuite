@@ -9,9 +9,8 @@ import Foundation
 import AVFoundation
 
 class CamReqServ {
-    func reqPerm() async throws -> (granted: Bool, message: String) {
-        let granted = await AVCaptureDevice.requestAccess(for: .video)
-        let message = granted ? "Camera permission granted" : "Camera permission denied"
-        return (granted, message)
+    func reqPerm() async throws -> AVAuthorizationStatus {
+        _ = await AVCaptureDevice.requestAccess(for: .video)
+        return AVCaptureDevice.authorizationStatus(for: .video)
     }
 }

@@ -9,26 +9,17 @@ import Foundation
 import EventKit
 
 class RemReqServ {
-    func reqPerm() async throws -> (granted: Bool, message: String) {
+    func reqPerm() async throws -> EKAuthorizationStatus {
         let eventStore = EKEventStore()
         
         if #available(macOS 14.0, *) {
-            do {
-                let granted = try await eventStore.requestFullAccessToReminders()
-                let message = granted ? "Reminders permission granted" : "Reminders permission denied"
-                return (granted, message)
-            } catch {
-                return (false, "Reminders permission error: \(error.localizedDescription)")
-            }
+            _ = try await eventStore.requestFullAccessToReminders()
+            return EKEventStore.authorizationStatus(for: .reminder)
         } else {
             return await withCheckedContinuation { continuation in
-                eventStore.requestAccess(to: .reminder) { granted, error in
-                    if let error = error {
-                        continuation.resume(returning: (false, "Reminders permission error: \(error.localizedDescription)"))
-                        return
-                    }
-                    let message = granted ? "Reminders permission granted" : "Reminders permission denied"
-                    continuation.resume(returning: (granted, message))
+                eventStore.requestAccess(to: .reminder) { _, _ in
+                    let status = EKEventStore.authorizationStatus(for: .reminder)
+                    continuation.resume(returning: status)
                 }
             }
         }

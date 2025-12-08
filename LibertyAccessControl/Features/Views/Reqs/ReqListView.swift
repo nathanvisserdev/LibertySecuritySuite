@@ -9,74 +9,37 @@ import SwiftUI
 
 struct ReqListView: View {
     @StateObject private var viewModel = ReqListViewModel()
-    @State private var showHistory = false
+    @State private var showStatusDisplay = false
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Header
                 VStack(spacing: 10) {
                     Image(systemName: "shield.checkered")
                         .font(.system(size: 60))
                         .foregroundColor(.blue)
                     
-                    Text("Request Permissions")
-                        .font(.title)
-                        .fontWeight(.bold)
-                    
-                    Text("Request system permissions for your application")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    // Messages
-                    if let errorMessage = viewModel.errorMessage {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                            Text(errorMessage)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(8)
-                        .padding(.horizontal)
-                    }
-                    
-                    if let successMessage = viewModel.successMessage {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                            Text(successMessage)
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(8)
-                        .padding(.horizontal)
-                    }
-                }
+                Text("Request Permissions")
+                    .font(.title)
+                    .fontWeight(.bold)
                 
-                Divider()
-                
-                if viewModel.isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .padding()
-                } else {
-                    // Permission Request Buttons Grid
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
+                Text("Request system permissions for your application")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            
+            Divider()
+            
+            // Permission Request Buttons Grid
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 200))], spacing: 16) {
                         PermissionRequestButton(
                             title: "Notifications",
                             icon: "bell.badge.fill",
                             color: .blue
                         ) {
-                            viewModel.requestPermission(for: .notifications)
+                            viewModel.requestNotificationPermission()
                         }
                         
                         PermissionRequestButton(
@@ -84,7 +47,7 @@ struct ReqListView: View {
                             icon: "location.fill",
                             color: .green
                         ) {
-                            viewModel.requestPermission(for: .location)
+                            viewModel.requestLocationPermission()
                         }
                         
                         PermissionRequestButton(
@@ -92,7 +55,7 @@ struct ReqListView: View {
                             icon: "mic.fill",
                             color: .red
                         ) {
-                            viewModel.requestPermission(for: .microphone)
+                            viewModel.requestMicrophonePermission()
                         }
                         
                         PermissionRequestButton(
@@ -100,47 +63,7 @@ struct ReqListView: View {
                             icon: "camera.fill",
                             color: .purple
                         ) {
-                            viewModel.requestPermission(for: .camera)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Screen Recording",
-                            icon: "record.circle.fill",
-                            color: .orange
-                        ) {
-                            viewModel.requestPermission(for: .screenRecording)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Screen Sharing",
-                            icon: "rectangle.on.rectangle",
-                            color: .cyan
-                        ) {
-                            viewModel.requestPermission(for: .screenSharing)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Full Disk Access",
-                            icon: "internaldrive.fill",
-                            color: .indigo
-                        ) {
-                            viewModel.requestPermission(for: .fullDiskAccess)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Accessibility",
-                            icon: "accessibility",
-                            color: .pink
-                        ) {
-                            viewModel.requestPermission(for: .accessibility)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Files & Folders",
-                            icon: "folder.fill",
-                            color: .yellow
-                        ) {
-                            viewModel.requestPermission(for: .filesAndFolders)
+                            viewModel.requestCameraPermission()
                         }
                         
                         PermissionRequestButton(
@@ -148,7 +71,7 @@ struct ReqListView: View {
                             icon: "photo.fill",
                             color: .blue
                         ) {
-                            viewModel.requestPermission(for: .photos)
+                            viewModel.requestPhotosPermission()
                         }
                         
                         PermissionRequestButton(
@@ -156,7 +79,7 @@ struct ReqListView: View {
                             icon: "calendar",
                             color: .red
                         ) {
-                            viewModel.requestPermission(for: .calendar)
+                            viewModel.requestCalendarPermission()
                         }
                         
                         PermissionRequestButton(
@@ -164,15 +87,7 @@ struct ReqListView: View {
                             icon: "person.crop.circle.fill",
                             color: .green
                         ) {
-                            viewModel.requestPermission(for: .contacts)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Bluetooth",
-                            icon: "wave.3.right.circle.fill",
-                            color: .blue
-                        ) {
-                            viewModel.requestPermission(for: .bluetooth)
+                            viewModel.requestContactsPermission()
                         }
                         
                         PermissionRequestButton(
@@ -180,15 +95,7 @@ struct ReqListView: View {
                             icon: "checklist",
                             color: .orange
                         ) {
-                            viewModel.requestPermission(for: .reminders)
-                        }
-                        
-                        PermissionRequestButton(
-                            title: "Apple Events",
-                            icon: "applescript.fill",
-                            color: .gray
-                        ) {
-                            viewModel.requestPermission(for: .appleEvents)
+                            viewModel.requestRemindersPermission()
                         }
                     }
                     .padding(.horizontal)
@@ -196,60 +103,121 @@ struct ReqListView: View {
                     Divider()
                         .padding(.vertical)
                     
-                    // History Section
+                    // Status Display Section
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Text("Request History")
+                            Text("Authorization Status")
                                 .font(.headline)
                             
                             Spacer()
                             
-                            Button(action: { showHistory.toggle() }) {
+                            Button(action: { showStatusDisplay.toggle() }) {
                                 HStack {
-                                    Image(systemName: showHistory ? "chevron.up" : "chevron.down")
-                                    Text(showHistory ? "Hide" : "Show")
+                                    Image(systemName: showStatusDisplay ? "chevron.up" : "chevron.down")
+                                    Text(showStatusDisplay ? "Hide" : "Show")
                                         .font(.caption)
                                 }
                             }
                             .buttonStyle(.plain)
                             .foregroundColor(.blue)
                             
-                            if !viewModel.model.requestHistory.isEmpty {
-                                Button(action: { viewModel.clearHistory() }) {
-                                    Text("Clear")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(.plain)
+                            Button(action: { viewModel.clearAllStatuses() }) {
+                                Text("Clear")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
                             }
+                            .buttonStyle(.plain)
                         }
                         
-                        if showHistory {
-                            if viewModel.model.requestHistory.isEmpty {
-                                Text("No permission requests yet")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .padding()
-                            } else {
-                                ForEach(viewModel.getAllHistory()) { request in
-                                    HistoryEntryView(request: request)
+                        if showStatusDisplay {
+                            VStack(spacing: 8) {
+                                if let status = viewModel.notificationStatus {
+                                    StatusRow(title: "Notifications", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.locationStatus {
+                                    StatusRow(title: "Location", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.microphoneStatus {
+                                    StatusRow(title: "Microphone", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.cameraStatus {
+                                    StatusRow(title: "Camera", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.photosStatus {
+                                    StatusRow(title: "Photos", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.calendarStatus {
+                                    StatusRow(title: "Calendar", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.contactsStatus {
+                                    StatusRow(title: "Contacts", statusValue: statusToString(status.status))
+                                }
+                                
+                                if let status = viewModel.remindersStatus {
+                                    StatusRow(title: "Reminders", statusValue: statusToString(status.status))
+                                }
+                                
+                                if viewModel.notificationStatus == nil && 
+                                   viewModel.locationStatus == nil && 
+                                   viewModel.microphoneStatus == nil && 
+                                   viewModel.cameraStatus == nil && 
+                                   viewModel.photosStatus == nil && 
+                                   viewModel.calendarStatus == nil && 
+                                   viewModel.contactsStatus == nil && 
+                                   viewModel.remindersStatus == nil {
+                                    Text("No permission responses yet")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding()
                                 }
                             }
                         }
-                    }
-                    .padding()
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(8)
-                    .padding(.horizontal)
                 }
+                .padding()
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(8)
+                .padding(.horizontal)
             }
             .padding()
         }
         .navigationTitle("Request Permissions")
     }
+    
+    private func statusToString(_ status: Any) -> String {
+        return String(describing: status)
+    }
+};struct StatusRow: View {
+    let title: String
+    let statusValue: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.semibold)
+            
+            Spacer()
+            
+            Text(statusValue)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(nsColor: .windowBackgroundColor))
+                .cornerRadius(4)
+        }
+        .padding(8)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .cornerRadius(6)
+    }
 }
 
-// Permission Request Button Component
 struct PermissionRequestButton: View {
     let title: String
     let icon: String
@@ -279,37 +247,6 @@ struct PermissionRequestButton: View {
             )
         }
         .buttonStyle(.plain)
-    }
-}
-
-// History Entry View Component
-struct HistoryEntryView: View {
-    let request: PermissionRequest
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: request.granted ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundColor(request.granted ? .green : .red)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(request.type.rawValue)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                
-                Text(request.message)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Text(request.timestamp.formatted(date: .abbreviated, time: .shortened))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-        }
-        .padding(8)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .cornerRadius(6)
     }
 }
 

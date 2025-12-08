@@ -10,7 +10,7 @@ import CoreLocation
 
 class LocReqServ: NSObject, CLLocationManagerDelegate {
     private var locationManager: CLLocationManager?
-    private var continuation: CheckedContinuation<(granted: Bool, message: String), Error>?
+    private var continuation: CheckedContinuation<CLAuthorizationStatus, Error>?
     
     func reqPerm() async throws -> CLAuthorizationStatus {
         return try await withCheckedThrowingContinuation { continuation in
@@ -30,16 +30,14 @@ class LocReqServ: NSObject, CLLocationManagerDelegate {
         guard continuation != nil else { return }
         
         switch status {
-        case .authorizedWhenInUse, .authorizedAlways:
-            continuation?.resume(returning: (true, "Location permission granted"))
-        case .denied, .restricted:
-            continuation?.resume(returning: (false, "Location permission denied"))
+        case .authorizedWhenInUse, .authorizedAlways, .denied, .restricted:
+            continuation?.resume(returning: status)
+            continuation = nil
         case .notDetermined:
             return // Wait for user decision
         @unknown default:
-            continuation?.resume(returning: (false, "Unknown location permission status"))
+            continuation?.resume(returning: status)
+            continuation = nil
         }
-        
-        continuation = nil
     }
 }

@@ -10,9 +10,9 @@ import CoreBluetooth
 // TBD Return type
 class BTReqServ: NSObject, CBCentralManagerDelegate {
     private var centralManager: CBCentralManager?
-    private var continuation: CheckedContinuation<(granted: Bool, message: String), Never>?
+    private var continuation: CheckedContinuation<Bool, Never>?
     
-    func reqPerm() async -> (granted: Bool, message: String) {
+    func reqPerm() async -> Bool {
         return await withCheckedContinuation { continuation in
             self.continuation = continuation
             
@@ -27,17 +27,17 @@ class BTReqServ: NSObject, CBCentralManagerDelegate {
         
         switch central.state {
         case .poweredOn:
-            continuation.resume(returning: (true, "Bluetooth permission granted"))
+            continuation.resume(returning: true)
         case .unauthorized:
-            continuation.resume(returning: (false, "Bluetooth permission denied"))
+            continuation.resume(returning: false)
         case .poweredOff:
-            continuation.resume(returning: (false, "Bluetooth is powered off"))
+            continuation.resume(returning: false)
         case .unsupported:
-            continuation.resume(returning: (false, "Bluetooth is not supported on this device"))
+            continuation.resume(returning: false)
         case .unknown, .resetting:
             return // Wait for final state
         @unknown default:
-            continuation.resume(returning: (false, "Unknown Bluetooth state"))
+            continuation.resume(returning: false)
         }
         
         self.continuation = nil

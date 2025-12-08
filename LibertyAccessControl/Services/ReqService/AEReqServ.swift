@@ -12,12 +12,12 @@ class AEReqServ {
     func reqPerm() async throws -> OSStatus {
         // Apple Events (Automation) permission must be manually granted
         // Open System Settings to Privacy & Security > Automation
-        let message = "Apple Events (Automation) permission must be manually enabled in System Settings > Privacy & Security > Automation"
         
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
             NSWorkspace.shared.open(url)
         }
         
-        return (false, message)
+        // Return errAuthorizationDenied (-60005) to indicate manual action required
+        return errAuthorizationDenied
     }
 }
