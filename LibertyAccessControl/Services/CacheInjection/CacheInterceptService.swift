@@ -58,8 +58,8 @@ class CacheInterceptService {
     /// Kill all tccd processes
     private func killTCCD() throws {
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        task.arguments = ["killall", "tccd"]
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
+        task.arguments = ["tccd"]
         
         try task.run()
         task.waitUntilExit()
@@ -81,7 +81,7 @@ class CacheInterceptService {
         }
         
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        task.executableURL = URL(fileURLWithPath: "/System/Library/PrivateFrameworks/TCC.framework/Support/tccd")
         
         var env = ProcessInfo.processInfo.environment
         env["DYLD_INSERT_LIBRARIES"] = hookDylibPath
@@ -91,10 +91,7 @@ class CacheInterceptService {
         }
         
         task.environment = env
-        task.arguments = [
-            "/System/Library/PrivateFrameworks/TCC.framework/Support/tccd",
-            "system"
-        ]
+        task.arguments = []
         
         // Run in background
         try task.run()
