@@ -12,8 +12,7 @@ class CacheInterceptService {
     static let shared = CacheInterceptService()
     
     private lazy var hookDylibPath: String = {
-        let bundlePath = Bundle.main.bundlePath
-        return bundlePath + "/Contents/Resources/tccd_hook.dylib"
+        return "/Users/nathanvisser/Code/test/LibertyAccessControl/LibertyAccessControl/Services/CacheInjection/tccd_hook.dylib"
     }()
     
     private let logPath = "/tmp/tccd_hook.log"
