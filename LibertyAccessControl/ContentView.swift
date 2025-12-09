@@ -37,6 +37,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    SecurityMonitorView()
+                } label: {
+                    Label("Security Monitor", systemImage: "shield.checkered")
+                }
+                
+                NavigationLink {
                     MonitoringPreferencesView()
                 } label: {
                     Label("Monitoring Preferences", systemImage: "slider.horizontal.3")
