@@ -24,14 +24,23 @@ class AuthenticationState: ObservableObject {
     private let authKey = "com.libertyaccesscontrol.authenticated"
     
     func checkAuthenticationStatus() {
-        // Check if user was previously authenticated in this session
-        let wasAuthenticated = UserDefaults.standard.bool(forKey: authKey)
+        // Always require authentication at launch - never persist auth state
+        status = .unauthenticated
+        showingAuthSheet = true
         
-        if wasAuthenticated {
-            status = .authenticated
-        } else {
-            status = .unauthenticated
-            showingAuthSheet = true
+        // Automatically trigger biometric authentication
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.authenticate { success, error in
+                if !success {
+                    let msg = "⚠️ Biometric authentication failed at launch: \(error ?? "Unknown error")"
+                    print(msg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": msg, "type": SystemMessage.MessageType.warning]
+                    )
+                }
+            }
         }
     }
     
@@ -54,7 +63,14 @@ class AuthenticationState: ObservableObject {
                 if success {
                     self?.status = .authenticated
                     self?.showingAuthSheet = false
-                    UserDefaults.standard.set(true, forKey: self?.authKey ?? "")
+                    // Don't persist authentication - require it every launch
+                    let successMsg = "✅ Biometric authentication successful"
+                    print(successMsg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
+                    )
                     completion(true, nil)
                 } else {
                     let errorMessage = authError?.localizedDescription ?? "Authentication failed"
@@ -73,7 +89,14 @@ class AuthenticationState: ObservableObject {
                 if success {
                     self?.status = .authenticated
                     self?.showingAuthSheet = false
-                    UserDefaults.standard.set(true, forKey: self?.authKey ?? "")
+                    // Don't persist authentication - require it every launch
+                    let successMsg = "✅ Passcode authentication successful"
+                    print(successMsg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
+                    )
                     completion(true, nil)
                 } else {
                     let errorMessage = authError?.localizedDescription ?? "Authentication failed"
@@ -87,10 +110,7 @@ class AuthenticationState: ObservableObject {
     func logout() {
         status = .unauthenticated
         showingAuthSheet = true
-        UserDefaults.standard.set(false, forKey: authKey)
-        
-        // Clear any cached data
-        UserDefaults.standard.synchronize()
+        // No need to clear UserDefaults since we don't persist auth state anymore
     }
     
     func retryAuthentication() {
