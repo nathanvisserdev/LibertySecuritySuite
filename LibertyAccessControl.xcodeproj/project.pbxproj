@@ -12,6 +12,8 @@
 		15A730952EE8752C0060D137 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A730942EE8752C0060D137 /* Foundation.framework */; };
 		15A7309B2EE88F0D0060D137 /* com.liberty.libertyAccessControl.helper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A730882EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		15A7309E2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */; };
+		15A730A52EE89D050060D137 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15A730A32EE89D050060D137 /* main.swift */; };
+		15A730A72EE89E940060D137 /* libbsm.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A730A62EE89E940060D137 /* libbsm.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +65,10 @@
 		15A730922EE875090060D137 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		15A730942EE8752C0060D137 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = com.liberty.LibertyAccessControl.helper.plist; path = PrivilegedHelper/com.liberty.LibertyAccessControl.helper.plist; sourceTree = "<group>"; };
+		15A730A12EE89D050060D137 /* com.liberty.LibertyAccessControl.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.liberty.LibertyAccessControl.helper.plist; sourceTree = "<group>"; };
+		15A730A22EE89D050060D137 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		15A730A32EE89D050060D137 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		15A730A62EE89E940060D137 /* libbsm.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbsm.tbd; path = usr/lib/libbsm.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -127,6 +133,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15A730A72EE89E940060D137 /* libbsm.tbd in Frameworks */,
 				15A730952EE8752C0060D137 /* Foundation.framework in Frameworks */,
 				15A730932EE875090060D137 /* Security.framework in Frameworks */,
 				15A730912EE874FE0060D137 /* libEndpointSecurity.tbd in Frameworks */,
@@ -139,6 +146,7 @@
 		155824722EE3646D0002EDA8 = {
 			isa = PBXGroup;
 			children = (
+				15A730A42EE89D050060D137 /* PrivilegedHelper */,
 				15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */,
 				1558247D2EE3646E0002EDA8 /* LibertyAccessControl */,
 				1558248D2EE364700002EDA8 /* LibertyAccessControlTests */,
@@ -163,11 +171,22 @@
 		15A7308F2EE874FE0060D137 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				15A730A62EE89E940060D137 /* libbsm.tbd */,
 				15A730942EE8752C0060D137 /* Foundation.framework */,
 				15A730922EE875090060D137 /* Security.framework */,
 				15A730902EE874FE0060D137 /* libEndpointSecurity.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		15A730A42EE89D050060D137 /* PrivilegedHelper */ = {
+			isa = PBXGroup;
+			children = (
+				15A730A12EE89D050060D137 /* com.liberty.LibertyAccessControl.helper.plist */,
+				15A730A22EE89D050060D137 /* Info.plist */,
+				15A730A32EE89D050060D137 /* main.swift */,
+			);
+			path = PrivilegedHelper;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -362,6 +381,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15A730A52EE89D050060D137 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
