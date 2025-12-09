@@ -12,6 +12,8 @@ import ServiceManagement
 struct LibertyAccessControlApp: App {
     @StateObject private var preferences = MonitoringPreferences()
     @StateObject private var monitoringService: ReqMonVM
+    @StateObject private var authState = AuthenticationState()
+    @StateObject private var blacklistEnforcementService: BlacklistEnforcementService
     
     init() {
         // Create service dependencies
@@ -20,6 +22,9 @@ struct LibertyAccessControlApp: App {
         let parser = TCCLogParser()
         let notificationService = NotificationService(preferences: prefs, trustManager: trustManager)
         let systemMonitor = SystemMonitorService(parser: parser, notificationService: notificationService)
+        let systemService = SystemService()
+        let userService = UserService()
+        let blacklistEnforcement = BlacklistEnforcementService(systemService: systemService, userService: userService)
         
         // Inject services into monitoring service
         _preferences = StateObject(wrappedValue: prefs)
@@ -27,6 +32,7 @@ struct LibertyAccessControlApp: App {
             monitorService: systemMonitor,
             notificationService: notificationService
         ))
+        _blacklistEnforcementService = StateObject(wrappedValue: blacklistEnforcement)
         
         // Register app to launch at login
         registerLaunchAtLogin()
@@ -34,21 +40,42 @@ struct LibertyAccessControlApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(preferences)
-                .environmentObject(monitoringService)
-                .onAppear {
-                    // Start monitoring after environment is set up
-                    monitoringService.startBackgroundMonitoring()
-                    
-                    // Start blacklist enforcement
-                    BlacklistEnforcementService.shared.startMonitoring()
-                    
-                    // Perform initial security scan ASYNC (don't block UI)
-                    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2.0) {
-                        self.performInitialSecurityScan()
-                    }
+            Group {
+                if authState.status == .authenticated {
+                    ContentView()
+                        .environmentObject(preferences)
+                        .environmentObject(monitoringService)
+                        .environmentObject(blacklistEnforcementService)
+                        .onAppear {
+                            // Start monitoring after environment is set up
+                            monitoringService.startBackgroundMonitoring()
+                            
+                            // Start blacklist enforcement
+                            blacklistEnforcementService.startMonitoring()
+                            
+                            // Perform initial security scan ASYNC (don't block UI)
+                            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2.0) {
+                                self.performInitialSecurityScan()
+                            }
+                        }
+                        .toolbar {
+                            ToolbarItem(placement: .automatic) {
+                                Button(action: {
+                                    authState.logout()
+                                }) {
+                                    Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                                }
+                            }
+                        }
+                } else {
+                    AuthenticationView()
+                        .environmentObject(authState)
                 }
+            }
+            .environmentObject(authState)
+            .onAppear {
+                authState.checkAuthenticationStatus()
+            }
         }
     }
     
