@@ -65,6 +65,14 @@ struct ContentView: View {
                 } label: {
                     Label("Monitoring Preferences", systemImage: "slider.horizontal.3")
                 }
+                
+                Divider()
+                
+                NavigationLink {
+                    SecureNotesView()
+                } label: {
+                    Label("Secure Notes", systemImage: "lock.doc")
+                }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
