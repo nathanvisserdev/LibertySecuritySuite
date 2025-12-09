@@ -37,6 +37,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    NetworkMonitorView()
+                } label: {
+                    Label("Network & Firewall", systemImage: "network")
+                }
+                
+                NavigationLink {
                     BlacklistManagementView()
                 } label: {
                     Label("Blacklist Management", systemImage: "hand.raised.fill")
