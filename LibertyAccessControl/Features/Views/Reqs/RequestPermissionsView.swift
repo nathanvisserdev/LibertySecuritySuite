@@ -19,7 +19,7 @@ struct RequestPermissionsView: View {
                     .font(.title)
                     .fontWeight(.bold)
                 
-                Text("Check and request permissions. Compares API status with TCC database.")
+                Text("TCC database status shown by default. Click 'Validate' to check API status (may show dialogs).")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -46,11 +46,15 @@ struct RequestPermissionsView: View {
                 Button(action: {
                     viewModel.loadAllPermissions()
                 }) {
-                    Label("Check All Permissions", systemImage: "arrow.clockwise")
+                    Label("Refresh from TCC", systemImage: "arrow.clockwise")
                         .font(.subheadline)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .disabled(viewModel.isLoading)
+                
+                Text("(No dialogs)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
                 
                 if !viewModel.getDiscrepancies().isEmpty {
                     Text("\(viewModel.getDiscrepancies().count) discrepancies")
@@ -97,11 +101,11 @@ struct RequestPermissionsView: View {
                         ForEach(filteredPermissions) { comparison in
                             PermissionRow(
                                 comparison: comparison,
-                                onRequest: {
-                                    viewModel.requestPermission(comparison.permissionType)
+                                onValidate: {
+                                    viewModel.fullyValidatePermission(comparison.permissionType)
                                 },
                                 onRefresh: {
-                                    viewModel.checkPermission(comparison.permissionType)
+                                    viewModel.quickRefreshPermission(comparison.permissionType)
                                 }
                             )
                             .background(Color(NSColor.controlBackgroundColor))
@@ -127,8 +131,10 @@ struct RequestPermissionsView: View {
 
 struct PermissionRow: View {
     let comparison: PermissionStatusComparison
-    let onRequest: () -> Void
+    let onValidate: () -> Void
     let onRefresh: () -> Void
+    
+    @State private var showValidateInfo = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -154,33 +160,62 @@ struct PermissionRow: View {
                         Spacer()
                     }
                     
-                    // API Status
-                    HStack(spacing: 8) {
-                        Text("API Status:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        StatusBadge(status: comparison.apiStatus, type: .api)
-                    }
-                    
-                    // TCC Database Status
-                    if let userTCC = comparison.userTCCStatus {
+                    // Status Display - show what we have
+                    if comparison.apiStatus == "Not Requested" {
+                        // Only TCC database info available
                         HStack(spacing: 8) {
-                            Text("User TCC:")
+                            Text("TCC Status:")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            StatusBadge(status: userTCC, type: .tcc)
+                            if let userTCC = comparison.userTCCStatus {
+                                StatusBadge(status: userTCC, type: .tcc)
+                                Text("(User)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            } else if let systemTCC = comparison.systemTCCStatus {
+                                StatusBadge(status: systemTCC, type: .tcc)
+                                Text("(System)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                StatusBadge(status: "Not Found", type: .tcc)
+                            }
                         }
-                    }
-                    
-                    if let systemTCC = comparison.systemTCCStatus {
+                        
+                        Text("Click 'Validate' to check API status")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .italic()
+                    } else {
+                        // Full validation done - show both
                         HStack(spacing: 8) {
-                            Text("System TCC:")
+                            Text("API Status:")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            StatusBadge(status: systemTCC, type: .tcc)
+                            StatusBadge(status: comparison.apiStatus, type: .api)
+                        }
+                        
+                        // TCC Database Status
+                        if let userTCC = comparison.userTCCStatus {
+                            HStack(spacing: 8) {
+                                Text("User TCC:")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                StatusBadge(status: userTCC, type: .tcc)
+                            }
+                        }
+                        
+                        if let systemTCC = comparison.systemTCCStatus {
+                            HStack(spacing: 8) {
+                                Text("System TCC:")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                StatusBadge(status: systemTCC, type: .tcc)
+                            }
                         }
                     }
                     
@@ -202,20 +237,43 @@ struct PermissionRow: View {
                 Spacer()
                 
                 // Action Buttons
-                VStack(spacing: 8) {
-                    Button(action: onRequest) {
-                        Text("Request")
-                            .font(.caption)
-                            .frame(minWidth: 70)
+                VStack(spacing: 6) {
+                    // Validate button (may trigger permission dialog)
+                    Button(action: onValidate) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.shield")
+                                .font(.caption2)
+                            Text("Validate")
+                                .font(.caption)
+                        }
+                        .frame(minWidth: 85)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderedProminent)
+                    .help("Request permission and compare API with TCC database (may show permission dialog)")
                     
+                    // Refresh button (TCC only, no dialog)
                     Button(action: onRefresh) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption)
-                            .frame(minWidth: 70)
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.caption2)
+                            Text("Refresh")
+                                .font(.caption)
+                        }
+                        .frame(minWidth: 85)
                     }
                     .buttonStyle(.bordered)
+                    .help("Refresh status from TCC database only (no dialog)")
+                    
+                    // Info indicator
+                    if comparison.apiStatus == "Not Requested" {
+                        Text("TCC only")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Validated")
+                            .font(.caption2)
+                            .foregroundColor(.green)
+                    }
                 }
             }
             .padding()

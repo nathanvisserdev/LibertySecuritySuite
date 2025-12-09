@@ -165,6 +165,47 @@ class ReqListModel {
     
     // MARK: - Permission Status Comparison Methods
     
+    // MARK: TCC-Only Check Methods (No User Interaction)
+    
+    /// Check permission status from TCC database only (doesn't trigger permission dialog)
+    func checkTCCOnlyStatus(for permissionType: PermissionType) -> PermissionStatusComparison {
+        let tccServiceName = permissionType.tccServiceName
+        let systemTCC = systemService.getAuthValue(service: tccServiceName, clientBundleID: appBundleID)
+        let userTCC = userService.getAuthValue(service: tccServiceName, clientBundleID: appBundleID)
+        
+        let systemTCCStatus = authValueToString(systemTCC)
+        let userTCCStatus = authValueToString(userTCC)
+        let primaryTCCStatus = userTCCStatus ?? systemTCCStatus
+        
+        return PermissionStatusComparison(
+            permissionType: permissionType,
+            apiStatus: primaryTCCStatus ?? "Not Requested",
+            systemTCCStatus: systemTCCStatus,
+            userTCCStatus: userTCCStatus,
+            matchStatus: primaryTCCStatus == nil ? .tccNotFound : .matched
+        )
+    }
+    
+    /// Check all permissions from TCC database only (initial load without triggering dialogs)
+    func checkAllTCCOnlyStatuses() -> [PermissionStatusComparison] {
+        return [
+            checkTCCOnlyStatus(for: .notifications),
+            checkTCCOnlyStatus(for: .location),
+            checkTCCOnlyStatus(for: .microphone),
+            checkTCCOnlyStatus(for: .camera),
+            checkTCCOnlyStatus(for: .screenRecording),
+            checkTCCOnlyStatus(for: .fullDiskAccess),
+            checkTCCOnlyStatus(for: .accessibility),
+            checkTCCOnlyStatus(for: .photos),
+            checkTCCOnlyStatus(for: .calendar),
+            checkTCCOnlyStatus(for: .contacts),
+            checkTCCOnlyStatus(for: .bluetooth),
+            checkTCCOnlyStatus(for: .reminders)
+        ]
+    }
+    
+    // MARK: Full Validation Methods (With User Interaction)
+    
     /// Check notification permission and compare with TCC database
     func checkNotificationPermissionWithComparison() async throws -> PermissionStatusComparison {
         let dto = try await requestNotificationPermission()

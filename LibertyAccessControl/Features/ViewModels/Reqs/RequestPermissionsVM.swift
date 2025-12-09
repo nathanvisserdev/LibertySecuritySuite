@@ -23,28 +23,33 @@ class RequestPermissionsVM: ObservableObject {
     /// Load all permission statuses and compare with TCC database
     func loadAllPermissions() {
         isLoading = true
-        statusMessage = "Checking all permissions..."
+        statusMessage = "Checking TCC database for permissions..."
         errorMessage = nil
         
         Task {
-            let results = await model.checkAllPermissionsWithComparison()
+            // Check TCC database only (no user interaction/dialogs)
+            let results = await Task.detached {
+                return self.model.checkAllTCCOnlyStatuses()
+            }.value
             
             await MainActor.run {
                 self.permissionStatuses = results
                 self.isLoading = false
                 
-                let discrepancyCount = results.filter { $0.hasDiscrepancy }.count
-                if discrepancyCount > 0 {
-                    self.statusMessage = "⚠️ \(discrepancyCount) permission(s) have discrepancies"
+                let notRequestedCount = results.filter { $0.apiStatus == "Not Requested" }.count
+                let grantedCount = results.filter { $0.apiStatus.contains("Granted") || $0.apiStatus.contains("Authorized") }.count
+                
+                if notRequestedCount == results.count {
+                    self.statusMessage = "No permissions found in TCC database. Click 'Request' to validate."
                 } else {
-                    self.statusMessage = "✓ All permissions match between API and TCC database"
+                    self.statusMessage = "Loaded \(grantedCount) granted permissions from TCC database"
                 }
             }
         }
     }
     
-    /// Check a specific permission
-    func checkPermission(_ permissionType: PermissionType) {
+    /// Fully validate a specific permission (triggers permission dialog if needed)
+    func fullyValidatePermission(_ permissionType: PermissionType) {
         isLoading = true
         statusMessage = "Checking \(permissionType.rawValue)..."
         errorMessage = nil
@@ -94,14 +99,32 @@ class RequestPermissionsVM: ObservableObject {
                     self.isLoading = false
                     self.statusMessage = result.hasDiscrepancy ? 
                         "⚠️ Discrepancy detected in \(permissionType.rawValue)" :
-                        "✓ \(permissionType.rawValue) matches"
+                        "✓ \(permissionType.rawValue) validated successfully"
                 }
             } catch {
                 await MainActor.run {
                     self.isLoading = false
                     self.errorMessage = error.localizedDescription
-                    self.statusMessage = "Error checking \(permissionType.rawValue)"
+                    self.statusMessage = "Error validating \(permissionType.rawValue)"
                 }
+            }
+        }
+    }
+    
+    /// Quick refresh from TCC database only (no dialogs)
+    func quickRefreshPermission(_ permissionType: PermissionType) {
+        Task {
+            let result = await Task.detached {
+                return self.model.checkTCCOnlyStatus(for: permissionType)
+            }.value
+            
+            await MainActor.run {
+                if let index = self.permissionStatuses.firstIndex(where: { $0.permissionType == permissionType }) {
+                    self.permissionStatuses[index] = result
+                } else {
+                    self.permissionStatuses.append(result)
+                }
+                self.statusMessage = "Refreshed \(permissionType.rawValue) from TCC database"
             }
         }
     }
@@ -144,8 +167,8 @@ class RequestPermissionsVM: ObservableObject {
                     break
                 }
                 
-                // After requesting, check the permission again
-                checkPermission(permissionType)
+                // After requesting, fully validate the permission
+                fullyValidatePermission(permissionType)
             } catch {
                 await MainActor.run {
                     self.isLoading = false
