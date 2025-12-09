@@ -49,6 +49,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    ProcessMonitorView()
+                } label: {
+                    Label("Process Monitor", systemImage: "arrow.triangle.2.circlepath")
+                }
+                
+                NavigationLink {
                     BlacklistManagementView()
                 } label: {
                     Label("Blacklist Management", systemImage: "hand.raised.fill")
