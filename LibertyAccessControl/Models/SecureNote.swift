@@ -15,6 +15,14 @@ struct SecureNote: Identifiable, Codable, Hashable {
     var createdAt: Date
     var updatedAt: Date
     var tags: [String]
+    var lastSavedContent: String? // Track last committed state
+    
+    var hasUnsavedChanges: Bool {
+        guard let savedContent = lastSavedContent else {
+            return true // Never saved
+        }
+        return content != savedContent || title != (lastSavedContent ?? "")
+    }
     
     init(id: UUID = UUID(), title: String = "Untitled Note", content: String = "", tags: [String] = []) {
         self.id = id
@@ -23,6 +31,7 @@ struct SecureNote: Identifiable, Codable, Hashable {
         self.createdAt = Date()
         self.updatedAt = Date()
         self.tags = tags
+        self.lastSavedContent = nil
     }
     
     mutating func update(title: String? = nil, content: String? = nil, tags: [String]? = nil) {
@@ -36,5 +45,9 @@ struct SecureNote: Identifiable, Codable, Hashable {
             self.tags = tags
         }
         self.updatedAt = Date()
+    }
+    
+    mutating func markAsSaved() {
+        self.lastSavedContent = content
     }
 }

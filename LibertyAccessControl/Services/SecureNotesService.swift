@@ -8,6 +8,7 @@
 import Foundation
 import CryptoKit
 import Security
+import LocalAuthentication
 
 /// Service for managing encrypted notes stored in the Keychain
 class SecureNotesService {
@@ -38,11 +39,15 @@ class SecureNotesService {
     }
     
     private func loadEncryptionKeyFromKeychain() -> SymmetricKey? {
+        let context = LAContext()
+        context.localizedReason = "Authenticate to access your encrypted notes"
+        
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: encryptionKeyTag,
-            kSecReturnData as String: true
+            kSecReturnData as String: true,
+            kSecUseAuthenticationContext as String: context
         ]
         
         var result: AnyObject?
@@ -59,6 +64,45 @@ class SecureNotesService {
     private func saveEncryptionKeyToKeychain(_ key: SymmetricKey) {
         let keyData = key.withUnsafeBytes { Data($0) }
         
+        // Create access control for biometric authentication
+        var accessControlError: Unmanaged<CFError>?
+        guard let accessControl = SecAccessControlCreateWithFlags(
+            kCFAllocatorDefault,
+            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            .biometryCurrentSet, // Requires Touch ID/Face ID
+            &accessControlError
+        ) else {
+            print("⚠️ Failed to create access control: \(accessControlError.debugDescription)")
+            // Fall back to no biometric protection
+            saveEncryptionKeyWithoutBiometrics(keyData)
+            return
+        }
+        
+        let context = LAContext()
+        context.localizedReason = "Authenticate to access your encrypted notes"
+        
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: encryptionKeyTag,
+            kSecValueData as String: keyData,
+            kSecAttrAccessControl as String: accessControl,
+            kSecUseAuthenticationContext as String: context
+        ]
+        
+        // Delete existing item first
+        SecItemDelete(query as CFDictionary)
+        
+        // Add new item with biometric protection
+        let status = SecItemAdd(query as CFDictionary, nil)
+        if status != errSecSuccess {
+            print("⚠️ Failed to save encryption key to Keychain with biometrics: \(status)")
+            // Fall back to no biometric protection
+            saveEncryptionKeyWithoutBiometrics(keyData)
+        }
+    }
+    
+    private func saveEncryptionKeyWithoutBiometrics(_ keyData: Data) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
@@ -67,14 +111,8 @@ class SecureNotesService {
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         ]
         
-        // Delete existing item first
         SecItemDelete(query as CFDictionary)
-        
-        // Add new item
-        let status = SecItemAdd(query as CFDictionary, nil)
-        if status != errSecSuccess {
-            print("⚠️ Failed to save encryption key to Keychain: \(status)")
-        }
+        SecItemAdd(query as CFDictionary, nil)
     }
     
     // MARK: - Note Encryption/Decryption

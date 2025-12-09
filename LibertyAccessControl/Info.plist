@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>LibertyAccessControl</string>
+	<string>Liberty.LibertyAccessControl</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to demonstrate location services.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -24,6 +24,8 @@
 	<string>This app needs access to speech recognition to demonstrate speech recognition permissions management.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app needs access to Bluetooth to demonstrate Bluetooth permissions management.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Secure Notes uses Face ID to protect your encrypted notes with biometric authentication.</string>
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>com.liberty.LibertyAccessControl.helper</key>

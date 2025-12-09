@@ -15,11 +15,52 @@ class SecureNotesViewModel: ObservableObject {
     @Published var selectedNote: SecureNote?
     @Published var searchQuery: String = ""
     @Published var isSearching: Bool = false
+    @Published var integrityStatus: String?
+    @Published var showCommitDialog = false
+    @Published var commitMessage = ""
     
     private let service = SecureNotesService.shared
+    private let gitService = GitVersioningService.shared
     
     init() {
         loadNotes()
+        // Don't verify on init - only when user requests it
+    }
+    
+    // MARK: - Git Versioning
+    
+    func commitChanges() {
+        guard !commitMessage.isEmpty else { return }
+        
+        let result = gitService.commitDatabase(message: commitMessage)
+        
+        if result.success {
+            // Mark current note as saved
+            if var note = selectedNote {
+                note.markAsSaved()
+                updateNote(note)
+            }
+            
+            integrityStatus = "✅ Saved and committed: \(commitMessage)"
+            commitMessage = ""
+            showCommitDialog = false
+        } else {
+            integrityStatus = "❌ Commit failed: \(result.error ?? "Unknown error")"
+        }
+    }
+    
+    func verifyIntegrity() {
+        let result = gitService.verifyIntegrity()
+        integrityStatus = result.message
+        
+        if !result.valid {
+            // Show alert for tampering
+            print("🚨 Database tampering detected!")
+        }
+    }
+    
+    func hasUnsavedChanges() -> Bool {
+        return selectedNote?.hasUnsavedChanges ?? false || gitService.hasUncommittedChanges()
     }
     
     // MARK: - Notes Management

@@ -85,6 +85,8 @@ class SystemMessageService: ObservableObject {
 struct HomeView: View {
     @StateObject private var messageService = SystemMessageService.shared
     @State private var searchText = ""
+    @State private var databaseStatuses: [DatabaseStatus] = []
+    @State private var showDatabaseDetails = false
     
     var filteredMessages: [SystemMessage] {
         if searchText.isEmpty {
@@ -113,6 +115,10 @@ struct HomeView: View {
                     }
                     
                     Spacer()
+                    
+                    Button(action: { showDatabaseDetails.toggle() }) {
+                        Label("Database Status", systemImage: "externaldrive.fill")
+                    }
                     
                     Button(action: {
                         messageService.clearMessages()
@@ -168,10 +174,34 @@ struct HomeView: View {
             }
         }
         .onAppear {
-            // Add welcome message if empty
-            if messageService.messages.isEmpty {
-                messageService.addMessage("Welcome to Liberty Access Control", type: .info)
-            }
+            checkDatabases()
+        }
+        .sheet(isPresented: $showDatabaseDetails) {
+            DatabaseStatusSheet(statuses: databaseStatuses)
+        }
+    }
+    
+    private func checkDatabases() {
+        databaseStatuses = DatabaseStatusService.shared.checkAllDatabases()
+        
+        // Add initialization messages
+        let initMessages = DatabaseStatusService.shared.initializeDatabases()
+        for message in initMessages {
+            messageService.addMessage(message, type: .success)
+        }
+        
+        // Add database status messages
+        for status in databaseStatuses {
+            let statusMessage = status.exists 
+                ? "✅ \(status.name): Found at \(status.location)"
+                : "⚠️ \(status.name): Will be created on first use"
+            
+            messageService.addMessage(statusMessage, type: status.exists ? .success : .warning)
+        }
+        
+        // Add welcome message if this is first launch
+        if messageService.messages.count == databaseStatuses.count + initMessages.count {
+            messageService.addMessage("Welcome to Liberty Access Control", type: .info)
         }
     }
 }
@@ -207,6 +237,117 @@ struct MessageRow: View {
         .cornerRadius(6)
         .padding(.horizontal)
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Database Status Sheet
+
+struct DatabaseStatusSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let statuses: [DatabaseStatus]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Database Status")
+                    .font(.title)
+                    .fontWeight(.bold)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            ScrollView {
+                VStack(spacing: 16) {
+                    ForEach(statuses, id: \.name) { status in
+                        DatabaseStatusRow(status: status)
+                    }
+                }
+                .padding()
+            }
+        }
+        .frame(width: 600, height: 500)
+    }
+}
+
+struct DatabaseStatusRow: View {
+    let status: DatabaseStatus
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: status.exists ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundColor(status.exists ? .green : .orange)
+                    .font(.title2)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(status.name)
+                        .font(.headline)
+                    
+                    Text(status.exists ? "Database found" : "Database will be created on first use")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if let size = status.size {
+                    Text(size)
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(4)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Location:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Text(status.location)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.textBackgroundColor))
+                    .cornerRadius(4)
+            }
+            
+            HStack {
+                Label(typeLabel, systemImage: typeIcon)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+    }
+    
+    private var typeLabel: String {
+        switch status.type {
+        case .coreData: return "Core Data SQLite"
+        case .encrypted: return "Encrypted UserDefaults"
+        case .userDefaults: return "UserDefaults"
+        }
+    }
+    
+    private var typeIcon: String {
+        switch status.type {
+        case .coreData: return "cylinder.fill"
+        case .encrypted: return "lock.fill"
+        case .userDefaults: return "doc.fill"
+        }
     }
 }
 

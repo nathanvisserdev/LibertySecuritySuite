@@ -111,13 +111,27 @@ class PrivilegedHelperManager: ObservableObject {
                 self.installationStatus = .installed
                 self.errorMessage = nil
             }
+            print("✅ Helper installed successfully")
             completion(.success(()))
         } else {
-            let errorDescription = error?.takeRetainedValue().localizedDescription ?? "Unknown error"
-            DispatchQueue.main.async {
-                self.errorMessage = errorDescription
+            let cfError = error?.takeRetainedValue()
+            let errorDescription = cfError?.localizedDescription ?? "Unknown error"
+            let errorCode = (cfError as? NSError)?.code ?? -1
+            let errorDomain = (cfError as? NSError)?.domain ?? "Unknown"
+            
+            print("❌ SMJobBless failed:")
+            print("   Error: \(errorDescription)")
+            print("   Code: \(errorCode)")
+            print("   Domain: \(errorDomain)")
+            
+            if let userInfo = (cfError as? NSError)?.userInfo {
+                print("   UserInfo: \(userInfo)")
             }
-            completion(.failure(.installationFailed(errorDescription)))
+            
+            DispatchQueue.main.async {
+                self.errorMessage = "\(errorDescription) (Code: \(errorCode))"
+            }
+            completion(.failure(.installationFailed("\(errorDescription) - Code: \(errorCode)")))
         }
     }
     

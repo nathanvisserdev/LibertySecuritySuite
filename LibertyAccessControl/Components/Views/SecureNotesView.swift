@@ -76,6 +76,13 @@ struct SecureNotesView: View {
                 }
                 
                 ToolbarItem(placement: .automatic) {
+                    Button(action: { viewModel.verifyIntegrity() }) {
+                        Label("Verify Integrity", systemImage: "checkmark.shield")
+                    }
+                    .help("Check database integrity against USB backup")
+                }
+                
+                ToolbarItem(placement: .automatic) {
                     Button(action: { showingShortcuts = true }) {
                         Label("Keyboard Shortcuts", systemImage: "keyboard")
                     }
@@ -84,14 +91,27 @@ struct SecureNotesView: View {
                 }
                 
                 ToolbarItem(placement: .status) {
-                    Text("\(viewModel.notesCount) \(viewModel.notesCount == 1 ? "note" : "notes")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if let status = viewModel.integrityStatus {
+                        Text(status)
+                            .font(.caption)
+                            .foregroundColor(status.contains("✅") ? .green : .red)
+                    } else {
+                        Text("\(viewModel.notesCount) \(viewModel.notesCount == 1 ? "note" : "notes")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             .navigationTitle("Secure Notes")
             .sheet(isPresented: $showingShortcuts) {
                 KeyboardShortcutsView()
+            }
+            .sheet(isPresented: $viewModel.showCommitDialog) {
+                CommitDialogView(
+                    commitMessage: $viewModel.commitMessage,
+                    onCommit: { viewModel.commitChanges() },
+                    onCancel: { viewModel.showCommitDialog = false }
+                )
             }
             
         } detail: {
@@ -101,6 +121,9 @@ struct SecureNotesView: View {
                     viewModel.updateNote(updatedNote)
                 } onDelete: {
                     viewModel.deleteNote(selectedNote)
+                } onSaveCommit: { message in
+                    viewModel.commitMessage = message
+                    viewModel.commitChanges()
                 }
             } else {
                 VStack(spacing: 16) {
@@ -169,16 +192,20 @@ struct NoteRowView: View {
 struct NoteEditorView: View {
     @State private var note: SecureNote
     @State private var newTag: String = ""
+    @State private var showCommitDialog = false
+    @State private var commitMessage = ""
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     
     let onUpdate: (SecureNote) -> Void
     let onDelete: () -> Void
+    let onSaveCommit: (String) -> Void
     
-    init(note: SecureNote, onUpdate: @escaping (SecureNote) -> Void, onDelete: @escaping () -> Void) {
+    init(note: SecureNote, onUpdate: @escaping (SecureNote) -> Void, onDelete: @escaping () -> Void, onSaveCommit: @escaping (String) -> Void) {
         _note = State(initialValue: note)
         self.onUpdate = onUpdate
         self.onDelete = onDelete
+        self.onSaveCommit = onSaveCommit
     }
     
     var body: some View {
@@ -243,6 +270,18 @@ struct NoteEditorView: View {
             
             // Footer with metadata
             HStack {
+                // Unsaved changes indicator
+                if note.hasUnsavedChanges {
+                    HStack(spacing: 4) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 6))
+                            .foregroundColor(.orange)
+                        Text("Modified")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+                
                 Text("Created: \(note.createdAt, formatter: dateFormatter)")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -264,6 +303,15 @@ struct NoteEditorView: View {
             .padding()
         }
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: onSaveAndCommit) {
+                    Label("Save & Commit", systemImage: "square.and.arrow.down")
+                }
+                .help("Save note and commit to version control")
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!note.hasUnsavedChanges)
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { newTag = newTag.isEmpty ? " " : "" }) {
                     Label("Add Tag", systemImage: "tag")
@@ -295,6 +343,20 @@ struct NoteEditorView: View {
                     .hidden()
             }
         )
+        .sheet(isPresented: $showCommitDialog) {
+            CommitDialogView(
+                commitMessage: $commitMessage,
+                onCommit: {
+                    onSaveCommit(commitMessage)
+                    showCommitDialog = false
+                },
+                onCancel: { showCommitDialog = false }
+            )
+        }
+    }
+    
+    private func onSaveAndCommit() {
+        showCommitDialog = true
     }
     
     private func insertMarkdown(_ prefix: String, _ suffix: String = "") {
@@ -475,6 +537,83 @@ struct MarkdownTip: View {
                 .foregroundColor(.secondary)
             
             Spacer()
+        }
+    }
+}
+
+// MARK: - Commit Dialog View
+
+struct CommitDialogView: View {
+    @Binding var commitMessage: String
+    let onCommit: () -> Void
+    let onCancel: () -> Void
+    @FocusState private var isMessageFocused: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Header
+            HStack {
+                Image(systemName: "square.and.arrow.down.fill")
+                    .font(.title)
+                    .foregroundColor(.blue)
+                
+                VStack(alignment: .leading) {
+                    Text("Save & Commit")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("Add a commit message to describe your changes")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            
+            Divider()
+            
+            // Commit message field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Commit Message:")
+                    .font(.headline)
+                
+                TextEditor(text: $commitMessage)
+                    .font(.body)
+                    .focused($isMessageFocused)
+                    .frame(height: 100)
+                    .padding(8)
+                    .background(Color(nsColor: .textBackgroundColor))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
+                
+                Text("Example: \"Added project notes\" or \"Updated research findings\"")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Actions
+            HStack {
+                Button("Cancel") {
+                    onCancel()
+                }
+                .keyboardShortcut(.escape)
+                
+                Spacer()
+                
+                Button("Commit") {
+                    onCommit()
+                }
+                .keyboardShortcut(.return)
+                .buttonStyle(.borderedProminent)
+                .disabled(commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 450, height: 280)
+        .onAppear {
+            isMessageFocused = true
         }
     }
 }
