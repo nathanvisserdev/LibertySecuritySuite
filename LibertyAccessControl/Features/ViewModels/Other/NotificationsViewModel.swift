@@ -1,5 +1,5 @@
 //
-//  ReqMonVM.swift
+//  NotificationsViewModel.swift
 //  LibertyAccessControl
 //
 //  Created by Nathan Visser on 2025-12-05.
@@ -10,21 +10,30 @@ import Combine
 import Darwin
 import UserNotifications
 
-class ReqMonVM: ObservableObject {
-    @Published var isNotificationsEnabled: Bool = false
-    @Published var statusMessage: String = "Notifications not enabled"
+class NotificationsViewModel: ObservableObject {
+    static let shared = NotificationsViewModel()
+    
+    @Published private(set) var isNotificationsEnabled: Bool = false
+    @Published var statusMessage: String = "Monitoring initializing..."
     @Published var errorMessage: String?
-    @Published var accessRequests: [TCCAccessRequest] = []
+    @Published private(set) var accessRequests: [TCCAccessRequest] = []
     
     private var monitoringQueue: DispatchQueue?
     private var isMonitoring: Bool = false
     private var logFileDescriptor: Int32 = -1
     
+    private init() {}
+    
+    func startBackgroundMonitoring() {
+        requestNotificationPermissions()
+        enableMonitoring()
+    }
+    
     func requestNotificationPermission() {
         requestNotificationPermissions()
     }
     
-    func enableMonitoring() {
+    private func enableMonitoring() {
         // Start monitoring TCC daemon activity by tailing the system log
         isMonitoring = true
         isNotificationsEnabled = true
@@ -37,7 +46,7 @@ class ReqMonVM: ObservableObject {
         }
     }
     
-    func disableMonitoring() {
+    private func disableMonitoring() {
         isMonitoring = false
         isNotificationsEnabled = false
         statusMessage = "TCC monitoring disabled"
