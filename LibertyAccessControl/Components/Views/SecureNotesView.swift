@@ -10,6 +10,7 @@ import SwiftUI
 struct SecureNotesView: View {
     @StateObject private var viewModel = SecureNotesViewModel()
     @State private var editingNote: SecureNote?
+    @State private var showingShortcuts = false
     
     var body: some View {
         NavigationSplitView {
@@ -71,6 +72,15 @@ struct SecureNotesView: View {
                         Label("New Note", systemImage: "plus")
                     }
                     .help("Create a new note")
+                    .keyboardShortcut("n", modifiers: .command)
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button(action: { showingShortcuts = true }) {
+                        Label("Keyboard Shortcuts", systemImage: "keyboard")
+                    }
+                    .help("View keyboard shortcuts")
+                    .keyboardShortcut("/", modifiers: .command)
                 }
                 
                 ToolbarItem(placement: .status) {
@@ -80,6 +90,9 @@ struct SecureNotesView: View {
                 }
             }
             .navigationTitle("Secure Notes")
+            .sheet(isPresented: $showingShortcuts) {
+                KeyboardShortcutsView()
+            }
             
         } detail: {
             // Note editor
@@ -157,6 +170,7 @@ struct NoteEditorView: View {
     @State private var note: SecureNote
     @State private var newTag: String = ""
     @FocusState private var isTitleFocused: Bool
+    @FocusState private var isContentFocused: Bool
     
     let onUpdate: (SecureNote) -> Void
     let onDelete: () -> Void
@@ -220,6 +234,7 @@ struct NoteEditorView: View {
             TextEditor(text: $note.content)
                 .font(.body)
                 .padding()
+                .focused($isContentFocused)
                 .onChange(of: note.content) { _, _ in
                     saveNote()
                 }
@@ -244,6 +259,7 @@ struct NoteEditorView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Delete note")
+                .keyboardShortcut(.delete, modifiers: .command)
             }
             .padding()
         }
@@ -253,8 +269,52 @@ struct NoteEditorView: View {
                     Label("Add Tag", systemImage: "tag")
                 }
                 .help("Add tags to organize notes")
+                .keyboardShortcut("t", modifiers: .command)
             }
         }
+        .background(
+            Group {
+                Button("") { insertMarkdown("# ") }
+                    .keyboardShortcut("h", modifiers: [.shift, .command])
+                    .hidden()
+                
+                Button("") { insertMarkdown("## ") }
+                    .keyboardShortcut("t", modifiers: [.shift, .command])
+                    .hidden()
+                
+                Button("") { insertMarkdown("```\n", "\n```") }
+                    .keyboardShortcut("m", modifiers: [.shift, .command])
+                    .hidden()
+                
+                Button("") { wrapSelection("**", "**") }
+                    .keyboardShortcut("b", modifiers: .command)
+                    .hidden()
+                
+                Button("") { wrapSelection("*", "*") }
+                    .keyboardShortcut("i", modifiers: .command)
+                    .hidden()
+            }
+        )
+    }
+    
+    private func insertMarkdown(_ prefix: String, _ suffix: String = "") {
+        guard isContentFocused else { return }
+        
+        // Get current cursor position (simplified - inserts at end)
+        let newText: String
+        if suffix.isEmpty {
+            newText = note.content + "\n\(prefix)"
+        } else {
+            newText = note.content + "\n\(prefix)\(suffix)"
+        }
+        note.content = newText
+        saveNote()
+    }
+    
+    private func wrapSelection(_ prefix: String, _ suffix: String) {
+        // For TextEditor, we'll insert at the end with the wrapper
+        note.content += "\n\(prefix)Text\(suffix)"
+        saveNote()
     }
     
     private func saveNote() {
@@ -281,6 +341,141 @@ struct NoteEditorView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter
+    }
+}
+
+// MARK: - Keyboard Shortcuts View
+
+struct KeyboardShortcutsView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Keyboard Shortcuts")
+                    .font(.title)
+                    .fontWeight(.bold)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // General
+                    ShortcutSection(title: "General") {
+                        ShortcutRow(keys: ["⌘", "N"], description: "Create new note")
+                        ShortcutRow(keys: ["⌘", "T"], description: "Add tag to note")
+                        ShortcutRow(keys: ["⌘", "⌫"], description: "Delete current note")
+                        ShortcutRow(keys: ["⌘", "/"], description: "Show keyboard shortcuts")
+                    }
+                    
+                    // Text Formatting (Markdown)
+                    ShortcutSection(title: "Text Formatting") {
+                        ShortcutRow(keys: ["⇧", "⌘", "H"], description: "Insert heading (# Heading)")
+                        ShortcutRow(keys: ["⇧", "⌘", "T"], description: "Insert title (## Title)")
+                        ShortcutRow(keys: ["⇧", "⌘", "M"], description: "Insert code block (```)")
+                        ShortcutRow(keys: ["⌘", "B"], description: "Insert bold (**text**)")
+                        ShortcutRow(keys: ["⌘", "I"], description: "Insert italic (*text*)")
+                    }
+                    
+                    // Markdown Tips
+                    ShortcutSection(title: "Markdown Tips") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            MarkdownTip(syntax: "# Heading", description: "Large heading")
+                            MarkdownTip(syntax: "## Title", description: "Medium heading")
+                            MarkdownTip(syntax: "### Subtitle", description: "Small heading")
+                            MarkdownTip(syntax: "**bold**", description: "Bold text")
+                            MarkdownTip(syntax: "*italic*", description: "Italic text")
+                            MarkdownTip(syntax: "`code`", description: "Inline code")
+                            MarkdownTip(syntax: "```code block```", description: "Code block")
+                            MarkdownTip(syntax: "- item", description: "Bullet list")
+                            MarkdownTip(syntax: "1. item", description: "Numbered list")
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                .padding()
+            }
+        }
+        .frame(width: 500, height: 600)
+    }
+}
+
+struct ShortcutSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            VStack(spacing: 8) {
+                content
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct ShortcutRow: View {
+    let keys: [String]
+    let description: String
+    
+    var body: some View {
+        HStack {
+            HStack(spacing: 4) {
+                ForEach(keys, id: \.self) { key in
+                    Text(key)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(4)
+                }
+            }
+            
+            Text(description)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+        }
+    }
+}
+
+struct MarkdownTip: View {
+    let syntax: String
+    let description: String
+    
+    var body: some View {
+        HStack {
+            Text(syntax)
+                .font(.system(.body, design: .monospaced))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(4)
+            
+            Image(systemName: "arrow.right")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            
+            Text(description)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+        }
     }
 }
 
