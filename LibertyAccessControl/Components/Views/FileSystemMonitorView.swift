@@ -37,6 +37,9 @@ struct FileSystemMonitorView: View {
                 }
             }
             .navigationTitle("File System Monitor")
+            
+            // Detail/Info View
+            infoDetailView
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     // Filter button
@@ -240,6 +243,129 @@ struct FileSystemMonitorView: View {
                         StatRow(title: "Suspicious Activities", value: "\(viewModel.stats.suspiciousActivities)")
                     }
                 }
+            }
+            .padding()
+        }
+    }
+    
+    // MARK: - Info Detail View
+    private var infoDetailView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.largeTitle)
+                            .foregroundColor(.blue)
+                        
+                        VStack(alignment: .leading) {
+                            Text("File System Monitor")
+                                .font(.title)
+                                .fontWeight(.bold)
+                            Text("Real-time security & ransomware detection")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                }
+                
+                Divider()
+                
+                // Features Section
+                GroupBox(label: Label("Features", systemImage: "star.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        FeatureRow(
+                            icon: "clock.arrow.circlepath",
+                            title: "Real-time File System Monitoring",
+                            description: "Monitors file modifications in real-time using FSEvents API (create, modify, delete, rename, etc.)"
+                        )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "exclamationmark.shield.fill",
+                            title: "Ransomware Detection",
+                            description: "Detects rapid encryption patterns (50+ files in 10s), suspicious extensions (.encrypted, .locked, .crypto), and mass operations"
+                        )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "lock.shield.fill",
+                            title: "System File Integrity",
+                            description: "Monitors protected paths (/System, /Library, /usr) with critical alerts for unauthorized modifications"
+                        )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "chart.bar.fill",
+                            title: "Threat Classification",
+                            description: "Four severity levels (Low, Medium, High, Critical) with intelligent pattern analysis"
+                        )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "folder.badge.gearshape",
+                            title: "Configurable Paths",
+                            description: "Monitor specific directories including Home, Documents, Desktop, Downloads, or custom paths"
+                        )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "arrow.down.doc.fill",
+                            title: "CSV Export",
+                            description: "Export events for forensic analysis and compliance reporting"
+                        )
+                    }
+                    .padding()
+                }
+                
+                // Technical Details
+                GroupBox(label: Label("Technical Details", systemImage: "gearshape.2.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        FSDetailRow(label: "API", value: "macOS FSEvents")
+                        FSDetailRow(label: "Latency", value: "300ms (real-time)")
+                        FSDetailRow(label: "Event Capacity", value: "1000 in-memory")
+                        FSDetailRow(label: "Ransomware Threshold", value: "50 files / 10s")
+                        FSDetailRow(label: "Architecture", value: "Combine + MVVM")
+                    }
+                    .padding()
+                }
+                
+                // How to Use
+                GroupBox(label: Label("How to Use", systemImage: "questionmark.circle.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HowToStep(number: 1, text: "Click the green play button to start monitoring")
+                        HowToStep(number: 2, text: "View real-time events in the Events tab")
+                        HowToStep(number: 3, text: "Check critical alerts in the Alerts tab")
+                        HowToStep(number: 4, text: "Configure monitored paths using the folder icon")
+                        HowToStep(number: 5, text: "Filter events by type, severity, or search")
+                        HowToStep(number: 6, text: "Export data to CSV for analysis")
+                    }
+                    .padding()
+                }
+                
+                // Protected Paths
+                GroupBox(label: Label("Protected System Paths", systemImage: "lock.fill")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("/System - macOS system files")
+                        Text("/Library - System libraries")
+                        Text("/usr - Unix system resources")
+                        Text("/bin - Essential binaries")
+                        Text("/sbin - System binaries")
+                        Text("/private/etc - Configuration files")
+                    }
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .padding()
+                }
+                
+                Spacer()
             }
             .padding()
         }
@@ -547,6 +673,69 @@ struct StatRow: View {
             Spacer()
             Text(value)
                 .fontWeight(.semibold)
+        }
+    }
+}
+
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.blue)
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+struct FSDetailRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+        }
+    }
+}
+
+struct HowToStep: View {
+    let number: Int
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 28, height: 28)
+                Text("\(number)")
+                    .font(.system(.body, design: .rounded))
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+            }
+            
+            Text(text)
+                .font(.body)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
