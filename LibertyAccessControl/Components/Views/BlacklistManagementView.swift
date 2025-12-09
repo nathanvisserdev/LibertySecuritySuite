@@ -13,6 +13,11 @@ struct BlacklistManagementView: View {
     @State private var selectedTab = 0
     @State private var showingClearAttemptsAlert = false
     @State private var searchText = ""
+    @State private var isScanning = false
+    @State private var suspiciousApps: [SuspiciousApp] = []
+    @State private var showingSuspiciousAlert = false
+    
+    private let scanner = SuspiciousPermissionScanner()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -47,6 +52,24 @@ struct BlacklistManagementView: View {
                     .padding(.vertical, 6)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
+                    
+                    // Scan button
+                    Button(action: scanForSuspiciousApps) {
+                        HStack {
+                            if isScanning {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                            } else {
+                                Image(systemName: "magnifyingglass.circle.fill")
+                            }
+                            Text(isScanning ? "Scanning..." : "Scan Now")
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isScanning)
                 }
             }
             .padding()
@@ -74,6 +97,38 @@ struct BlacklistManagementView: View {
             if !enforcementService.isMonitoring {
                 enforcementService.startMonitoring()
             }
+        }
+        .alert("Suspicious Apps Detected", isPresented: $showingSuspiciousAlert) {
+            Button("Cancel", role: .cancel) {
+                suspiciousApps = []
+            }
+            Button("Blacklist All", role: .destructive) {
+                autoBlacklistSuspicious()
+            }
+        } message: {
+            Text("Found \(suspiciousApps.count) app(s) with unauthorized permissions. Do you want to automatically blacklist them?")
+        }
+    }
+    
+    // MARK: - Scan Methods
+    
+    private func scanForSuspiciousApps() {
+        isScanning = true
+        
+        scanner.scanAllDatabases { found in
+            isScanning = false
+            suspiciousApps = found
+            
+            if !found.isEmpty {
+                showingSuspiciousAlert = true
+            }
+        }
+    }
+    
+    private func autoBlacklistSuspicious() {
+        scanner.autoBlacklistSuspiciousApps(suspiciousApps: suspiciousApps) { count in
+            print("✅ Auto-blacklisted \(count) suspicious apps")
+            suspiciousApps = []
         }
     }
     
@@ -117,18 +172,30 @@ struct BlacklistManagementView: View {
     }
     
     private func blacklistEntryCard(_ entry: BlacklistEntry) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.client)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    
-                    if let bundleID = entry.bundleID {
-                        Text(bundleID)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    HStack(spacing: 8) {
+                        Text(entry.bundleID ?? entry.client)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        if entry.wasAutomaticallyBlacklisted {
+                            Text("AUTO")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange)
+                                .cornerRadius(4)
+                        }
                     }
+                    
+                    Text(entry.client)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
                 
                 Spacer()
@@ -144,37 +211,87 @@ struct BlacklistManagementView: View {
             
             Divider()
             
-            HStack {
-                Label(entry.service, systemImage: "lock.shield")
+            // All Revoked Services
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Revoked Permissions (\(entry.allRevokedServices.count))")
                     .font(.caption)
+                    .fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 
-                Spacer()
-                
-                Text("Revoked: \(entry.revokedAt.formatted(date: .abbreviated, time: .shortened))")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                ForEach(entry.allRevokedServices, id: \.self) { service in
+                    HStack(spacing: 6) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                        Text(service)
+                            .font(.caption)
+                        Spacer()
+                    }
+                }
             }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(6)
             
-            if let teamID = entry.teamID {
-                Text("Team ID: \(teamID)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+            // Metadata
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: "calendar")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text("Banned: \(entry.revokedAt.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                if let teamID = entry.teamID {
+                    HStack {
+                        Image(systemName: "person.badge.key")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("Team ID: \(teamID)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Access attempts count
+                let attemptCount = blacklistService.revocationAttempts.filter { 
+                    $0.client == entry.client 
+                }.count
+                
+                if attemptCount > 0 {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                        Text("\(attemptCount) access attempt\(attemptCount == 1 ? "" : "s") blocked")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                }
             }
             
             if let reason = entry.reason {
-                Text("Reason: \(reason)")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                    .italic()
+                Divider()
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .italic()
+                }
             }
         }
         .padding()
-        .background(Color.red.opacity(0.05))
+        .background(entry.wasAutomaticallyBlacklisted ? Color.orange.opacity(0.05) : Color.red.opacity(0.05))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                .stroke(entry.wasAutomaticallyBlacklisted ? Color.orange.opacity(0.3) : Color.red.opacity(0.3), lineWidth: 1)
         )
     }
     

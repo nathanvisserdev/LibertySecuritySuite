@@ -15,8 +15,10 @@ struct BlacklistEntry: Identifiable, Codable, Equatable {
     let teamID: String?
     let revokedAt: Date
     let reason: String?
+    let allRevokedServices: [String]  // Track all services that were revoked for this app
+    let wasAutomaticallyBlacklisted: Bool
     
-    init(id: UUID = UUID(), service: String, client: String, bundleID: String?, teamID: String?, revokedAt: Date = Date(), reason: String? = nil) {
+    init(id: UUID = UUID(), service: String, client: String, bundleID: String?, teamID: String?, revokedAt: Date = Date(), reason: String? = nil, allRevokedServices: [String] = [], wasAutomaticallyBlacklisted: Bool = false) {
         self.id = id
         self.service = service
         self.client = client
@@ -24,6 +26,8 @@ struct BlacklistEntry: Identifiable, Codable, Equatable {
         self.teamID = teamID
         self.revokedAt = revokedAt
         self.reason = reason
+        self.allRevokedServices = allRevokedServices.isEmpty ? [service] : allRevokedServices
+        self.wasAutomaticallyBlacklisted = wasAutomaticallyBlacklisted
     }
     
     static func == (lhs: BlacklistEntry, rhs: BlacklistEntry) -> Bool {

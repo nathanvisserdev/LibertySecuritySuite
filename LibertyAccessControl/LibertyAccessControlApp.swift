@@ -40,7 +40,42 @@ struct LibertyAccessControlApp: App {
                 .onAppear {
                     // Start monitoring after environment is set up
                     monitoringService.startBackgroundMonitoring()
+                    
+                    // Start blacklist enforcement
+                    BlacklistEnforcementService.shared.startMonitoring()
+                    
+                    // Perform initial security scan ASYNC (don't block UI)
+                    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2.0) {
+                        self.performInitialSecurityScan()
+                    }
                 }
+        }
+    }
+    
+    private func performInitialSecurityScan() {
+        let scanner = SuspiciousPermissionScanner()
+        
+        scanner.scanAllDatabases { suspiciousApps in
+            guard !suspiciousApps.isEmpty else {
+                print("✅ Security scan complete: No suspicious permissions detected")
+                return
+            }
+            
+            print("⚠️ Security scan found \(suspiciousApps.count) suspicious app(s)")
+            
+            // Auto-blacklist suspicious apps
+            scanner.autoBlacklistSuspiciousApps(suspiciousApps: suspiciousApps) { count in
+                print("🚫 Auto-blacklisted \(count) suspicious app(s) on launch")
+                
+                // Post notification to user
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SuspiciousAppsBlacklisted"),
+                        object: nil,
+                        userInfo: ["count": count]
+                    )
+                }
+            }
         }
     }
     

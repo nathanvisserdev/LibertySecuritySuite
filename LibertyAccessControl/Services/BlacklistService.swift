@@ -24,16 +24,18 @@ class BlacklistService: ObservableObject {
     
     // MARK: - Blacklist Management
     
-    func addToBlacklist(service: String, client: String, bundleID: String?, teamID: String?, reason: String? = nil) {
+    func addToBlacklist(service: String, client: String, bundleID: String?, teamID: String?, reason: String? = nil, allRevokedServices: [String] = [], wasAutomaticallyBlacklisted: Bool = false) {
         let entry = BlacklistEntry(
             service: service,
             client: client,
             bundleID: bundleID,
             teamID: teamID,
-            reason: reason
+            reason: reason,
+            allRevokedServices: allRevokedServices,
+            wasAutomaticallyBlacklisted: wasAutomaticallyBlacklisted
         )
         
-        // Check if already blacklisted
+        // Check if already blacklisted for this service
         if !isBlacklisted(service: service, client: client) {
             blacklistedEntries.append(entry)
             saveBlacklist()
