@@ -77,54 +77,33 @@ class PrivilegedHelperManager: ObservableObject {
     // MARK: - Installation
     
     func installHelper(completion: @escaping (Result<Void, HelperError>) -> Void) {
-        var authRef: AuthorizationRef?
-        var authItem = AuthorizationItem(
-            name: kSMRightBlessPrivilegedHelper,
-            valueLength: 0,
-            value: nil,
-            flags: 0
-        )
-        var authRights = AuthorizationRights(count: 1, items: &authItem)
+        // Modern SMAppService API (macOS 13+)
+        // Registers the privileged helper with launchd and installs it to /Library/PrivilegedHelperTools/
+        // User authorization happens automatically when register() is called
+        let service = SMAppService.daemon(plistName: "com.liberty.LibertyAccessControl.helper.plist")
         
-        let flags: AuthorizationFlags = [.interactionAllowed, .extendRights, .preAuthorize]
-        let status = AuthorizationCreate(&authRights, nil, flags, &authRef)
-        
-        guard status == errAuthorizationSuccess, let authorization = authRef else {
-            completion(.failure(.authorizationFailed("Failed to create authorization")))
-            return
-        }
-        
-        defer {
-            AuthorizationFree(authorization, [])
-        }
-        
-        var error: Unmanaged<CFError>?
-        let result = SMJobBless(
-            kSMDomainSystemLaunchd,
-            PrivilegedHelperInfo.machServiceName as CFString,
-            authorization,
-            &error
-        )
-        
-        if result {
+        do {
+            // Register the helper - this prompts for authorization and installs
+            try service.register()
+            
             DispatchQueue.main.async {
                 self.installationStatus = .installed
                 self.errorMessage = nil
             }
-            print("✅ Helper installed successfully")
+            print("✅ Helper installed successfully using SMAppService")
             completion(.success(()))
-        } else {
-            let cfError = error?.takeRetainedValue()
-            let errorDescription = cfError?.localizedDescription ?? "Unknown error"
-            let errorCode = (cfError as? NSError)?.code ?? -1
-            let errorDomain = (cfError as? NSError)?.domain ?? "Unknown"
             
-            print("❌ SMJobBless failed:")
+        } catch {
+            let errorDescription = error.localizedDescription
+            let errorCode = (error as NSError).code
+            let errorDomain = (error as NSError).domain
+            
+            print("❌ SMAppService.register() failed:")
             print("   Error: \(errorDescription)")
             print("   Code: \(errorCode)")
             print("   Domain: \(errorDomain)")
             
-            if let userInfo = (cfError as? NSError)?.userInfo {
+            if let userInfo = (error as NSError).userInfo as? [String: Any] {
                 print("   UserInfo: \(userInfo)")
             }
             

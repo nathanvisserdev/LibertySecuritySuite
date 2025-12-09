@@ -8,6 +8,20 @@
       buildArchitectures = "Automatic">
       <BuildActionEntries>
          <BuildActionEntry
+            buildForTesting = "NO"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "15A730872EE86EBE0060D137"
+               BuildableName = "com.liberty.libertyAccessControl.helper"
+               BlueprintName = "com.liberty.libertyAccessControl.helper"
+               ReferencedContainer = "container:LibertyAccessControl.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
             buildForProfiling = "YES"
