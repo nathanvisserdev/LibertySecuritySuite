@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 class BlacklistService: ObservableObject {
     static let shared = BlacklistService()

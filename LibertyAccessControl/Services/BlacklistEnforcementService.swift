@@ -17,7 +17,13 @@ class BlacklistEnforcementService: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var lastKnownPermissions: Set<String> = []
     
-    private init() {}
+    private let systemService: SystemService
+    private let userService: UserService
+    
+    init(systemService: SystemService = SystemService(), userService: UserService = UserService()) {
+        self.systemService = systemService
+        self.userService = userService
+    }
     
     // MARK: - Monitoring Control
     
@@ -130,7 +136,7 @@ class BlacklistEnforcementService: ObservableObject {
         
         // Re-revoke the permission
         if isSystemDB {
-            SystemService.shared.deletePermission(service: entry.service, client: entry.client) { success, message in
+            systemService.deletePermission(service: entry.service, client: entry.client) { success, message in
                 if success {
                     print("✅ Automatically re-revoked system permission: \(entry.client)")
                     self.notifyUser(entry: entry)
@@ -139,7 +145,7 @@ class BlacklistEnforcementService: ObservableObject {
                 }
             }
         } else {
-            UserService.shared.deletePermission(service: entry.service, client: entry.client) { success, message in
+            userService.deletePermission(service: entry.service, client: entry.client) { success, message in
                 if success {
                     print("✅ Automatically re-revoked user permission: \(entry.client)")
                     self.notifyUser(entry: entry)

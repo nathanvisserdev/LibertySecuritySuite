@@ -209,16 +209,12 @@ struct UserView: View {
     }
     
     private func revokePermission(entry: UserEntry) {
-        UserService.shared.revokeAndBlacklistPermission(
-            service: entry.service,
-            client: entry.client,
-            bundleID: entry.parsedBundleID,
-            teamID: entry.parsedTeamID,
+        viewModel.revokeAndBlacklistPermission(
+            entry: entry,
             reason: revokeReason.isEmpty ? nil : revokeReason
         ) { success, message in
             if success {
                 print("✅ Permission revoked and blacklisted: \(message)")
-                viewModel.loadTCCData() // Refresh the list
             } else {
                 print("❌ Failed to revoke permission: \(message)")
             }

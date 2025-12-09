@@ -16,14 +16,18 @@ class UserVM: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let model: UserModel
+    private let userService: UserService
+    private let blacklistService: BlacklistService
     private var codeSignature: String?
     
     var appCodeSignature: String {
         return codeSignature ?? "Unable to calculate"
     }
     
-    init(UserService: UserService = UserService()) {
+    init(UserService: UserService = UserService(), blacklistService: BlacklistService = .shared) {
         self.model = UserModel(UserService: UserService)
+        self.userService = UserService
+        self.blacklistService = blacklistService
         self.codeSignature = calculateCodeSignature()
     }
     
@@ -87,6 +91,21 @@ class UserVM: ObservableObject {
                     self.statusMessage = "Loaded \(result.entries.count) user TCC entries (\(withCSReq) with csreq, \(withTeamID) with Team ID)"
                 }
             }
+        }
+    }
+    
+    func revokeAndBlacklistPermission(entry: UserEntry, reason: String? = nil, completion: @escaping (Bool, String) -> Void) {
+        userService.revokeAndBlacklistPermission(
+            service: entry.service,
+            client: entry.client,
+            bundleID: entry.parsedBundleID,
+            teamID: entry.parsedTeamID,
+            reason: reason
+        ) { [weak self] success, message in
+            if success {
+                self?.loadTCCData()
+            }
+            completion(success, message)
         }
     }
 }

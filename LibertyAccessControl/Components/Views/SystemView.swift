@@ -319,16 +319,12 @@ struct SystemView: View {
     }
     
     private func revokePermission(entry: SystemEntry) {
-        SystemService.shared.revokeAndBlacklistPermission(
-            service: entry.service,
-            client: entry.client,
-            bundleID: entry.parsedBundleID,
-            teamID: entry.parsedTeamID,
+        viewModel.revokeAndBlacklistPermission(
+            entry: entry,
             reason: revokeReason.isEmpty ? nil : revokeReason
         ) { success, message in
             if success {
                 print("✅ System permission revoked and blacklisted: \(message)")
-                viewModel.loadTCCData() // Refresh the list
             } else {
                 print("❌ Failed to revoke system permission: \(message)")
             }
