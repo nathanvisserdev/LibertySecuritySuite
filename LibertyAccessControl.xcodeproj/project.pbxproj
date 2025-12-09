@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		15A730912EE874FE0060D137 /* libEndpointSecurity.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A730902EE874FE0060D137 /* libEndpointSecurity.tbd */; };
+		15A730932EE875090060D137 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A730922EE875090060D137 /* Security.framework */; };
+		15A730952EE8752C0060D137 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A730942EE8752C0060D137 /* Foundation.framework */; };
+		15A7309B2EE88F0D0060D137 /* com.liberty.libertyAccessControl.helper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A730882EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		15A7309E2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1558248B2EE364700002EDA8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -23,20 +31,47 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		15A7309A2EE88E0B0060D137 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchServices;
+			dstSubfolderSpec = 1;
+			files = (
+				15A7309B2EE88F0D0060D137 /* com.liberty.libertyAccessControl.helper in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A7309C2EE88FF40060D137 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchServices;
+			dstSubfolderSpec = 1;
+			files = (
+				15A7309E2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		1558247B2EE3646E0002EDA8 /* LibertyAccessControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LibertyAccessControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1558248A2EE364700002EDA8 /* LibertyAccessControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibertyAccessControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		155824942EE364700002EDA8 /* LibertyAccessControlUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibertyAccessControlUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A730882EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.liberty.libertyAccessControl.helper; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A730902EE874FE0060D137 /* libEndpointSecurity.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libEndpointSecurity.tbd; path = usr/lib/libEndpointSecurity.tbd; sourceTree = SDKROOT; };
+		15A730922EE875090060D137 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		15A730942EE8752C0060D137 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = com.liberty.LibertyAccessControl.helper.plist; path = PrivilegedHelper/com.liberty.LibertyAccessControl.helper.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		15C930F92EE66B0F00DB278F /* Exceptions for "LibertyAccessControl" folder in "LibertyAccessControl" target */ = {
+		15A730992EE885C90060D137 /* Exceptions for "LibertyAccessControl" folder in "com.liberty.libertyAccessControl.helper" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Services/CacheInjection/tccd_hook.c,
-				Services/CacheInjection/tccd_hook.dylib,
+				Services/PrivilegedHelper/PrivilegedHelperProtocol.swift,
 			);
-			target = 1558247A2EE3646E0002EDA8 /* LibertyAccessControl */;
+			target = 15A730872EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -44,7 +79,7 @@
 		1558247D2EE3646E0002EDA8 /* LibertyAccessControl */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				15C930F92EE66B0F00DB278F /* Exceptions for "LibertyAccessControl" folder in "LibertyAccessControl" target */,
+				15A730992EE885C90060D137 /* Exceptions for "LibertyAccessControl" folder in "com.liberty.libertyAccessControl.helper" target */,
 			);
 			path = LibertyAccessControl;
 			sourceTree = "<group>";
@@ -57,6 +92,11 @@
 		155824972EE364700002EDA8 /* LibertyAccessControlUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LibertyAccessControlUITests;
+			sourceTree = "<group>";
+		};
+		15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = com.liberty.libertyAccessControl.helper;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -83,15 +123,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		15A730852EE86EBE0060D137 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A730952EE8752C0060D137 /* Foundation.framework in Frameworks */,
+				15A730932EE875090060D137 /* Security.framework in Frameworks */,
+				15A730912EE874FE0060D137 /* libEndpointSecurity.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		155824722EE3646D0002EDA8 = {
 			isa = PBXGroup;
 			children = (
+				15A7309D2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist */,
 				1558247D2EE3646E0002EDA8 /* LibertyAccessControl */,
 				1558248D2EE364700002EDA8 /* LibertyAccessControlTests */,
 				155824972EE364700002EDA8 /* LibertyAccessControlUITests */,
+				15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
+				15A7308F2EE874FE0060D137 /* Frameworks */,
 				1558247C2EE3646E0002EDA8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -102,8 +155,19 @@
 				1558247B2EE3646E0002EDA8 /* LibertyAccessControl.app */,
 				1558248A2EE364700002EDA8 /* LibertyAccessControlTests.xctest */,
 				155824942EE364700002EDA8 /* LibertyAccessControlUITests.xctest */,
+				15A730882EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		15A7308F2EE874FE0060D137 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				15A730942EE8752C0060D137 /* Foundation.framework */,
+				15A730922EE875090060D137 /* Security.framework */,
+				15A730902EE874FE0060D137 /* libEndpointSecurity.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -116,6 +180,8 @@
 				155824772EE3646E0002EDA8 /* Sources */,
 				155824782EE3646E0002EDA8 /* Frameworks */,
 				155824792EE3646E0002EDA8 /* Resources */,
+				15A7309A2EE88E0B0060D137 /* CopyFiles */,
+				15A7309C2EE88FF40060D137 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -177,6 +243,27 @@
 			productReference = 155824942EE364700002EDA8 /* LibertyAccessControlUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		15A730872EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15A7308E2EE86EBE0060D137 /* Build configuration list for PBXNativeTarget "com.liberty.libertyAccessControl.helper" */;
+			buildPhases = (
+				15A730842EE86EBE0060D137 /* Sources */,
+				15A730852EE86EBE0060D137 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
+			);
+			name = com.liberty.libertyAccessControl.helper;
+			packageProductDependencies = (
+			);
+			productName = com.liberty.libertyAccessControl.helper;
+			productReference = 15A730882EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -198,6 +285,9 @@
 						CreatedOnToolsVersion = 26.1.1;
 						TestTargetID = 1558247A2EE3646E0002EDA8;
 					};
+					15A730872EE86EBE0060D137 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 				};
 			};
 			buildConfigurationList = 155824762EE3646E0002EDA8 /* Build configuration list for PBXProject "LibertyAccessControl" */;
@@ -217,6 +307,7 @@
 				1558247A2EE3646E0002EDA8 /* LibertyAccessControl */,
 				155824892EE364700002EDA8 /* LibertyAccessControlTests */,
 				155824932EE364700002EDA8 /* LibertyAccessControlUITests */,
+				15A730872EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
 			);
 		};
 /* End PBXProject section */
@@ -261,6 +352,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		155824902EE364700002EDA8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A730842EE86EBE0060D137 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -410,6 +508,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VPG3WS8A3F;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -559,6 +658,58 @@
 			};
 			name = Release;
 		};
+		15A7308C2EE86EBE0060D137 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LibertyAccessControl/Services/PrivilegedHelper/PrivilegedHelper.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				"CURRENT_PROJECT_VERSION[sdk=*]" = 1;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = VPG3WS8A3F;
+				INFOPLIST_FILE = PrivilegedHelper/Info.plist;
+				INSTALL_PATH = /Library/PrivilegedHelperTools;
+				"MARKETING_VERSION[sdk=*]" = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liberty.LibertyAccessControl.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRINGS_FILE_INFOPLIST_RENAME = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		15A7308D2EE86EBE0060D137 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LibertyAccessControl/Services/PrivilegedHelper/PrivilegedHelper.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = YES;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				"CURRENT_PROJECT_VERSION[sdk=*]" = 1;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = VPG3WS8A3F;
+				INFOPLIST_FILE = PrivilegedHelper/Info.plist;
+				INSTALL_PATH = /Library/PrivilegedHelperTools;
+				"MARKETING_VERSION[sdk=*]" = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liberty.LibertyAccessControl.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRINGS_FILE_INFOPLIST_RENAME = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -594,6 +745,15 @@
 			buildConfigurations = (
 				155824A52EE364700002EDA8 /* Debug */,
 				155824A62EE364700002EDA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15A7308E2EE86EBE0060D137 /* Build configuration list for PBXNativeTarget "com.liberty.libertyAccessControl.helper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A7308C2EE86EBE0060D137 /* Debug */,
+				15A7308D2EE86EBE0060D137 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,7 +1,63 @@
 # Xcode user-specific files
-**/xcuserdata/**/xcdebugger/Breakpoints_v2.xcbkptlist
-LibertyAccessControl.xcodeproj/xcshareddata/
-LibertyAccessControl.xcodeproj/xcuserdata/nathanvisser.xcuserdatad/xcschemes/xcschememanagement.plist
-LibertyAccessControl.xcodeproj/project.xcworkspace/xcuserdata/
-LibertyAccessControl.xcodeproj/project.pbxproj
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Build products
+DerivedData/
+build/
+*.app
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Provisioning profiles and certificates (SECURITY)
+*.mobileprovision
+*.cer
+*.p12
+*.certSigningRequest
+
+# Environment variables and secrets (SECURITY)
+.env
+.env.*
+secrets/
+*.key
+*.pem
+config.json
+credentials.json
+
+# API keys and tokens (SECURITY)
+**/APIKeys.plist
+**/Secrets.plist
+**/Config.plist
+GoogleService-Info.plist
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
 
