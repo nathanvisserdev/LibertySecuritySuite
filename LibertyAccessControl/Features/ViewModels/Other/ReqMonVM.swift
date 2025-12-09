@@ -30,6 +30,12 @@ class ReqMonVM: ObservableObject {
         isNotificationsEnabled = true
     }
     
+    func stopBackgroundMonitoring() {
+        monitorService.stopMonitoring()
+        isNotificationsEnabled = false
+        statusMessage = "Monitoring stopped"
+    }
+    
     private func setupCallbacks() {
         monitorService.onRequestReceived = { [weak self] request in
             self?.accessRequests.insert(request, at: 0)

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @State private var selectedView: DashboardTab = .permissions
+    @EnvironmentObject private var monitoringService: ReqMonVM
     
     enum DashboardTab {
         case permissions
@@ -78,10 +79,64 @@ struct DashboardView: View {
                     .foregroundColor(selectedView == .registry ? .blue : .primary)
                 }
             }
+            
+            ToolbarItem(placement: .automatic) {
+                HStack(spacing: 12) {
+                    // Request count
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(monitoringService.accessRequests.count)")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(monitoringService.isNotificationsEnabled ? .green : .secondary)
+                        
+                        Text("requests")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Monitoring toggle
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Toggle("", isOn: Binding(
+                            get: { monitoringService.isNotificationsEnabled },
+                            set: { isOn in
+                                if isOn {
+                                    monitoringService.startBackgroundMonitoring()
+                                } else {
+                                    monitoringService.stopBackgroundMonitoring()
+                                }
+                            }
+                        ))
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .labelsHidden()
+                        
+                        Text(monitoringService.isNotificationsEnabled ? "Active" : "Inactive")
+                            .font(.caption2)
+                            .foregroundColor(monitoringService.isNotificationsEnabled ? .green : .secondary)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
         }
     }
 }
 
 #Preview {
     DashboardView()
+        .environmentObject(ReqMonVM(
+            monitorService: SystemMonitorService(
+                parser: TCCLogParser(),
+                notificationService: NotificationService(
+                    preferences: MonitoringPreferences(),
+                    trustManager: AppTrustManager(preferences: MonitoringPreferences())
+                )
+            ),
+            notificationService: NotificationService(
+                preferences: MonitoringPreferences(),
+                trustManager: AppTrustManager(preferences: MonitoringPreferences())
+            )
+        ))
 }
