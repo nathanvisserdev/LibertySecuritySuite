@@ -43,6 +43,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    FileSystemMonitorView()
+                } label: {
+                    Label("File System Monitor", systemImage: "doc.text.magnifyingglass")
+                }
+                
+                NavigationLink {
                     BlacklistManagementView()
                 } label: {
                     Label("Blacklist Management", systemImage: "hand.raised.fill")

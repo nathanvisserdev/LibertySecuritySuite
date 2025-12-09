@@ -488,7 +488,7 @@ enum ThreatType: String {
     case tampering = "System Tampering"
 }
 
-enum ThreatSeverity: String {
+enum ThreatSeverity: String, CaseIterable {
     case low = "Low"
     case medium = "Medium"
     case high = "High"
@@ -496,10 +496,19 @@ enum ThreatSeverity: String {
     
     var color: String {
         switch self {
-        case .low: return "blue"
+        case .low: return "green"
         case .medium: return "yellow"
         case .high: return "orange"
         case .critical: return "red"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .low: return "shield.fill"
+        case .medium: return "exclamationmark.shield.fill"
+        case .high: return "exclamationmark.triangle.fill"
+        case .critical: return "xmark.octagon.fill"
         }
     }
 }
