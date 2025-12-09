@@ -16,6 +16,45 @@ struct TCCAccessRequest: Identifiable {
     let processName: String
     let serviceName: String
     let decision: String
+    let rawLogLine: String
+    
+    var parsedDetails: [String: String] {
+        var details: [String: String] = [:]
+        
+        // Extract all key-value pairs from the log line
+        let patterns = [
+            ("process", #"process=([^\s,]+)"#),
+            ("pid", #"pid=(\d+)"#),
+            ("sender", #"sender=([^\s,]+)"#),
+            ("subsystem", #"subsystem=([^\s,]+)"#),
+            ("category", #"category=([^\s,]+)"#),
+            ("service", #"kTCCService([A-Za-z]+)"#),
+            ("client", #"client=([^\s,]+)"#),
+            ("auth_value", #"auth_value=(\d+)"#),
+            ("auth_reason", #"auth_reason=([^\s,]+)"#),
+            ("csreq", #"csreq=([^\s,]+)"#)
+        ]
+        
+        for (key, pattern) in patterns {
+            if let range = rawLogLine.range(of: pattern, options: .regularExpression) {
+                let match = String(rawLogLine[range])
+                if let equalIndex = match.firstIndex(of: "=") {
+                    let value = String(match[match.index(after: equalIndex)...])
+                    details[key] = value
+                } else if key == "service" {
+                    details[key] = match.replacingOccurrences(of: "kTCCService", with: "")
+                }
+            }
+        }
+        
+        // Add basic fields
+        details["timestamp"] = timestamp.formatted(date: .abbreviated, time: .standard)
+        details["processName"] = processName
+        details["serviceName"] = serviceName
+        details["decision"] = decision
+        
+        return details
+    }
 }
 
 class TSSViewModel: ObservableObject {
@@ -116,7 +155,8 @@ class TSSViewModel: ObservableObject {
                     timestamp: Date(),
                     processName: processName,
                     serviceName: serviceName,
-                    decision: decision
+                    decision: decision,
+                    rawLogLine: line
                 )
                 
                 DispatchQueue.main.async { [weak self] in
