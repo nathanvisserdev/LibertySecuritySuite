@@ -25,6 +25,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    MonitoringPreferencesView()
+                } label: {
+                    Label("Monitoring Preferences", systemImage: "slider.horizontal.3")
+                }
+                
+                NavigationLink {
                     ReqListView()
                 } label: {
                     Label("Request List", systemImage: "list.bullet.rectangle")
