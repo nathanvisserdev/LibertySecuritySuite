@@ -34,10 +34,9 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func enableMonitoring() {
-        // Start monitoring TCC daemon activity by tailing the system log
         isMonitoring = true
         isNotificationsEnabled = true
-        statusMessage = "TCC monitoring enabled - watching for access requests"
+        statusMessage = "Notifications enabled - listening for Notifications"
         errorMessage = nil
         
         monitoringQueue = DispatchQueue(label: "com.libertyaccess.tcc", qos: .userInitiated)
@@ -49,7 +48,7 @@ class NotificationsViewModel: ObservableObject {
     private func disableMonitoring() {
         isMonitoring = false
         isNotificationsEnabled = false
-        statusMessage = "TCC monitoring disabled"
+        statusMessage = "Notifications Disabled"
         errorMessage = nil
         
         if logFileDescriptor >= 0 {
@@ -91,8 +90,8 @@ class NotificationsViewModel: ObservableObject {
             
         } catch {
             DispatchQueue.main.async { [weak self] in
-                self?.errorMessage = "Failed to start TCC monitoring: \(error.localizedDescription)"
-                self?.statusMessage = "TCC monitoring failed"
+                self?.errorMessage = "Failed to start Notifications: \(error.localizedDescription)"
+                self?.statusMessage = "Notifications Disabled: Task failed"
                 self?.isNotificationsEnabled = false
             }
         }

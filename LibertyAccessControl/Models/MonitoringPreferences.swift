@@ -6,10 +6,9 @@
 //
 
 import Foundation
+import Combine
 
 class MonitoringPreferences: ObservableObject {
-    static let shared = MonitoringPreferences()
-    
     @Published var monitoredServices: Set<TCCServiceType> = []
     @Published var trustedApps: Set<String> = [] // Bundle IDs
     @Published var notifyOnlyDenied: Bool = true
@@ -21,7 +20,7 @@ class MonitoringPreferences: ObservableObject {
     private let notifyOnlyDeniedKey = "notifyOnlyDenied"
     private let notifyHighPriorityKey = "notifyHighPriority"
     
-    private init() {
+    init() {
         loadPreferences()
         
         // Set default high-priority services if empty
@@ -142,18 +141,18 @@ enum TCCServiceType: String, CaseIterable, Identifiable {
         
         if normalized.contains("camera") { return .camera }
         if normalized.contains("microphone") { return .microphone }
-        if normalized.contains("screen") { return .screenRecording }
-        if normalized.contains("disk") || normalized.contains("files") { return .fullDiskAccess }
+        if normalized.contains("screen") || normalized.contains("capture") { return .screenRecording }
+        if normalized.contains("disk") || normalized.contains("allfiles") { return .fullDiskAccess }
         if normalized.contains("bluetooth") { return .bluetooth }
         if normalized.contains("accessibility") { return .accessibility }
-        if normalized.contains("keyboard") { return .keyboardAccess }
+        if normalized.contains("keyboard") || normalized.contains("postevent") || normalized.contains("input monitoring") { return .keyboardAccess }
         if normalized.contains("location") { return .location }
-        if normalized.contains("contacts") { return .contacts }
+        if normalized.contains("contacts") || normalized.contains("addressbook") { return .contacts }
         if normalized.contains("calendar") { return .calendar }
         if normalized.contains("photos") { return .photos }
         if normalized.contains("reminders") { return .reminders }
-        if normalized.contains("folder") { return .filesAndFolders }
-        if normalized.contains("apple") || normalized.contains("events") { return .appleEvents }
+        if normalized.contains("folder") || normalized.contains("desktop") || normalized.contains("documents") || normalized.contains("downloads") { return .filesAndFolders }
+        if normalized.contains("apple") && normalized.contains("events") { return .appleEvents }
         if normalized.contains("speech") { return .speechRecognition }
         
         return .fullDiskAccess // Default to high priority if unknown

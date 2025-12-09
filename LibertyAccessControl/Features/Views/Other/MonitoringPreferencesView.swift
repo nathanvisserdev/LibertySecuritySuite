@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MonitoringPreferencesView: View {
-    @StateObject private var preferences = MonitoringPreferences.shared
+    @EnvironmentObject private var preferences: MonitoringPreferences
     
     var body: some View {
         ScrollView {
@@ -195,5 +195,6 @@ struct TrustedAppRow: View {
 #Preview {
     NavigationStack {
         MonitoringPreferencesView()
+            .environmentObject(MonitoringPreferences())
     }
 }

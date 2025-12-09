@@ -10,20 +10,37 @@ import ServiceManagement
 
 @main
 struct LibertyAccessControlApp: App {
-    @StateObject private var monitoringService = NotificationsViewModel.shared
+    @StateObject private var preferences = MonitoringPreferences()
+    @StateObject private var monitoringService: ReqMonVM
     
     init() {
+        // Create service dependencies
+        let prefs = MonitoringPreferences()
+        let trustManager = AppTrustManager(preferences: prefs)
+        let parser = TCCLogParser()
+        let notificationService = NotificationService(preferences: prefs, trustManager: trustManager)
+        let systemMonitor = SystemMonitorService(parser: parser, notificationService: notificationService)
+        
+        // Inject services into monitoring service
+        _preferences = StateObject(wrappedValue: prefs)
+        _monitoringService = StateObject(wrappedValue: ReqMonVM(
+            monitorService: systemMonitor,
+            notificationService: notificationService
+        ))
+        
         // Register app to launch at login
         registerLaunchAtLogin()
-        
-        // Start monitoring automatically on launch
-        NotificationsViewModel.shared.startBackgroundMonitoring()
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(preferences)
                 .environmentObject(monitoringService)
+                .onAppear {
+                    // Start monitoring after environment is set up
+                    monitoringService.startBackgroundMonitoring()
+                }
         }
     }
     

@@ -7,16 +7,19 @@
 
 import Foundation
 import Security
+import AppKit
 
 class AppTrustManager {
-    static let shared = AppTrustManager()
+    private let preferences: MonitoringPreferences
     
-    private init() {}
+    init(preferences: MonitoringPreferences) {
+        self.preferences = preferences
+    }
     
     /// Check if an app is trusted based on signature and system status
     func isAppTrusted(processName: String, bundleId: String?) -> Bool {
         // Check user's manual whitelist first
-        if let bundleId = bundleId, MonitoringPreferences.shared.isAppTrusted(bundleId) {
+        if let bundleId = bundleId, preferences.isAppTrusted(bundleId) {
             return true
         }
         
@@ -134,7 +137,7 @@ class AppTrustManager {
         let bundleId = getBundleId(from: processName)
         let isSystem = isSystemApp(processName: processName, bundleId: bundleId)
         let isApple = bundleId.map { isAppleSigned(bundleId: $0) } ?? false
-        let isTrusted = bundleId.map { MonitoringPreferences.shared.isAppTrusted($0) } ?? false
+        let isTrusted = bundleId.map { preferences.isAppTrusted($0) } ?? false
         
         return AppTrustInfo(
             processName: processName,
