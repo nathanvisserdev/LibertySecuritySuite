@@ -39,14 +39,30 @@ class CacheInterceptService {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 // Step 1: Kill existing tccd
-                print("🔴 Killing tccd...")
+                let killMsg = "🔴 Killing tccd..."
+                print(killMsg)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": killMsg, "type": SystemMessage.MessageType.info]
+                    )
+                }
                 try self.killTCCD()
                 
                 // Step 2: Wait a moment for cleanup
                 usleep(500000) // 0.5 seconds
                 
                 // Step 3: Start tccd with our hook injected
-                print("🟢 Starting tccd with hook...")
+                let startMsg = "🟢 Starting tccd with hook..."
+                print(startMsg)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": startMsg, "type": SystemMessage.MessageType.info]
+                    )
+                }
                 try self.startTCCDWithHook(targetBundleId: targetBundleId)
                 
                 // Step 4: Wait for cache to be captured
@@ -110,7 +126,15 @@ class CacheInterceptService {
         try task.run()
         
         // Don't wait - let it run in background
-        print("✅ tccd started with hook injected")
+        let successMsg = "✅ tccd started with hook injected"
+        print(successMsg)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("SystemLogMessage"),
+                object: nil,
+                userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
+            )
+        }
     }
     
     /// Read cache information from the hook log
@@ -167,7 +191,15 @@ class CacheInterceptService {
         let jsonData = try JSONSerialization.data(withJSONObject: snapshot, options: .prettyPrinted)
         try jsonData.write(to: URL(fileURLWithPath: cacheSnapshotPath))
         
-        print("💾 Cache snapshot saved to \(cacheSnapshotPath)")
+        let snapshotMsg = "💾 Cache snapshot saved to \(cacheSnapshotPath)"
+        print(snapshotMsg)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("SystemLogMessage"),
+                object: nil,
+                userInfo: ["message": snapshotMsg, "type": SystemMessage.MessageType.success]
+            )
+        }
     }
     
     /// Get the latest cache snapshot

@@ -40,7 +40,13 @@ class BlacklistEnforcementService: ObservableObject {
             self?.scanAndEnforceBlacklist()
         }
         
-        print("✅ Blacklist enforcement monitoring started")
+        let message = "✅ Blacklist enforcement monitoring started"
+        print(message)
+        NotificationCenter.default.post(
+            name: NSNotification.Name("SystemLogMessage"),
+            object: nil,
+            userInfo: ["message": message, "type": SystemMessage.MessageType.success]
+        )
     }
     
     func stopMonitoring() {

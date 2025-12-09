@@ -84,7 +84,15 @@ struct LibertyAccessControlApp: App {
         
         scanner.scanAllDatabases { suspiciousApps in
             guard !suspiciousApps.isEmpty else {
-                print("✅ Security scan complete: No suspicious permissions detected")
+                let message = "✅ Security scan complete: No suspicious permissions detected"
+                print(message)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": message, "type": SystemMessage.MessageType.success]
+                    )
+                }
                 return
             }
             

@@ -16,15 +16,40 @@ extension UserService {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            print("🔍 UPDATE REQUEST: service='\(service)', client='\(client)', authValue=\(authValue)")
+            let updateMsg = "🔍 UPDATE REQUEST: service='\(service)', client='\(client)', authValue=\(authValue)"
+            print(updateMsg)
+            NotificationCenter.default.post(
+                name: NSNotification.Name("SystemLogMessage"),
+                object: nil,
+                userInfo: ["message": updateMsg, "type": SystemMessage.MessageType.info]
+            )
             
             // Kill tccd and intercept it when it starts up again
-            print("🎯 Intercepting tccd cache for: \(client)")
+            let interceptMsg = "🎯 Intercepting tccd cache for: \(client)"
+            print(interceptMsg)
+            NotificationCenter.default.post(
+                name: NSNotification.Name("SystemLogMessage"),
+                object: nil,
+                userInfo: ["message": interceptMsg, "type": SystemMessage.MessageType.info]
+            )
             CacheInterceptService.shared.restartTCCDWithInterception(targetBundleId: client) { result in
                 switch result {
                 case .success(let info):
-                    print("✅ Cache intercepted:\n\(info)")
-                    print("📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details")
+                    let successMsg = "✅ Cache intercepted:\n\(info)"
+                    print(successMsg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
+                    )
+                    
+                    let detailsMsg = "📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details"
+                    print(detailsMsg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": detailsMsg, "type": SystemMessage.MessageType.info]
+                    )
                     
                     // STOP HERE - don't update database yet
                     DispatchQueue.main.async {
@@ -32,7 +57,13 @@ extension UserService {
                     }
                     
                 case .failure(let error):
-                    print("⚠️ Cache interception failed: \(error.localizedDescription)")
+                    let errorMsg = "⚠️ Cache interception failed: \(error.localizedDescription)"
+                    print(errorMsg)
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SystemLogMessage"),
+                        object: nil,
+                        userInfo: ["message": errorMsg, "type": SystemMessage.MessageType.warning]
+                    )
                     DispatchQueue.main.async {
                         completion(false, "Cache interception failed: \(error.localizedDescription)")
                     }

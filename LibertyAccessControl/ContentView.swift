@@ -13,6 +13,12 @@ struct ContentView: View {
         NavigationSplitView {
             List {
                 NavigationLink {
+                    HomeView()
+                } label: {
+                    Label("Home", systemImage: "house.fill")
+                }
+                
+                NavigationLink {
                     DashboardView()
                 } label: {
                     Label("Permissions", systemImage: "checklist")
@@ -27,7 +33,7 @@ struct ContentView: View {
                 NavigationLink {
                     BlacklistManagementView()
                 } label: {
-                    Label("Blacklist Management", systemImage: "hand.raised.shield.fill")
+                    Label("Blacklist Management", systemImage: "hand.raised.fill")
                 }
                 
                 NavigationLink {
@@ -158,7 +164,7 @@ struct ContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            DashboardView()
+            HomeView()
         }
     }
 }
