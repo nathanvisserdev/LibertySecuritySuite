@@ -243,6 +243,32 @@ struct FileSystemMonitorView: View {
                         StatRow(title: "Suspicious Activities", value: "\(viewModel.stats.suspiciousActivities)")
                     }
                 }
+                
+                // Data Management
+                GroupBox(label: Label("Data Management", systemImage: "externaldrive.fill")) {
+                    VStack(spacing: 12) {
+                        StatRow(title: "Total Stored Events", value: "\(viewModel.stats.totalEvents)")
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            viewModel.cleanupOldData(olderThanDays: 30)
+                        }) {
+                            Label("Cleanup Data (>30 days)", systemImage: "trash.circle")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button(action: {
+                            viewModel.cleanupOldData(olderThanDays: 7)
+                        }) {
+                            Label("Cleanup Data (>7 days)", systemImage: "trash.circle")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding()
+                }
             }
             .padding()
         }
@@ -321,6 +347,14 @@ struct FileSystemMonitorView: View {
                             title: "CSV Export",
                             description: "Export events for forensic analysis and compliance reporting"
                         )
+                        
+                        Divider()
+                        
+                        FeatureRow(
+                            icon: "lock.doc.fill",
+                            title: "Encrypted Persistence",
+                            description: "All events stored in encrypted Core Data with AES-256. Encryption keys secured in macOS Keychain. Automatic data retention management."
+                        )
                     }
                     .padding()
                 }
@@ -331,8 +365,11 @@ struct FileSystemMonitorView: View {
                         FSDetailRow(label: "API", value: "macOS FSEvents")
                         FSDetailRow(label: "Latency", value: "300ms (real-time)")
                         FSDetailRow(label: "Event Capacity", value: "1000 in-memory")
+                        FSDetailRow(label: "Persistence", value: "Encrypted Core Data")
+                        FSDetailRow(label: "Storage", value: "AES-256 + Keychain")
                         FSDetailRow(label: "Ransomware Threshold", value: "50 files / 10s")
                         FSDetailRow(label: "Architecture", value: "Combine + MVVM")
+                        FSDetailRow(label: "Auto-Cleanup", value: "Configurable retention")
                     }
                     .padding()
                 }

@@ -23,7 +23,14 @@ class FileSystemMonitorService: ObservableObject {
     // System integrity
     private let systemIntegrity = SystemFileIntegrity()
     
-    private init() {}
+    // Persistence
+    private let persistenceController = FileSystemPersistenceController.shared
+    private var persistenceTimer: Timer?
+    
+    private init() {
+        // Load persisted events on initialization
+        loadPersistedData()
+    }
     
     // MARK: - Start/Stop Monitoring
     func startMonitoring(paths: [String] = []) {
@@ -81,6 +88,7 @@ class FileSystemMonitorService: ObservableObject {
                 self.isMonitoring = true
                 self.stats.monitoredPaths = self.monitoredPaths.count
                 self.startStatsTimer()
+                self.startPersistenceTimer()
             }
             
             print("📁 File System Monitoring started for \(monitoredPaths.count) paths")
@@ -99,6 +107,11 @@ class FileSystemMonitorService: ObservableObject {
             self.isMonitoring = false
             self.statsTimer?.invalidate()
             self.statsTimer = nil
+            self.persistenceTimer?.invalidate()
+            self.persistenceTimer = nil
+            
+            // Final save before stopping
+            self.persistCurrentData()
         }
         
         print("📁 File System Monitoring stopped")
@@ -270,6 +283,9 @@ class FileSystemMonitorService: ObservableObject {
         )
         alerts.insert(alert, at: 0)
         
+        // Save to persistence
+        persistenceController.saveAlert(alert)
+        
         // Keep only recent alerts
         if alerts.count > 100 {
             alerts = Array(alerts.prefix(100))
@@ -279,6 +295,11 @@ class FileSystemMonitorService: ObservableObject {
     // MARK: - Event Management
     private func addEvent(_ event: FileSystemEvent) {
         events.insert(event, at: 0)
+        
+        // Save to persistence (high/critical severity immediately)
+        if event.severity == .high || event.severity == .critical {
+            persistenceController.saveEvent(event)
+        }
         
         // Limit stored events
         if events.count > maxStoredEvents {
@@ -344,10 +365,84 @@ class FileSystemMonitorService: ObservableObject {
         alerts.removeAll()
         stats = FileSystemStats()
         stats.monitoredPaths = monitoredPaths.count
+        
+        // Clear from persistence
+        persistenceController.deleteAllEvents()
     }
     
     func clearAlerts() {
         alerts.removeAll()
+        
+        // Clear from persistence
+        persistenceController.deleteAllAlerts()
+    }
+    
+    // MARK: - Persistence
+    
+    private func loadPersistedData() {
+        // Load recent events (last 7 days)
+        let persistedEvents = persistenceController.fetchEvents(limit: maxStoredEvents)
+        
+        DispatchQueue.main.async {
+            self.events = persistedEvents
+            
+            // Recalculate stats from persisted data
+            self.recalculateStats()
+        }
+        
+        // Load recent alerts
+        let persistedAlerts = persistenceController.fetchAlerts(limit: 100)
+        
+        DispatchQueue.main.async {
+            self.alerts = persistedAlerts
+        }
+        
+        print("📂 Loaded \(persistedEvents.count) events and \(persistedAlerts.count) alerts from persistence")
+    }
+    
+    private func persistCurrentData() {
+        // Batch save all current events that aren't already saved
+        let eventsToSave = events.filter { event in
+            // Only save if not high/critical (those are saved immediately)
+            event.severity != .high && event.severity != .critical
+        }
+        
+        if !eventsToSave.isEmpty {
+            persistenceController.saveEvents(eventsToSave)
+            print("💾 Persisted \(eventsToSave.count) events")
+        }
+    }
+    
+    private func startPersistenceTimer() {
+        // Save data every 5 minutes
+        persistenceTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
+            self?.persistCurrentData()
+        }
+    }
+    
+    private func recalculateStats() {
+        // Recalculate statistics from loaded events
+        for event in events {
+            stats.totalEvents += 1
+            stats.eventsByType[event.eventType, default: 0] += 1
+            stats.eventsBySeverity[event.severity, default: 0] += 1
+            
+            if event.severity == .high || event.severity == .critical {
+                stats.suspiciousActivities += 1
+            }
+        }
+    }
+    
+    // MARK: - Data Retention
+    
+    func cleanupOldData(olderThanDays days: Int = 30) {
+        persistenceController.deleteOldEvents(olderThanDays: days)
+        persistenceController.deleteOldAlerts(olderThanDays: days)
+        
+        // Reload data after cleanup
+        loadPersistedData()
+        
+        print("🧹 Cleaned up data older than \(days) days")
     }
 }
 

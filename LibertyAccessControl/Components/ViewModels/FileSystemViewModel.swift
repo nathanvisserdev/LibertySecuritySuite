@@ -215,6 +215,10 @@ class FileSystemViewModel: ObservableObject {
         alerts.removeAll { $0.id == alert.id }
     }
     
+    func cleanupOldData(olderThanDays days: Int) {
+        monitorService.cleanupOldData(olderThanDays: days)
+    }
+    
     // MARK: - Statistics
     var eventsInLastMinute: Int {
         let now = Date()
