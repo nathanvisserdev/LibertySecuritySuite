@@ -187,13 +187,17 @@ struct MessageRow: View {
                 .frame(width: 20)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(message.message)
-                    .font(.system(.body, design: .monospaced))
-                    .textSelection(.enabled)
-                
-                Text(message.timestamp.formatted(date: .omitted, time: .standard))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack {
+                    Text(message.message)
+                        .font(.system(.body, design: .monospaced))
+                        .textSelection(.enabled)
+                    
+                    Spacer()
+                    
+                    Text(message.timestamp.formatted(date: .omitted, time: .standard))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
             
             Spacer()
