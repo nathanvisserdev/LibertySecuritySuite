@@ -24,49 +24,22 @@ extension UserService {
                 userInfo: ["message": updateMsg, "type": SystemMessage.MessageType.info]
             )
             
-            // Kill tccd and intercept it when it starts up again
-            let interceptMsg = "🎯 Intercepting tccd cache for: \(client)"
-            print(interceptMsg)
-            NotificationCenter.default.post(
-                name: NSNotification.Name("SystemLogMessage"),
-                object: nil,
-                userInfo: ["message": interceptMsg, "type": SystemMessage.MessageType.info]
-            )
-            CacheInterceptService.shared.restartTCCDWithInterception(targetBundleId: client) { result in
-                switch result {
-                case .success(let info):
-                    let successMsg = "✅ Cache intercepted:\n\(info)"
-                    print(successMsg)
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("SystemLogMessage"),
-                        object: nil,
-                        userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
-                    )
-                    
-                    let detailsMsg = "📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details"
-                    print(detailsMsg)
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("SystemLogMessage"),
-                        object: nil,
-                        userInfo: ["message": detailsMsg, "type": SystemMessage.MessageType.info]
-                    )
-                    
-                    // STOP HERE - don't update database yet
-                    DispatchQueue.main.async {
-                        completion(true, "Cache intercepted. Check logs before proceeding.")
+            // Perform the database update
+            self.performDatabaseUpdate(service: service, client: client, authValue: authValue) { success, message in
+                if success {
+                    // Invalidate tccd cache to force re-read from database
+                    TCCCacheReader.shared.revokePermission(service: service, client: client) { result in
+                        switch result {
+                        case .success(let msg):
+                            print(msg)
+                            completion(true, "Permission updated and cache invalidated")
+                        case .failure(let error):
+                            print("⚠️ Cache invalidation warning: \(error.localizedDescription)")
+                            completion(true, "Permission updated (cache invalidation warning: \(error.localizedDescription))")
+                        }
                     }
-                    
-                case .failure(let error):
-                    let errorMsg = "⚠️ Cache interception failed: \(error.localizedDescription)"
-                    print(errorMsg)
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("SystemLogMessage"),
-                        object: nil,
-                        userInfo: ["message": errorMsg, "type": SystemMessage.MessageType.warning]
-                    )
-                    DispatchQueue.main.async {
-                        completion(false, "Cache interception failed: \(error.localizedDescription)")
-                    }
+                } else {
+                    completion(success, message)
                 }
             }
         }

@@ -13,7 +13,7 @@ class TCCRevocationService {
     
     static let shared = TCCRevocationService()
     
-    private let cacheInterceptService = CacheInterceptService.shared
+    private let cacheReader = TCCCacheReader.shared
     private let blacklistService = BlacklistService.shared
     
     private init() {}
@@ -123,82 +123,52 @@ class TCCRevocationService {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            // Step 1: Intercept tccd cache and mark app for revocation
-            print("📋 Step 1: Intercepting tccd cache for \(bundleID)...")
-            self.cacheInterceptService.restartTCCDWithInterception(targetBundleId: bundleID) { result in
-                switch result {
-                case .success(let cacheInfo):
-                    print("✅ Cache intercepted:\n\(cacheInfo)")
-                    
-                    // Step 2: Update TCC database to revoke permission
-                    print("📋 Step 2: Updating TCC database...")
-                    self.updateTCCDatabase(
-                        databasePath: databasePath,
+            // Step 1: Update TCC database to revoke permission
+            print("📋 Step 1: Updating TCC database...")
+            self.updateTCCDatabase(
+                databasePath: databasePath,
+                service: service,
+                client: client,
+                isSystemDB: isSystemDB
+            ) { dbSuccess, dbMessage in
+                
+                if dbSuccess {
+                    // Step 2: Add to blacklist
+                    print("📋 Step 2: Adding to blacklist...")
+                    self.blacklistService.addToBlacklist(
                         service: service,
                         client: client,
-                        isSystemDB: isSystemDB
-                    ) { dbSuccess, dbMessage in
-                        
-                        if dbSuccess {
-                            // Step 3: Add to blacklist
-                            print("📋 Step 3: Adding to blacklist...")
-                            self.blacklistService.addToBlacklist(
-                                service: service,
-                                client: client,
-                                bundleID: bundleID,
-                                teamID: teamID,
-                                reason: reason
-                            )
-                            
-                            self.blacklistService.logRevocationAttempt(
-                                service: service,
-                                client: client,
-                                bundleID: bundleID,
-                                blocked: false
-                            )
-                            
-                            // Step 4: Restart tccd normally (without hook)
-                            print("📋 Step 4: Restarting tccd normally...")
-                            self.restartTCCDNormally()
-                            
+                        bundleID: bundleID,
+                        teamID: teamID,
+                        reason: reason
+                    )
+                    
+                    self.blacklistService.logRevocationAttempt(
+                        service: service,
+                        client: client,
+                        bundleID: bundleID,
+                        blocked: false
+                    )
+                    
+                    // Step 3: Invalidate tccd cache
+                    print("📋 Step 3: Invalidating tccd cache...")
+                    self.cacheReader.revokePermission(service: service, client: bundleID) { result in
+                        switch result {
+                        case .success(let msg):
+                            print("✅ \(msg)")
                             DispatchQueue.main.async {
                                 completion(true, "✅ Permission revoked successfully\n\n🔐 Cache invalidated for \(bundleID)\n💾 Database updated\n🚫 Added to blacklist\n\nThe app will need to request permission again, but it will be denied.")
                             }
-                        } else {
+                        case .failure(let error):
+                            print("⚠️ Cache invalidation warning: \(error.localizedDescription)")
                             DispatchQueue.main.async {
-                                completion(false, "Failed to update TCC database: \(dbMessage)")
+                                completion(true, "✅ Permission revoked (cache invalidation warning: \(error.localizedDescription))")
                             }
                         }
                     }
-                    
-                case .failure(let error):
-                    print("❌ Failed to intercept cache: \(error.localizedDescription)")
-                    // Try to revoke without cache interception
-                    print("⚠️ Attempting database-only revocation...")
-                    
-                    self.updateTCCDatabase(
-                        databasePath: databasePath,
-                        service: service,
-                        client: client,
-                        isSystemDB: isSystemDB
-                    ) { dbSuccess, dbMessage in
-                        if dbSuccess {
-                            self.blacklistService.addToBlacklist(
-                                service: service,
-                                client: client,
-                                bundleID: bundleID,
-                                teamID: teamID,
-                                reason: reason
-                            )
-                            
-                            DispatchQueue.main.async {
-                                completion(true, "⚠️ Permission revoked (cache not invalidated)\n\n💾 Database updated\n🚫 Added to blacklist\n\nNote: Cache interception failed. The app may still have cached access until tccd restarts.")
-                            }
-                        } else {
-                            DispatchQueue.main.async {
-                                completion(false, "Failed: \(dbMessage)")
-                            }
-                        }
+                } else {
+                    DispatchQueue.main.async {
+                        completion(false, "Failed to update TCC database: \(dbMessage)")
                     }
                 }
             }
@@ -293,17 +263,5 @@ class TCCRevocationService {
         }
         
         return nil
-    }
-    
-    private func restartTCCDNormally() {
-        // Kill tccd and let macOS restart it naturally
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
-        task.arguments = ["tccd"]
-        
-        try? task.run()
-        task.waitUntilExit()
-        
-        print("🔄 tccd killed, will restart automatically")
     }
 }

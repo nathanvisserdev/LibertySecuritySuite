@@ -47,6 +47,9 @@ struct LibertyAccessControlApp: App {
                         .environmentObject(monitoringService)
                         .environmentObject(blacklistEnforcementService)
                         .onAppear {
+                            // FIRST: Capture TCC cache for privilege revocation
+                            self.captureTCCCache()
+                            
                             // Start monitoring after environment is set up
                             monitoringService.startBackgroundMonitoring()
                             
@@ -75,6 +78,41 @@ struct LibertyAccessControlApp: App {
             .environmentObject(authState)
             .onAppear {
                 authState.checkAuthenticationStatus()
+            }
+        }
+    }
+    
+    private func captureTCCCache() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            TCCCacheReader.shared.captureCache { result in
+                switch result {
+                case .success(let info):
+                    let successMsg = "✅ TCC cache captured successfully"
+                    print(successMsg)
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("SystemLogMessage"),
+                            object: nil,
+                            userInfo: ["message": successMsg, "type": SystemMessage.MessageType.success]
+                        )
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("SystemLogMessage"),
+                            object: nil,
+                            userInfo: ["message": info, "type": SystemMessage.MessageType.info]
+                        )
+                    }
+                    
+                case .failure(let error):
+                    let errorMsg = "❌ TCC cache capture failed: \(error.localizedDescription)"
+                    print(errorMsg)
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("SystemLogMessage"),
+                            object: nil,
+                            userInfo: ["message": errorMsg, "type": SystemMessage.MessageType.error]
+                        )
+                    }
+                }
             }
         }
     }

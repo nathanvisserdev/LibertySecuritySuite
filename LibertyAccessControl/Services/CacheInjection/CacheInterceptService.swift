@@ -34,8 +34,23 @@ class CacheInterceptService {
         // Empty - dylib path is lazy loaded
     }
     
+    /// Capture the entire tccd cache by restarting tccd with interception
+    func captureEntireCache(completion: @escaping (Result<String, Error>) -> Void) {
+        let initMsg = "🔄 Initiating full TCC cache capture..."
+        print(initMsg)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("SystemLogMessage"),
+                object: nil,
+                userInfo: ["message": initMsg, "type": SystemMessage.MessageType.info]
+            )
+        }
+        
+        restartTCCDWithInterception(targetBundleId: nil, completion: completion)
+    }
+    
     /// Kill tccd and restart it with cache interception
-    func restartTCCDWithInterception(targetBundleId: String? = nil, completion: @escaping (Result<String, Error>) -> Void) {
+    private func restartTCCDWithInterception(targetBundleId: String? = nil, completion: @escaping (Result<String, Error>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 // Step 1: Kill existing tccd
