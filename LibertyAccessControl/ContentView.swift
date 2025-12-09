@@ -25,6 +25,12 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
+                    BlacklistManagementView()
+                } label: {
+                    Label("Blacklist Management", systemImage: "hand.raised.shield.fill")
+                }
+                
+                NavigationLink {
                     MonitoringPreferencesView()
                 } label: {
                     Label("Monitoring Preferences", systemImage: "slider.horizontal.3")

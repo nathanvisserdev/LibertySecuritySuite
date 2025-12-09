@@ -36,6 +36,50 @@ extension UserService {
         }
     }
     
+    /// Revoke permission and add to blacklist to prevent re-enabling
+    func revokeAndBlacklistPermission(service: String, client: String, bundleID: String?, teamID: String?, reason: String? = nil, completion: @escaping (Bool, String) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            guard let db = self.openDatabase(readOnly: false) else {
+                DispatchQueue.main.async {
+                    completion(false, "Failed to open user TCC database")
+                }
+                return
+            }
+            
+            defer { sqlite3_close(db) }
+            
+            // First, delete the permission from TCC database
+            let success = self.executeDelete(db: db, service: service, client: client)
+            
+            DispatchQueue.main.async {
+                if success {
+                    // Add to blacklist
+                    BlacklistService.shared.addToBlacklist(
+                        service: service,
+                        client: client,
+                        bundleID: bundleID,
+                        teamID: teamID,
+                        reason: reason
+                    )
+                    
+                    // Log the revocation
+                    BlacklistService.shared.logRevocationAttempt(
+                        service: service,
+                        client: client,
+                        bundleID: bundleID,
+                        blocked: false
+                    )
+                    
+                    completion(true, "Permission revoked and blacklisted")
+                } else {
+                    completion(false, "Failed to revoke permission")
+                }
+            }
+        }
+    }
+    
     private func executeDelete(db: OpaquePointer?, service: String, client: String) -> Bool {
         let deleteQuery = "DELETE FROM access WHERE service = ? AND client = ?"
         var statement: OpaquePointer?

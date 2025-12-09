@@ -9,8 +9,12 @@ import SwiftUI
 
 struct SystemView: View {
     @StateObject private var viewModel = SystemVM()
+    @StateObject private var blacklistService = BlacklistService.shared
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
+    @State private var showingRevokeAlert = false
+    @State private var entryToRevoke: SystemEntry?
+    @State private var revokeReason: String = ""
     
     private let serviceCategories = [
         ("Calendar", ["Calendar"]),
@@ -145,12 +149,37 @@ struct SystemView: View {
                                                             Text("Service: \(entry.service)")
                                                                 .font(.caption)
                                                                 .foregroundColor(.secondary)
+                                                            
+                                                            // Show if blacklisted
+                                                            if blacklistService.isBlacklisted(service: entry.service, client: entry.client) {
+                                                                HStack(spacing: 4) {
+                                                                    Image(systemName: "hand.raised.fill")
+                                                                    Text("BLACKLISTED")
+                                                                }
+                                                                .font(.caption2)
+                                                                .fontWeight(.bold)
+                                                                .foregroundColor(.red)
+                                                            }
                                                         }
                                                         
                                                         Spacer()
                                                     }
                                                 }
                                                 .buttonStyle(.plain)
+                                                
+                                                // Revoke Button - only show if allowed
+                                                if entry.auth_value == 2 {
+                                                    Button(action: {
+                                                        entryToRevoke = entry
+                                                        showingRevokeAlert = true
+                                                    }) {
+                                                        Image(systemName: "xmark.shield.fill")
+                                                            .foregroundColor(.red)
+                                                            .font(.system(size: 18))
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                    .help("Revoke and Blacklist")
+                                                }
                                                 
                                                 // Toggle Switch (read-only, shows permission state)
                                                 Toggle("", isOn: .constant(entry.auth_value == 2))
@@ -267,10 +296,44 @@ struct SystemView: View {
         }
         .padding()
         .navigationTitle("System Permissions")
+        .alert("Revoke and Blacklist Permission", isPresented: $showingRevokeAlert) {
+            Button("Cancel", role: .cancel) {
+                entryToRevoke = nil
+                revokeReason = ""
+            }
+            Button("Revoke", role: .destructive) {
+                if let entry = entryToRevoke {
+                    revokePermission(entry: entry)
+                }
+            }
+        } message: {
+            if let entry = entryToRevoke {
+                Text("Are you sure you want to revoke \(entry.client)'s access to \(entry.service)? This will blacklist the app and prevent it from regaining this permission. Note: Requires root privileges.")
+            }
+        }
         .onAppear {
             if viewModel.entries.isEmpty && !viewModel.isLoading {
                 viewModel.loadTCCData()
             }
+        }
+    }
+    
+    private func revokePermission(entry: SystemEntry) {
+        SystemService.shared.revokeAndBlacklistPermission(
+            service: entry.service,
+            client: entry.client,
+            bundleID: entry.parsedBundleID,
+            teamID: entry.parsedTeamID,
+            reason: revokeReason.isEmpty ? nil : revokeReason
+        ) { success, message in
+            if success {
+                print("✅ System permission revoked and blacklisted: \(message)")
+                viewModel.loadTCCData() // Refresh the list
+            } else {
+                print("❌ Failed to revoke system permission: \(message)")
+            }
+            entryToRevoke = nil
+            revokeReason = ""
         }
     }
     
