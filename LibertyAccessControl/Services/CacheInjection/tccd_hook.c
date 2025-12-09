@@ -42,7 +42,12 @@ static void poison_cache_for_target(void);
 static void log_msg(const char* format, ...);
 
 static void init_logging(void) {
-    log_file = fopen("/tmp/tccd_hook.log", "a");
+    // Use secure location from environment variable, fallback to temp
+    const char* log_path = getenv("TCCD_HOOK_LOG_PATH");
+    if (!log_path) {
+        log_path = "/tmp/tccd_hook.log";
+    }
+    log_file = fopen(log_path, "a");
     if (log_file) {
         fprintf(log_file, "\n=== tccd_hook loaded at %ld ===\n", time(NULL));
         fflush(log_file);

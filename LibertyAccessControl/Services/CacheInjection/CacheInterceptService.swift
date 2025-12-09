@@ -15,8 +15,20 @@ class CacheInterceptService {
         return "/Users/nathanvisser/Code/test/LibertyAccessControl/LibertyAccessControl/Services/CacheInjection/tccd_hook.dylib"
     }()
     
-    private let logPath = "/tmp/tccd_hook.log"
-    private let cacheSnapshotPath = "/tmp/tccd_cache_snapshot.json"
+    // Use secure app container for logs
+    private lazy var logPath: String = {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let secureDir = appSupport.appendingPathComponent("LibertyAccessControl/TCCHooks")
+        try? FileManager.default.createDirectory(at: secureDir, withIntermediateDirectories: true)
+        return secureDir.appendingPathComponent("tccd_hook.log").path
+    }()
+    
+    private lazy var cacheSnapshotPath: String = {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let secureDir = appSupport.appendingPathComponent("LibertyAccessControl/TCCHooks")
+        try? FileManager.default.createDirectory(at: secureDir, withIntermediateDirectories: true)
+        return secureDir.appendingPathComponent("tccd_cache_snapshot.json").path
+    }()
     
     private init() {
         // Empty - dylib path is lazy loaded
@@ -85,6 +97,7 @@ class CacheInterceptService {
         
         var env = ProcessInfo.processInfo.environment
         env["DYLD_INSERT_LIBRARIES"] = hookDylibPath
+        env["TCCD_HOOK_LOG_PATH"] = logPath
         
         if let target = targetBundleId {
             env["TCCD_REVOKE_TARGET"] = target

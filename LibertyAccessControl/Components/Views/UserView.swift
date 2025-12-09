@@ -424,15 +424,39 @@ struct UserView: View {
     private func handleToggleChange(entry: UserEntry, newValue: Bool) {
         print("🔄 Toggle changed for \(entry.client) - new value: \(newValue)")
         
-        // Kill tccd and intercept it when it starts up again
-        CacheInterceptService.shared.restartTCCDWithInterception(targetBundleId: entry.client) { result in
-            switch result {
-            case .success(let info):
-                print("✅ Cache intercepted:\n\(info)")
-                print("📋 Check /tmp/tccd_hook.log and /tmp/tccd_cache_snapshot.json for details")
-                
-            case .failure(let error):
-                print("⚠️ Cache interception failed: \(error.localizedDescription)")
+        if !newValue {
+            // User is turning OFF the permission - revoke it with cache invalidation
+            print("🚫 Revoking permission for \(entry.client)")
+            
+            viewModel.revokeAndBlacklistPermission(entry: entry, reason: "Toggled off by user") { success, message in
+                if success {
+                    print("✅ Permission revoked: \(message)")
+                    // Reset toggle state to reflect the revocation
+                    DispatchQueue.main.async {
+                        self.toggleStates[entry.id] = false
+                        self.viewModel.loadTCCData()
+                    }
+                } else {
+                    print("❌ Failed to revoke: \(message)")
+                    // Revert toggle back to ON since revocation failed
+                    DispatchQueue.main.async {
+                        self.toggleStates[entry.id] = true
+                    }
+                }
+            }
+        } else {
+            // User is trying to turn ON - check if blacklisted
+            if blacklistService.isBlacklisted(service: entry.service, client: entry.client) {
+                print("⚠️ Cannot enable - app is blacklisted")
+                DispatchQueue.main.async {
+                    self.toggleStates[entry.id] = false
+                }
+            } else {
+                print("⚠️ Cannot enable permissions through UI - app must request permission normally")
+                // Revert toggle - we don't support granting permissions through UI
+                DispatchQueue.main.async {
+                    self.toggleStates[entry.id] = false
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ struct SystemView: View {
     @StateObject private var blacklistService = BlacklistService.shared
     @State private var expandedEntries: Set<UUID> = []
     @State private var expandedCategories: Set<String> = []
+    @State private var toggleStates: [UUID: Bool] = [:]
     @State private var showingRevokeAlert = false
     @State private var entryToRevoke: SystemEntry?
     @State private var revokeReason: String = ""
@@ -181,11 +182,16 @@ struct SystemView: View {
                                                     .help("Revoke and Blacklist")
                                                 }
                                                 
-                                                // Toggle Switch (read-only, shows permission state)
-                                                Toggle("", isOn: .constant(entry.auth_value == 2))
+                                                // Toggle Switch - Interactive
+                                                Toggle("", isOn: Binding(
+                                                    get: { toggleStates[entry.id] ?? (entry.auth_value == 2) },
+                                                    set: { newValue in
+                                                        toggleStates[entry.id] = newValue
+                                                        handleToggleChange(entry: entry, newValue: newValue)
+                                                    }
+                                                ))
                                                     .toggleStyle(.switch)
                                                     .labelsHidden()
-                                                    .disabled(true)
                                                 
                                                 // Show auth value badge
                                                 Text(authValueText(entry.auth_value))
@@ -368,6 +374,46 @@ struct SystemView: View {
         case "green": return .green
         case "orange": return .orange
         default: return .gray
+        }
+    }
+    
+    private func handleToggleChange(entry: SystemEntry, newValue: Bool) {
+        print("🔄 Toggle changed for \(entry.client) - new value: \(newValue)")
+        
+        if !newValue {
+            // User is turning OFF the permission - revoke it with cache invalidation
+            print("🚫 Revoking system permission for \(entry.client)")
+            
+            viewModel.revokeAndBlacklistPermission(entry: entry, reason: "Toggled off by user") { success, message in
+                if success {
+                    print("✅ System permission revoked: \(message)")
+                    // Reset toggle state to reflect the revocation
+                    DispatchQueue.main.async {
+                        self.toggleStates[entry.id] = false
+                        self.viewModel.loadTCCData()
+                    }
+                } else {
+                    print("❌ Failed to revoke: \(message)")
+                    // Revert toggle back to ON since revocation failed
+                    DispatchQueue.main.async {
+                        self.toggleStates[entry.id] = true
+                    }
+                }
+            }
+        } else {
+            // User is trying to turn ON - check if blacklisted
+            if blacklistService.isBlacklisted(service: entry.service, client: entry.client) {
+                print("⚠️ Cannot enable - app is blacklisted")
+                DispatchQueue.main.async {
+                    self.toggleStates[entry.id] = false
+                }
+            } else {
+                print("⚠️ Cannot enable system permissions through UI - app must request permission normally")
+                // Revert toggle - we don't support granting permissions through UI
+                DispatchQueue.main.async {
+                    self.toggleStates[entry.id] = false
+                }
+            }
         }
     }
 }

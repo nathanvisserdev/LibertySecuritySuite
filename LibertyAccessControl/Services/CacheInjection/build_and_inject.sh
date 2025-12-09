@@ -10,6 +10,7 @@ cd "$(dirname "$0")"
 clang -dynamiclib -o tccd_hook.dylib tccd_hook.c \
     -framework Foundation \
     -framework CoreFoundation \
+    -arch arm64e \
     -arch arm64 \
     -arch x86_64 \
     -mmacosx-version-min=10.15 \
