@@ -25,36 +25,80 @@ class TCCCacheReader {
     func captureCache(completion: @escaping (Result<String, Error>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                // Find tccd process
-                guard let tccdPID = self.findTCCDProcess() else {
+                // Step 1: Kill existing tccd to force a clean restart
+                let killMsg = "🔴 Killing tccd daemon..."
+                print(killMsg)
+                self.postMessage(killMsg, type: .info)
+                
+                try self.killTCCD()
+                
+                let killedMsg = "✅ tccd daemon killed successfully"
+                print(killedMsg)
+                self.postMessage(killedMsg, type: .success)
+                
+                // Step 2: Wait for tccd to restart (macOS will auto-restart it)
+                let waitMsg = "⏳ Waiting for tccd to restart..."
+                print(waitMsg)
+                self.postMessage(waitMsg, type: .info)
+                
+                usleep(1000000) // 1 second - give it time to restart
+                
+                // Step 3: Find the restarted tccd process
+                let findMsg = "🔍 Looking for restarted tccd process..."
+                print(findMsg)
+                self.postMessage(findMsg, type: .info)
+                
+                var tccdPID: pid_t?
+                var attempts = 0
+                let maxAttempts = 10
+                
+                // Poll for tccd process (it should restart automatically)
+                while tccdPID == nil && attempts < maxAttempts {
+                    tccdPID = self.findTCCDProcess()
+                    if tccdPID == nil {
+                        usleep(500000) // Wait 0.5 seconds between attempts
+                        attempts += 1
+                    }
+                }
+                
+                guard let pid = tccdPID else {
                     throw TCCCacheError.processNotFound
                 }
                 
-                let msg = "🔍 Found tccd process: PID \(tccdPID)"
-                print(msg)
-                self.postMessage(msg, type: .info)
+                let foundMsg = "✅ Found tccd process: PID \(pid)"
+                print(foundMsg)
+                self.postMessage(foundMsg, type: .success)
+                
+                // Step 4: Hook into the process memory
+                let hookMsg = "🪝 Hooking into tccd memory (requires root + SIP disabled)..."
+                print(hookMsg)
+                self.postMessage(hookMsg, type: .info)
                 
                 // Get task port for tccd
                 var task: mach_port_name_t = 0
-                let kr = task_for_pid(mach_task_self_, tccdPID, &task)
+                let kr = task_for_pid(mach_task_self_, pid, &task)
                 
                 guard kr == KERN_SUCCESS else {
                     throw TCCCacheError.taskAccessDenied(code: kr)
                 }
                 
-                let taskMsg = "✅ Got task port for tccd (requires root + SIP disabled)"
+                let taskMsg = "✅ Successfully hooked into tccd memory space"
                 print(taskMsg)
                 self.postMessage(taskMsg, type: .success)
                 
-                // Read memory regions to find cache data
+                // Step 5: Scan memory for cache data
+                let scanMsg = "🔬 Scanning tccd memory for TCC cache entries..."
+                print(scanMsg)
+                self.postMessage(scanMsg, type: .info)
+                
                 let cacheData = try self.scanMemoryForCache(task: task)
                 
-                // Save the captured cache
+                // Step 6: Save the captured cache
                 try self.saveCapturedCache(cacheData)
                 
                 let summary = """
                 === TCC Cache Capture Summary ===
-                • Process ID: \(tccdPID)
+                • Process ID: \(pid)
                 • Captured entries: \(cacheData.count)
                 • Saved to: \(self.cacheCapturePath)
                 """
@@ -94,6 +138,22 @@ class TCCCacheReader {
         }
         
         return nil
+    }
+    
+    /// Kill the tccd daemon
+    private func killTCCD() throws {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        task.arguments = ["killall", "tccd"]
+        
+        try task.run()
+        task.waitUntilExit()
+        
+        if task.terminationStatus != 0 {
+            let warnMsg = "⚠️ tccd may not have been running (or killall failed)"
+            print(warnMsg)
+            self.postMessage(warnMsg, type: .warning)
+        }
     }
     
     /// Scan tccd memory for cache structures
