@@ -1,5 +1,0 @@
-{
-  "status" : "captured",
-  "timestamp" : 1765163049.8823509,
-  "log" : "\n=== tccd_hook loaded at 1765163048 ===\n[HOOK] Target bundle ID for revocation: com.apple.mail\n[HOOK] tccd_hook.dylib initializing...\n[HOOK] PID: 45702\n[HOOK] Hooking malloc_type_calloc and dispatch_queue_create\n[HOOK] NSCache class found at 0x1f964d610\n[HOOK] Found NSCache setObject:forKey: method\n[HOOK] Initialization complete\n"
-}
