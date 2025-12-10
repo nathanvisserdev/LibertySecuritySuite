@@ -97,14 +97,38 @@ struct REGView: View {
                                     
                                     // Expanded details
                                     if expandedEntries.contains(entry.id) {
-                                        VStack(alignment: .leading, spacing: 4) {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Divider()
+                                                .padding(.vertical, 2)
+                                            
+                                            // Section: Core Database Fields
+                                            Text("Core Fields")
+                                                .font(.caption.bold())
+                                                .foregroundColor(.purple)
+                                                .padding(.bottom, 2)
+                                            
                                             fieldRow("abs_path", value: entry.abs_path)
-                                            fieldRow("first_seen", value: entry.first_seen.formatted(date: .abbreviated, time: .shortened))
-                                            fieldRow("last_seen", value: entry.last_seen.formatted(date: .abbreviated, time: .shortened))
+                                            fieldRow("first_seen", value: "\(entry.first_seen.timeIntervalSince1970) (\(entry.first_seen.formatted(date: .long, time: .standard)))")
+                                            fieldRow("last_seen", value: "\(entry.last_seen.timeIntervalSince1970) (\(entry.last_seen.formatted(date: .long, time: .standard)))")
                                             fieldRow("trusted", value: "\(entry.trusted)")
+                                            fieldRow("isTrusted", value: "\(entry.isTrusted)")
+                                            
+                                            // Additional computed info
+                                            Divider()
+                                                .padding(.vertical, 2)
+                                            
+                                            Text("Computed Information")
+                                                .font(.caption.bold())
+                                                .foregroundColor(.blue)
+                                                .padding(.bottom, 2)
+                                            
+                                            fieldRow("Time Since Last Seen", value: formatTimeSince(entry.last_seen))
+                                            fieldRow("Time Since First Seen", value: formatTimeSince(entry.first_seen))
+                                            fieldRow("Duration in Registry", value: formatDuration(from: entry.first_seen, to: entry.last_seen))
                                         }
                                         .padding(.top, 4)
                                         .padding(.leading, 24)
+                                        .padding(.vertical, 8)
                                     }
                                 }
                                 .padding(12)
@@ -151,7 +175,7 @@ struct REGView: View {
                                                     .font(.caption.bold())
                                                     .foregroundColor(.purple)
                                                 Spacer()
-                                                Text("\(table.columns.count) fields")
+                                                Text("\(table.columns.count) fields, \(table.rows.count) rows")
                                                     .font(.caption2)
                                                     .foregroundColor(.secondary)
                                             }
@@ -175,6 +199,41 @@ struct REGView: View {
                                                         }
                                                     }
                                                 }
+                                            }
+                                            
+                                            // Table data rows
+                                            if !table.rows.isEmpty {
+                                                Divider()
+                                                    .padding(.vertical, 4)
+                                                
+                                                Text("Data (\(table.rows.count) rows)")
+                                                    .font(.caption.bold())
+                                                    .foregroundColor(.purple)
+                                                    .padding(.bottom, 4)
+                                                
+                                                ScrollView(.horizontal, showsIndicators: true) {
+                                                    VStack(alignment: .leading, spacing: 3) {
+                                                        ForEach(table.columns, id: \.self) { column in
+                                                            HStack(alignment: .top, spacing: 8) {
+                                                                Text(column + ":")
+                                                                    .font(.caption2)
+                                                                    .foregroundColor(.secondary)
+                                                                    .frame(width: 140, alignment: .trailing)
+                                                                
+                                                                Text(table.rows.compactMap { $0[column] }.joined(separator: ", "))
+                                                                    .font(.caption2)
+                                                                    .textSelection(.enabled)
+                                                            }
+                                                        }
+                                                    }
+                                                    .padding(6)
+                                                }
+                                                .frame(maxHeight: 400)
+                                            } else if table.columns.isEmpty {
+                                                Text("No data available")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                    .padding(.top, 4)
                                             }
                                         }
                                         .padding(8)
@@ -213,13 +272,65 @@ struct REGView: View {
             Text(label + ":")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(width: 100, alignment: .trailing)
+                .frame(width: 140, alignment: .trailing)
             
             Text(value)
                 .font(.caption)
                 .textSelection(.enabled)
             
             Spacer()
+        }
+    }
+    
+    private func formatTimeSince(_ date: Date) -> String {
+        let now = Date()
+        let interval = now.timeIntervalSince(date)
+        
+        if interval < 60 {
+            return "Just now"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "\(minutes) minute\(minutes == 1 ? "" : "s") ago"
+        } else if interval < 86400 {
+            let hours = Int(interval / 3600)
+            return "\(hours) hour\(hours == 1 ? "" : "s") ago"
+        } else if interval < 604800 {
+            let days = Int(interval / 86400)
+            return "\(days) day\(days == 1 ? "" : "s") ago"
+        } else if interval < 2592000 {
+            let weeks = Int(interval / 604800)
+            return "\(weeks) week\(weeks == 1 ? "" : "s") ago"
+        } else if interval < 31536000 {
+            let months = Int(interval / 2592000)
+            return "\(months) month\(months == 1 ? "" : "s") ago"
+        } else {
+            let years = Int(interval / 31536000)
+            return "\(years) year\(years == 1 ? "" : "s") ago"
+        }
+    }
+    
+    private func formatDuration(from start: Date, to end: Date) -> String {
+        let interval = end.timeIntervalSince(start)
+        
+        if interval < 60 {
+            return "Less than a minute"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "\(minutes) minute\(minutes == 1 ? "" : "s")"
+        } else if interval < 86400 {
+            let hours = Int(interval / 3600)
+            let minutes = Int((interval.truncatingRemainder(dividingBy: 3600)) / 60)
+            if minutes > 0 {
+                return "\(hours) hour\(hours == 1 ? "" : "s"), \(minutes) min"
+            }
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else {
+            let days = Int(interval / 86400)
+            let hours = Int((interval.truncatingRemainder(dividingBy: 86400)) / 3600)
+            if hours > 0 {
+                return "\(days) day\(days == 1 ? "" : "s"), \(hours) hour\(hours == 1 ? "" : "s")"
+            }
+            return "\(days) day\(days == 1 ? "" : "s")"
         }
     }
 }
