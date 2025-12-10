@@ -7,11 +7,19 @@
 
 import Foundation
 import CryptoKit
+import Security
+import LocalAuthentication
 
 struct CommitHashPair: Codable {
     let commitHash: String
     let dbHash: String
     let timestamp: Date
+}
+
+enum VerificationMode {
+    case usb
+    case keychain
+    case both // Prefer USB, fallback to keychain
 }
 
 class GitVersioningService {
@@ -20,6 +28,8 @@ class GitVersioningService {
     private let dbDirectory: URL
     private let dbFileName = "SecureNotes.encrypted"
     private let usbHashFileName = "LibertyHashes.json"
+    private let keychainService = "com.liberty.LibertyAccessControl.commitHashes"
+    private let keychainAccount = "commitHashPairs"
     
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -61,12 +71,7 @@ class GitVersioningService {
         }
     }
     
-    func commitDatabase(message: String) -> (success: Bool, commitHash: String?, error: String?) {
-        // Check if USB is available
-        guard findUSBDrive() != nil else {
-            return (false, nil, "⚠️ USB drive not found. Please plug in your security USB drive to save.")
-        }
-        
+    func commitDatabase(message: String, mode: VerificationMode = .both) -> (success: Bool, commitHash: String?, error: String?) {
         // Add file to git
         var result = runGitCommand(["add", dbFileName], at: dbDirectory)
         guard result.success else {
@@ -92,25 +97,64 @@ class GitVersioningService {
             return (false, nil, "Failed to compute database hash")
         }
         
-        // Store commit-hash pair on USB
-        let stored = storeHashOnUSB(commitHash: commitHash, dbHash: dbHash)
-        if !stored {
-            print("⚠️ Warning: Failed to store hash on USB drive")
+        // Store based on mode
+        var usbStored = false
+        var keychainStored = false
+        
+        switch mode {
+        case .usb:
+            usbStored = storeHashOnUSB(commitHash: commitHash, dbHash: dbHash)
+            if !usbStored {
+                return (false, nil, "⚠️ USB drive not found. Please plug in your security USB drive.")
+            }
+        case .keychain:
+            keychainStored = storeHashInKeychain(commitHash: commitHash, dbHash: dbHash)
+            if !keychainStored {
+                return (false, nil, "Failed to store hash in keychain")
+            }
+        case .both:
+            usbStored = storeHashOnUSB(commitHash: commitHash, dbHash: dbHash)
+            keychainStored = storeHashInKeychain(commitHash: commitHash, dbHash: dbHash)
+            if !usbStored && !keychainStored {
+                return (false, nil, "Failed to store hash in both USB and keychain")
+            }
         }
         
         return (true, commitHash, nil)
     }
     
-    func verifyIntegrity() -> (valid: Bool, message: String) {
-        // Check if USB is available
-        guard findUSBDrive() != nil else {
-            return (false, "⚠️ USB drive not found. Plug in USB to verify integrity.")
+    func verifyIntegrity(mode: VerificationMode = .both) -> (valid: Bool, message: String) {
+        var latestPair: CommitHashPair?
+        var source = ""
+        
+        switch mode {
+        case .usb:
+            guard let usbData = readHashesFromUSB(), let pair = usbData.first else {
+                return (false, "⚠️ No verification data found on USB drive")
+            }
+            latestPair = pair
+            source = "USB"
+        case .keychain:
+            guard let keychainData = readHashesFromKeychain(), let pair = keychainData.first else {
+                return (false, "⚠️ No verification data found in keychain")
+            }
+            latestPair = pair
+            source = "Keychain"
+        case .both:
+            // Try USB first, fallback to keychain
+            if let usbData = readHashesFromUSB(), let pair = usbData.first {
+                latestPair = pair
+                source = "USB"
+            } else if let keychainData = readHashesFromKeychain(), let pair = keychainData.first {
+                latestPair = pair
+                source = "Keychain"
+            } else {
+                return (false, "⚠️ No verification data found in USB or keychain")
+            }
         }
         
-        // Get latest commit from USB
-        guard let usbData = readHashesFromUSB(),
-              let latestPair = usbData.first else {
-            return (false, "⚠️ No verification data found on USB drive")
+        guard let verificationPair = latestPair else {
+            return (false, "⚠️ No verification data available")
         }
         
         // Compute current database hash
@@ -119,10 +163,10 @@ class GitVersioningService {
         }
         
         // Compare hashes
-        if currentHash == latestPair.dbHash {
-            return (true, "✅ Database integrity verified (last saved: \(latestPair.timestamp.formatted()))")
+        if currentHash == verificationPair.dbHash {
+            return (true, "✅ Database integrity verified via \(source) (last saved: \(verificationPair.timestamp.formatted()))")
         } else {
-            return (false, "🚨 TAMPERING DETECTED! Database has been modified since last commit.\nLast known good commit: \(latestPair.commitHash)")
+            return (false, "🚨 TAMPERING DETECTED! Database has been modified since last commit.\nLast known good commit: \(verificationPair.commitHash)\nVerified via: \(source)")
         }
     }
     
@@ -231,6 +275,129 @@ class GitVersioningService {
         decoder.dateDecodingStrategy = .iso8601
         return try? decoder.decode([CommitHashPair].self, from: data)
     }
+    
+    // MARK: - Keychain Hash Storage
+    
+    private func storeHashInKeychain(commitHash: String, dbHash: String) -> Bool {
+        // Read existing hashes
+        var hashes = readHashesFromKeychain() ?? []
+        
+        // Add new pair at the beginning (most recent first)
+        let newPair = CommitHashPair(commitHash: commitHash, dbHash: dbHash, timestamp: Date())
+        hashes.insert(newPair, at: 0)
+        
+        // Keep only last 100 entries
+        if hashes.count > 100 {
+            hashes = Array(hashes.prefix(100))
+        }
+        
+        // Encode to JSON
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(hashes)
+            
+            // Create access control for biometric authentication
+            var accessControlError: Unmanaged<CFError>?
+            guard let accessControl = SecAccessControlCreateWithFlags(
+                kCFAllocatorDefault,
+                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                .biometryCurrentSet,
+                &accessControlError
+            ) else {
+                print("⚠️ Failed to create access control, storing without biometrics")
+                return storeHashInKeychainWithoutBiometrics(data)
+            }
+            
+            let context = LAContext()
+            context.localizedReason = "Authenticate to store database verification hash"
+            
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: keychainService,
+                kSecAttrAccount as String: keychainAccount,
+                kSecValueData as String: data,
+                kSecAttrAccessControl as String: accessControl,
+                kSecUseAuthenticationContext as String: context
+            ]
+            
+            // Delete existing item first
+            SecItemDelete(query as CFDictionary)
+            
+            // Add new item
+            let status = SecItemAdd(query as CFDictionary, nil)
+            if status == errSecSuccess {
+                print("✅ Hash stored in keychain with biometric protection")
+                return true
+            } else {
+                print("⚠️ Failed to store in keychain with biometrics (\(status)), trying without")
+                return storeHashInKeychainWithoutBiometrics(data)
+            }
+        } catch {
+            print("⚠️ Failed to encode hashes: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    private func storeHashInKeychainWithoutBiometrics(_ data: Data) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+        
+        SecItemDelete(query as CFDictionary)
+        let status = SecItemAdd(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+    
+    func readHashesFromKeychain() -> [CommitHashPair]? {
+        let context = LAContext()
+        context.localizedReason = "Authenticate to access database verification hash"
+        
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
+            kSecReturnData as String: true,
+            kSecUseAuthenticationContext as String: context
+        ]
+        
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        
+        guard status == errSecSuccess, let data = result as? Data else {
+            // Try without biometrics if the first attempt failed
+            return readHashesFromKeychainWithoutBiometrics()
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode([CommitHashPair].self, from: data)
+    }
+    
+    private func readHashesFromKeychainWithoutBiometrics() -> [CommitHashPair]? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
+            kSecReturnData as String: true
+        ]
+        
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        
+        guard status == errSecSuccess, let data = result as? Data else {
+            return nil
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode([CommitHashPair].self, from: data)
+    }
+
     
     // MARK: - Hash Computation
     

@@ -44,7 +44,7 @@
 		15A7309A2EE88E0B0060D137 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Contents/Library/LaunchServices;
+			dstPath = Contents/Library/LaunchDaemons;
 			dstSubfolderSpec = 1;
 			files = (
 				15A7309B2EE88F0D0060D137 /* com.liberty.libertyAccessControl.helper in CopyFiles */,
@@ -54,8 +54,8 @@
 		15A7309C2EE88FF40060D137 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Contents/Library/LaunchServices;
-			dstSubfolderSpec = 1;
+			dstPath = "";
+			dstSubfolderSpec = 7;
 			files = (
 				15A7309E2EE891F90060D137 /* com.liberty.LibertyAccessControl.helper.plist in CopyFiles */,
 			);

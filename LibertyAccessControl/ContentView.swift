@@ -69,6 +69,12 @@ struct ContentView: View {
                 Divider()
                 
                 NavigationLink {
+                    MalwareAnalysisView()
+                } label: {
+                    Label("Malware Detection", systemImage: "ant.fill")
+                }
+                
+                NavigationLink {
                     SecureNotesView()
                 } label: {
                     Label("Secure Notes", systemImage: "lock.doc")

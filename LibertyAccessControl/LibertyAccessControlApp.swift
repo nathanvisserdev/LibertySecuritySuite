@@ -47,8 +47,14 @@ struct LibertyAccessControlApp: App {
                         .environmentObject(monitoringService)
                         .environmentObject(blacklistEnforcementService)
                         .onAppear {
-                            // FIRST: Capture TCC cache for privilege revocation
+                            // FIRST: Verify database integrity before any operations
+                            self.verifyDatabaseIntegrity()
+                            
+                            // SECOND: Capture TCC cache for privilege revocation
                             self.captureTCCCache()
+                            
+                            // THIRD: Perform malware scan AFTER integrity check
+                            self.performBootTimeMalwareScan()
                             
                             // Start monitoring after environment is set up
                             monitoringService.startBackgroundMonitoring()
@@ -78,6 +84,72 @@ struct LibertyAccessControlApp: App {
             .environmentObject(authState)
             .onAppear {
                 authState.checkAuthenticationStatus()
+            }
+        }
+    }
+    
+    private func verifyDatabaseIntegrity() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let gitService = GitVersioningService.shared
+            let result = gitService.verifyIntegrity(mode: .both)
+            
+            let message: String
+            let messageType: SystemMessage.MessageType
+            
+            if result.valid {
+                message = result.message
+                messageType = .success
+                print("✅ Database integrity verified")
+            } else {
+                message = "🚨 DATABASE TAMPERING DETECTED! \(result.message)"
+                messageType = .error
+                print("🚨 CRITICAL: \(message)")
+            }
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("SystemLogMessage"),
+                    object: nil,
+                    userInfo: ["message": message, "type": messageType]
+                )
+            }
+        }
+    }
+    
+    private func performBootTimeMalwareScan() {
+        print("🔍 Starting boot-time malware scan...")
+        
+        Task {
+            let scanner = MalwareScannerService.shared
+            let result = await scanner.performFullSystemScan()
+            
+            let message: String
+            let messageType: SystemMessage.MessageType
+            
+            if result.isClean {
+                message = "✅ Malware scan complete: System clean (\(result.filesScanned) files scanned)"
+                messageType = .success
+            } else {
+                message = "🚨 MALWARE DETECTED: \(result.threatsDetected) threat(s) quarantined automatically"
+                messageType = .error
+                
+                // Send critical notification for malware detection
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("MalwareDetected"),
+                        object: nil,
+                        userInfo: ["count": result.threatsDetected, "result": result]
+                    )
+                }
+            }
+            
+            print(message)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("SystemLogMessage"),
+                    object: nil,
+                    userInfo: ["message": message, "type": messageType]
+                )
             }
         }
     }

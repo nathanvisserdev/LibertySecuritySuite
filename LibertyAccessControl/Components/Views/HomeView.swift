@@ -84,9 +84,11 @@ class SystemMessageService: ObservableObject {
 
 struct HomeView: View {
     @StateObject private var messageService = SystemMessageService.shared
+    @StateObject private var malwareScanner = MalwareScannerService.shared
     @State private var searchText = ""
     @State private var databaseStatuses: [DatabaseStatus] = []
     @State private var showDatabaseDetails = false
+    @State private var showMalwareDetails = false
     
     var filteredMessages: [SystemMessage] {
         if searchText.isEmpty {
@@ -127,6 +129,29 @@ struct HomeView: View {
                     }
                 }
                 .padding()
+                
+                // Status cards
+                HStack(spacing: 12) {
+                    // Malware scan status
+                    StatusCard(
+                        icon: malwareScanner.lastScanResult?.isClean == true ? "checkmark.shield.fill" : "exclamationmark.shield.fill",
+                        iconColor: malwareScanner.lastScanResult?.isClean == true ? .green : .red,
+                        title: "Malware Status",
+                        subtitle: malwareScanStatusText,
+                        action: { showMalwareDetails = true }
+                    )
+                    
+                    // Database integrity status
+                    StatusCard(
+                        icon: "externaldrive.fill",
+                        iconColor: .blue,
+                        title: "Database Status",
+                        subtitle: "\(databaseStatuses.filter { $0.exists }.count) of \(databaseStatuses.count) active",
+                        action: { showDatabaseDetails = true }
+                    )
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
                 
                 // Search bar
                 HStack {
@@ -178,6 +203,23 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showDatabaseDetails) {
             DatabaseStatusSheet(statuses: databaseStatuses)
+        }
+        .sheet(isPresented: $showMalwareDetails) {
+            MalwareStatusSheet(scanResult: malwareScanner.lastScanResult)
+        }
+    }
+    
+    private var malwareScanStatusText: String {
+        if malwareScanner.isScanning {
+            return "Scanning... \(Int(malwareScanner.currentScanProgress * 100))%"
+        } else if let result = malwareScanner.lastScanResult {
+            if result.isClean {
+                return "Clean - \(result.filesScanned) files scanned"
+            } else {
+                return "⚠️ \(result.threatsDetected) threats quarantined"
+            }
+        } else {
+            return "No scan performed yet"
         }
     }
     
@@ -351,6 +393,194 @@ struct DatabaseStatusRow: View {
     }
 }
 
+// MARK: - Status Card
+
+struct StatusCard: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(iconColor)
+                    .frame(width: 40, height: 40)
+                    .background(iconColor.opacity(0.15))
+                    .cornerRadius(8)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(subtitle)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color(.controlBackgroundColor))
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Malware Status Sheet
+
+struct MalwareStatusSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let scanResult: MalwareScanResult?
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Malware Scan Status")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Spacer()
+                
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            if let result = scanResult {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Status indicator
+                        VStack(spacing: 12) {
+                            Image(systemName: result.isClean ? "checkmark.shield.fill" : "exclamationmark.shield.fill")
+                                .font(.system(size: 64))
+                                .foregroundColor(result.isClean ? .green : .red)
+                            
+                            Text(result.isClean ? "System Clean" : "Threats Detected")
+                                .font(.title)
+                            
+                            Text(result.scanEndTime.formatted())
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        
+                        // Statistics
+                        HStack(spacing: 20) {
+                            MalwareStatBox(label: "Files Scanned", value: "\(result.filesScanned)", icon: "doc.text")
+                            MalwareStatBox(label: "Threats Found", value: "\(result.threatsDetected)", icon: "exclamationmark.triangle.fill", color: result.threatsDetected > 0 ? .red : .green)
+                            MalwareStatBox(label: "Duration", value: formatDuration(result.duration), icon: "clock")
+                        }
+                        .padding(.horizontal)
+                        
+                        // Threat list
+                        if !result.quarantinedFiles.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Quarantined Threats")
+                                    .font(.headline)
+                                    .padding(.horizontal)
+                                
+                                ForEach(result.quarantinedFiles) { file in
+                                    ThreatSummaryRow(file: file)
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                }
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    Text("No scan performed yet")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    Text("A full system scan will run at boot")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxHeight: .infinity)
+            }
+        }
+        .frame(width: 600, height: 500)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return "\(minutes)m \(seconds)s"
+    }
+}
+
+struct MalwareStatBox: View {
+    let label: String
+    let value: String
+    let icon: String
+    var color: Color = .blue
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.title2.bold())
+                .foregroundColor(color)
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+    }
+}
+
+struct ThreatSummaryRow: View {
+    let file: QuarantinedFile
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.octagon.fill")
+                .foregroundColor(.red)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(URL(fileURLWithPath: file.originalPath).lastPathComponent)
+                    .font(.body)
+                Text(file.threat.rawValue)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(6)
+        .padding(.horizontal)
+    }
+}
+
 #Preview {
     HomeView()
 }
+
