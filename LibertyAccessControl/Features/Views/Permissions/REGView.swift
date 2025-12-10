@@ -41,88 +41,88 @@ struct REGView: View {
             
             Divider()
             
-            // Entries List
+            // Combined ScrollView for Entries and Database Tables
             if viewModel.isLoading {
                 ProgressView()
                     .scaleEffect(1.5)
                     .padding()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(viewModel.entries) { entry in
-                            VStack(alignment: .leading, spacing: 6) {
-                                // Header - Always visible, clickable
-                                Button(action: {
-                                    if expandedEntries.contains(entry.id) {
-                                        expandedEntries.remove(entry.id)
-                                    } else {
-                                        expandedEntries.insert(entry.id)
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
-                                            .foregroundColor(.secondary)
-                                            .font(.caption)
-                                        
-                                        Image(systemName: entry.isTrusted ? "checkmark.shield.fill" : "xmark.shield.fill")
-                                            .foregroundColor(entry.isTrusted ? .green : .red)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(entry.abs_path)
-                                                .font(.body)
-                                                .fontWeight(.medium)
-                                                .lineLimit(1)
-                                            
-                                            Text("Last seen: \(entry.last_seen.formatted(date: .abbreviated, time: .shortened))")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                    VStack(spacing: 16) {
+                        // Registry Entries List
+                        LazyVStack(spacing: 8) {
+                            ForEach(viewModel.entries) { entry in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    // Header - Always visible, clickable
+                                    Button(action: {
+                                        if expandedEntries.contains(entry.id) {
+                                            expandedEntries.remove(entry.id)
+                                        } else {
+                                            expandedEntries.insert(entry.id)
                                         }
-                                        
-                                        Spacer()
-                                        
-                                        // Show trusted badge
-                                        Text(entry.isTrusted ? "Trusted" : "Untrusted")
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(entry.isTrusted ? Color.green : Color.red)
-                                            .cornerRadius(6)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: expandedEntries.contains(entry.id) ? "chevron.down" : "chevron.right")
+                                                .foregroundColor(.secondary)
+                                                .font(.caption)
+                                            
+                                            Image(systemName: entry.isTrusted ? "checkmark.shield.fill" : "xmark.shield.fill")
+                                                .foregroundColor(entry.isTrusted ? .green : .red)
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(entry.abs_path)
+                                                    .font(.body)
+                                                    .fontWeight(.medium)
+                                                    .lineLimit(1)
+                                                
+                                                Text("Last seen: \(entry.last_seen.formatted(date: .abbreviated, time: .shortened))")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Show trusted badge
+                                            Text(entry.isTrusted ? "Trusted" : "Untrusted")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(entry.isTrusted ? Color.green : Color.red)
+                                                .cornerRadius(6)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    // Expanded details
+                                    if expandedEntries.contains(entry.id) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            fieldRow("abs_path", value: entry.abs_path)
+                                            fieldRow("first_seen", value: entry.first_seen.formatted(date: .abbreviated, time: .shortened))
+                                            fieldRow("last_seen", value: entry.last_seen.formatted(date: .abbreviated, time: .shortened))
+                                            fieldRow("trusted", value: "\(entry.trusted)")
+                                        }
+                                        .padding(.top, 4)
+                                        .padding(.leading, 24)
                                     }
                                 }
-                                .buttonStyle(.plain)
-                                
-                                // Expanded details
-                                if expandedEntries.contains(entry.id) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        fieldRow("abs_path", value: entry.abs_path)
-                                        fieldRow("first_seen", value: entry.first_seen.formatted(date: .abbreviated, time: .shortened))
-                                        fieldRow("last_seen", value: entry.last_seen.formatted(date: .abbreviated, time: .shortened))
-                                        fieldRow("trusted", value: "\(entry.trusted)")
-                                    }
-                                    .padding(.top, 4)
-                                    .padding(.leading, 24)
-                                }
+                                .padding(12)
+                                .background(Color(nsColor: .controlBackgroundColor))
+                                .cornerRadius(8)
                             }
-                            .padding(12)
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(8)
                         }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-            
-            // TCC Database Tables Section
-            if !viewModel.databases.isEmpty {
-                Divider()
-                    .padding(.vertical, 8)
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("TCC Database Tables")
-                        .font(.headline)
                         .padding(.horizontal)
+                        
+                        // TCC Database Tables Section
+                        if !viewModel.databases.isEmpty {
+                            Divider()
+                                .padding(.vertical, 8)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("TCC Database Tables")
+                                    .font(.headline)
+                                    .padding(.horizontal)
                     
                     ForEach(viewModel.databases) { database in
                         VStack(alignment: .leading, spacing: 8) {
@@ -139,24 +139,50 @@ struct REGView: View {
                             .padding(.horizontal)
                             
                             if !database.tables.isEmpty {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(database.tables, id: \.self) { table in
-                                            Text(table)
-                                                .font(.caption)
-                                                .padding(.horizontal, 10)
-                                                .padding(.vertical, 6)
-                                                .background(Color.purple.opacity(0.1))
-                                                .foregroundColor(.purple)
-                                                .cornerRadius(6)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-                                                )
+                                VStack(alignment: .leading, spacing: 12) {
+                                    ForEach(database.tables) { table in
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            // Table name header
+                                            HStack {
+                                                Image(systemName: "tablecells")
+                                                    .font(.caption)
+                                                    .foregroundColor(.purple)
+                                                Text(table.name)
+                                                    .font(.caption.bold())
+                                                    .foregroundColor(.purple)
+                                                Spacer()
+                                                Text("\(table.columns.count) fields")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            // Columns
+                                            if !table.columns.isEmpty {
+                                                ScrollView(.horizontal, showsIndicators: false) {
+                                                    HStack(spacing: 6) {
+                                                        ForEach(table.columns, id: \.self) { column in
+                                                            Text(column)
+                                                                .font(.caption2)
+                                                                .padding(.horizontal, 8)
+                                                                .padding(.vertical, 4)
+                                                                .background(Color.blue.opacity(0.1))
+                                                                .foregroundColor(.blue)
+                                                                .cornerRadius(4)
+                                                                .overlay(
+                                                                    RoundedRectangle(cornerRadius: 4)
+                                                                        .stroke(Color.blue.opacity(0.3), lineWidth: 0.5)
+                                                                )
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
+                                        .padding(8)
+                                        .background(Color.purple.opacity(0.05))
+                                        .cornerRadius(6)
                                     }
-                                    .padding(.horizontal)
                                 }
+                                .padding(.horizontal)
                             } else {
                                 Text("No tables found or access denied")
                                     .font(.caption)
@@ -170,6 +196,9 @@ struct REGView: View {
                     }
                 }
                 .padding(.horizontal)
+            }
+                    }
+                }
             }
         }
         .padding()

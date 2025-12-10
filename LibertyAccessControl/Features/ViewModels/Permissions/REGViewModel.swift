@@ -25,7 +25,7 @@ struct TCCDatabase: Identifiable {
     let id = UUID()
     let name: String
     let path: String
-    var tables: [String] = []
+    var tables: [TableSchema] = []
 }
 
 class REGViewModel: ObservableObject {
@@ -77,7 +77,7 @@ class REGViewModel: ObservableObject {
         for (name, path) in databasePaths {
             group.enter()
             
-            tableService.getDatabaseTables(databasePath: path) { [weak self] (tables: [String], error: String?) in
+            tableService.getDatabaseTables(databasePath: path) { [weak self] (tables: [TableSchema], error: String?) in
                 var database = TCCDatabase(name: name, path: path)
                 database.tables = tables
                 loadedDatabases.append(database)

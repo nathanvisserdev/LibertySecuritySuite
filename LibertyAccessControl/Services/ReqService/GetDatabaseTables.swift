@@ -8,14 +8,22 @@
 import Foundation
 import SQLite3
 
+// MARK: - Database Schema Models
+
+struct TableSchema: Identifiable {
+    let id = UUID()
+    let name: String
+    var columns: [String] = []
+}
+
 // MARK: - Get All Tables from a Database
 
 class DatabaseTablesService {
-    /// Query all table names from a TCC database
-    func getDatabaseTables(databasePath: String, completion: @escaping ([String], String?) -> Void) {
+    /// Query all table names and their columns from a TCC database
+    func getDatabaseTables(databasePath: String, completion: @escaping ([TableSchema], String?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             var db: OpaquePointer?
-            var tables: [String] = []
+            var tables: [TableSchema] = []
             var errorMessage: String?
             
             let openResult = sqlite3_open_v2(databasePath, &db, SQLITE_OPEN_READONLY, nil)
@@ -39,7 +47,7 @@ class DatabaseTablesService {
             }
             
             // Query to get all table names
-            let query = """
+            let tableQuery = """
             SELECT name FROM sqlite_master 
             WHERE type='table' 
             ORDER BY name
@@ -47,7 +55,7 @@ class DatabaseTablesService {
             
             var statement: OpaquePointer?
             
-            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+            guard sqlite3_prepare_v2(db, tableQuery, -1, &statement, nil) == SQLITE_OK else {
                 errorMessage = "Failed to prepare query for tables"
                 DispatchQueue.main.async {
                     completion([], errorMessage)
@@ -55,14 +63,37 @@ class DatabaseTablesService {
                 return
             }
             
-            defer { sqlite3_finalize(statement) }
+            var tableNames: [String] = []
             
             // Execute query and collect table names
             while sqlite3_step(statement) == SQLITE_ROW {
                 if let cString = sqlite3_column_text(statement, 0) {
                     let tableName = String(cString: cString)
-                    tables.append(tableName)
+                    tableNames.append(tableName)
                 }
+            }
+            
+            sqlite3_finalize(statement)
+            
+            // For each table, get its columns
+            for tableName in tableNames {
+                var table = TableSchema(name: tableName)
+                
+                let columnQuery = "PRAGMA table_info(\(tableName))"
+                var columnStatement: OpaquePointer?
+                
+                if sqlite3_prepare_v2(db, columnQuery, -1, &columnStatement, nil) == SQLITE_OK {
+                    while sqlite3_step(columnStatement) == SQLITE_ROW {
+                        // Column name is at index 1 in PRAGMA table_info result
+                        if let cString = sqlite3_column_text(columnStatement, 1) {
+                            let columnName = String(cString: cString)
+                            table.columns.append(columnName)
+                        }
+                    }
+                    sqlite3_finalize(columnStatement)
+                }
+                
+                tables.append(table)
             }
             
             DispatchQueue.main.async {
