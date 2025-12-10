@@ -113,6 +113,64 @@ struct REGView: View {
                     .padding(.horizontal)
                 }
             }
+            
+            // TCC Database Tables Section
+            if !viewModel.databases.isEmpty {
+                Divider()
+                    .padding(.vertical, 8)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("TCC Database Tables")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    ForEach(viewModel.databases) { database in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "cylinder.fill")
+                                    .foregroundColor(.purple)
+                                Text(database.name)
+                                    .font(.subheadline.bold())
+                                Spacer()
+                                Text("\(database.tables.count) tables")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal)
+                            
+                            if !database.tables.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(database.tables, id: \.self) { table in
+                                            Text(table)
+                                                .font(.caption)
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 6)
+                                                .background(Color.purple.opacity(0.1))
+                                                .foregroundColor(.purple)
+                                                .cornerRadius(6)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .stroke(Color.purple.opacity(0.3), lineWidth: 1)
+                                                )
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+                            } else {
+                                Text("No tables found or access denied")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal)
+            }
         }
         .padding()
         .navigationTitle("TCC Registry")

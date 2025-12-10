@@ -21,11 +21,22 @@ struct REGEntry: Identifiable {
     }
 }
 
+struct TCCDatabase: Identifiable {
+    let id = UUID()
+    let name: String
+    let path: String
+    var tables: [String] = []
+}
+
 class REGViewModel: ObservableObject {
     @Published var statusMessage: String = "System TCC Registry Database - Ready to query"
     @Published var errorMessage: String?
     @Published var entries: [REGEntry] = []
     @Published var isLoading: Bool = false
+    @Published var databases: [TCCDatabase] = []
+    @Published var isLoadingTables: Bool = false
+    
+    private let tableService = DatabaseTablesService()
     
     func loadREGData() {
         isLoading = true
@@ -44,6 +55,44 @@ class REGViewModel: ObservableObject {
                     self?.statusMessage = "Loaded \(results.count) registry entries"
                 }
             }
+        }
+        
+        // Also load database tables
+        loadDatabaseTables()
+    }
+    
+    func loadDatabaseTables() {
+        isLoadingTables = true
+        
+        // Define TCC databases to query
+        let databasePaths: [(name: String, path: String)] = [
+            ("System TCC Database", "/Library/Application Support/com.apple.TCC/TCC.db"),
+            ("User TCC Database", "\(NSHomeDirectory())/Library/Application Support/com.apple.TCC/TCC.db"),
+            ("System TCC Registry", "/Library/Application Support/com.apple.TCC/REG.db")
+        ]
+        
+        var loadedDatabases: [TCCDatabase] = []
+        let group = DispatchGroup()
+        
+        for (name, path) in databasePaths {
+            group.enter()
+            
+            tableService.getDatabaseTables(databasePath: path) { [weak self] (tables: [String], error: String?) in
+                var database = TCCDatabase(name: name, path: path)
+                database.tables = tables
+                loadedDatabases.append(database)
+                
+                if let error = error {
+                    print("⚠️ Error loading tables for \(name): \(error)")
+                }
+                
+                group.leave()
+            }
+        }
+        
+        group.notify(queue: .main) { [weak self] in
+            self?.databases = loadedDatabases.sorted { $0.name < $1.name }
+            self?.isLoadingTables = false
         }
     }
     
