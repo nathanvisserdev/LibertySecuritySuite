@@ -42,16 +42,20 @@ class NetworkMonitor: ObservableObject {
     // MARK: - Authorization
     
     func requestAuthorization() {
-        let result = authService.executeWithAdminPrompt(command: "/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate")
+        statusMessage = "Authenticating..."
         
-        DispatchQueue.main.async {
-            if result.success {
-                self.isAuthorized = true
-                self.statusMessage = "Admin authorization granted"
-                self.checkFirewallStatus()
-            } else {
-                self.isAuthorized = false
-                self.statusMessage = "Admin authorization required for firewall operations"
+        authService.authenticateWithBiometrics(reason: "Authenticate to manage firewall settings") { [weak self] success, error in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                if success {
+                    self.isAuthorized = true
+                    self.statusMessage = "Biometric authorization granted"
+                    self.checkFirewallStatus()
+                } else {
+                    self.isAuthorized = false
+                    self.statusMessage = "Authorization failed: \(error ?? "Unknown error")"
+                }
             }
         }
     }

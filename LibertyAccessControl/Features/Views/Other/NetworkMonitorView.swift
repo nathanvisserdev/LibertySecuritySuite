@@ -91,10 +91,10 @@ struct NetworkMonitorView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.orange)
                     
-                    Text("Admin Authorization Required")
+                    Text("Biometric Authorization Required")
                         .font(.headline)
                     
-                    Text("Firewall management requires administrator privileges.\nYou'll be prompted to enter your password.")
+                    Text("Firewall management requires biometric authentication.\nUse Touch ID or Face ID to authorize.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -102,7 +102,7 @@ struct NetworkMonitorView: View {
                     Button(action: {
                         monitor.requestAuthorization()
                     }) {
-                        Label("Request Authorization", systemImage: "key.fill")
+                        Label("Authenticate with Biometrics", systemImage: "faceid")
                             .font(.subheadline)
                     }
                     .buttonStyle(.borderedProminent)
