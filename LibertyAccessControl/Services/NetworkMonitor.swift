@@ -366,13 +366,16 @@ class NetworkMonitor: ObservableObject {
     func checkFirewallStatus() {
         guard isAuthorized else { return }
         
-        let result = authService.executeWithAdminPrompt(command: "/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate")
-        
-        DispatchQueue.main.async {
-            if result.success {
-                self.firewallEnabled = result.output.contains("enabled")
-            } else {
-                self.statusMessage = "Unable to check firewall status"
+        authService.executeWithBiometricAuth(
+            command: "/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate",
+            reason: "Authenticate to check firewall status"
+        ) { [weak self] success, output, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.firewallEnabled = output.contains("enabled")
+                } else {
+                    self?.statusMessage = "Unable to check firewall status"
+                }
             }
         }
     }
@@ -385,14 +388,17 @@ class NetworkMonitor: ObservableObject {
             return
         }
         
-        let result = authService.executeWithAdminPrompt(command: "/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on")
-        
-        DispatchQueue.main.async {
-            if result.success {
-                self.statusMessage = "Firewall enabled"
-                self.checkFirewallStatus()
-            } else {
-                self.statusMessage = "Failed to enable firewall"
+        authService.executeWithBiometricAuth(
+            command: "/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on",
+            reason: "Authenticate to enable firewall"
+        ) { [weak self] success, output, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.statusMessage = "Firewall enabled"
+                    self?.checkFirewallStatus()
+                } else {
+                    self?.statusMessage = "Failed to enable firewall"
+                }
             }
         }
     }
@@ -405,14 +411,17 @@ class NetworkMonitor: ObservableObject {
             return
         }
         
-        let result = authService.executeWithAdminPrompt(command: "/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off")
-        
-        DispatchQueue.main.async {
-            if result.success {
-                self.statusMessage = "Firewall disabled"
-                self.checkFirewallStatus()
-            } else {
-                self.statusMessage = "Failed to disable firewall"
+        authService.executeWithBiometricAuth(
+            command: "/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off",
+            reason: "Authenticate to disable firewall"
+        ) { [weak self] success, output, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.statusMessage = "Firewall disabled"
+                    self?.checkFirewallStatus()
+                } else {
+                    self?.statusMessage = "Failed to disable firewall"
+                }
             }
         }
     }
@@ -438,14 +447,17 @@ class NetworkMonitor: ObservableObject {
         blockedIPs.insert(ip)
         
         // Use pfctl to block IP
-        let result = authService.executeWithAdminPrompt(command: "/sbin/pfctl -e -f /dev/stdin <<< 'block drop from \(ip) to any'")
-        
-        DispatchQueue.main.async {
-            if result.success {
-                self.statusMessage = "Blocked IP: \(ip)"
-                self.saveFirewallRules()
-            } else {
-                self.statusMessage = "Failed to block IP: \(ip)"
+        authService.executeWithBiometricAuth(
+            command: "/sbin/pfctl -e -f /dev/stdin <<< 'block drop from \(ip) to any'",
+            reason: "Authenticate to block IP address"
+        ) { [weak self] success, output, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.statusMessage = "Blocked IP: \(ip)"
+                    self?.saveFirewallRules()
+                } else {
+                    self?.statusMessage = "Failed to block IP: \(ip)"
+                }
             }
         }
     }
@@ -461,14 +473,17 @@ class NetworkMonitor: ObservableObject {
         blockedIPs.remove(ip)
         
         // Remove from pfctl
-        let result = authService.executeWithAdminPrompt(command: "/sbin/pfctl -e -f /dev/stdin <<< 'pass from \(ip) to any'")
-        
-        DispatchQueue.main.async {
-            if result.success {
-                self.statusMessage = "Unblocked IP: \(ip)"
-                self.saveFirewallRules()
-            } else {
-                self.statusMessage = "Failed to unblock IP: \(ip)"
+        authService.executeWithBiometricAuth(
+            command: "/sbin/pfctl -e -f /dev/stdin <<< 'pass from \(ip) to any'",
+            reason: "Authenticate to unblock IP address"
+        ) { [weak self] success, output, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.statusMessage = "Unblocked IP: \(ip)"
+                    self?.saveFirewallRules()
+                } else {
+                    self?.statusMessage = "Failed to unblock IP: \(ip)"
+                }
             }
         }
     }
