@@ -79,6 +79,12 @@ struct ContentView: View {
                 } label: {
                     Label("Secure Notes", systemImage: "lock.doc")
                 }
+                
+                NavigationLink {
+                    FileEncryptionView()
+                } label: {
+                    Label("File Encryption", systemImage: "lock.shield.fill")
+                }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
