@@ -85,6 +85,12 @@ struct ContentView: View {
                 } label: {
                     Label("File Encryption", systemImage: "lock.shield.fill")
                 }
+
+                NavigationLink {
+                    FileEncryptGPGView()
+                } label: {
+                    Label("File Encrypt (GPG)", systemImage: "lock.shield")
+                }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {

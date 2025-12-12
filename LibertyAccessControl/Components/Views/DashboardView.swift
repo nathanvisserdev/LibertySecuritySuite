@@ -16,6 +16,7 @@ struct DashboardView: View {
         case user
         case system
         case registry
+        case fileEncryptGPG
     }
     
     var body: some View {
@@ -31,6 +32,8 @@ struct DashboardView: View {
                     SystemView()
                 case .registry:
                     REGView()
+                case .fileEncryptGPG:
+                    FileEncryptGPGView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -77,6 +80,17 @@ struct DashboardView: View {
                     .buttonStyle(.plain)
                     .font(.title2)
                     .foregroundColor(selectedView == .registry ? .blue : .primary)
+                    
+                    Text("|")
+                        .foregroundColor(.secondary)
+                        .font(.title2)
+                    
+                    Button("File Encrypt (GPG)") {
+                        selectedView = .fileEncryptGPG
+                    }
+                    .buttonStyle(.plain)
+                    .font(.title2)
+                    .foregroundColor(selectedView == .fileEncryptGPG ? .blue : .primary)
                 }
             }
             
