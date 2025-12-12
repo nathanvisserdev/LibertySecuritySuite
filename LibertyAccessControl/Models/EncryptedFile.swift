@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EncryptedFile: Identifiable, Codable {
+struct EncryptedFile: Identifiable, Codable, Hashable {
     let id: UUID
     let originalFileName: String
     let encryptedFilePath: String
