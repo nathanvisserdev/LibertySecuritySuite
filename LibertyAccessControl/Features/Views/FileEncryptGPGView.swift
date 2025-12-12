@@ -179,7 +179,10 @@ struct FileEncryptGPGView: View {
                         CommandRow(title: "Export public key (ASCII)", command: "gpg --armor --export <FINGERPRINT> > ~/Desktop/my-public-key.asc")
                         CommandRow(title: "Import public key from file", command: "gpg --import /path/to/publickey.asc")
                         CommandRow(title: "Encrypt file to recipient", command: "gpg --output file.txt.gpg --encrypt --recipient <FINGERPRINT> file.txt")
+                        CommandRow(title: "Symmetric (passphrase) encrypt", command: "gpg --symmetric file.txt")
                         CommandRow(title: "Decrypt file", command: "gpg --output file.txt --decrypt file.txt.gpg")
+                        CommandRow(title: "Decrypt (short)", command: "gpg --decrypt file.txt.gpg")
+                        CommandRow(title: "Decrypt (explicit output)", command: "gpg --output file.txt --decrypt file.txt.gpg")
                     }
 
                     Divider()
