@@ -223,11 +223,11 @@ struct FileEncryptionDetailView: View {
                     Text("File Information")
                         .font(.headline)
                     
-                    InfoRow(label: "Original Name", value: file.originalFileName)
-                    InfoRow(label: "File Size", value: file.formattedSize)
-                    InfoRow(label: "Encryption Date", value: file.formattedDate)
-                    InfoRow(label: "Algorithm", value: file.algorithm)
-                    InfoRow(label: "Location", value: file.encryptedFilePath, isPath: true)
+                    FileInfoRow(label: "Original Name", value: file.originalFileName)
+                    FileInfoRow(label: "File Size", value: file.formattedSize)
+                    FileInfoRow(label: "Encryption Date", value: file.formattedDate)
+                    FileInfoRow(label: "Algorithm", value: file.algorithm)
+                    FileInfoRow(label: "Location", value: file.encryptedFilePath, isPath: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
@@ -293,17 +293,17 @@ struct FileEncryptionDetailView: View {
 
 // MARK: - Info Row
 
-struct InfoRow: View {
+struct FileInfoRow: View {
     let label: String
     let value: String
     var isPath: Bool = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             if isPath {
                 Text(value)
                     .font(.caption)

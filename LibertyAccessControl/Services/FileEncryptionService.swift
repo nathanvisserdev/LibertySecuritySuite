@@ -7,6 +7,7 @@
 
 import Foundation
 import CryptoKit
+import Combine
 
 class FileEncryptionService: ObservableObject {
     static let shared = FileEncryptionService()
@@ -99,7 +100,7 @@ class FileEncryptionService: ObservableObject {
             encryptionDate: Date(),
             algorithm: "AES-256-GCM",
             salt: salt,
-            iv: sealedBox.nonce
+            iv: Data(sealedBox.nonce)
         )
         
         guard let metadataJSON = metadata.toJSON() else {

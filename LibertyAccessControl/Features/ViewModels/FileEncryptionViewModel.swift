@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import Combine
 
 @MainActor
 class FileEncryptionViewModel: ObservableObject {
