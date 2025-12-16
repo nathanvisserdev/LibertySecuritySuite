@@ -108,9 +108,10 @@ class PrivilegedHelperManager: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                self.errorMessage = "\(errorDescription) (Code: \(errorCode))"
+                self.installationStatus = .notInstalled
+                self.errorMessage = errorDescription
             }
-            completion(.failure(.installationFailed("\(errorDescription) - Code: \(errorCode)")))
+            completion(.failure(.installationFailed(errorDescription)))
         }
     }
     

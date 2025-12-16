@@ -107,11 +107,6 @@
 			path = LibertyAccessControlUITests;
 			sourceTree = "<group>";
 		};
-		15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = com.liberty.libertyAccessControl.helper;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,7 +153,6 @@
 				1558247D2EE3646E0002EDA8 /* LibertyAccessControl */,
 				1558248D2EE364700002EDA8 /* LibertyAccessControlTests */,
 				155824972EE364700002EDA8 /* LibertyAccessControlUITests */,
-				15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
 				15A7308F2EE874FE0060D137 /* Frameworks */,
 				1558247C2EE3646E0002EDA8 /* Products */,
 			);
@@ -280,9 +274,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				15A730892EE86EBE0060D137 /* com.liberty.libertyAccessControl.helper */,
 			);
 			name = com.liberty.libertyAccessControl.helper;
 			packageProductDependencies = (
