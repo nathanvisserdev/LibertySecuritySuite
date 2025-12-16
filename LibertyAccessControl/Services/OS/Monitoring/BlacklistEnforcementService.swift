@@ -20,7 +20,9 @@ class BlacklistEnforcementService: ObservableObject {
     private let systemService: SystemService
     private let userService: UserService
     
-    init(systemService: SystemService = SystemService(), userService: UserService = UserService()) {
+    init(systemService: SystemService = SystemService(),
+         userService: UserService = UserService()
+    ) {
         self.systemService = systemService
         self.userService = userService
     }
