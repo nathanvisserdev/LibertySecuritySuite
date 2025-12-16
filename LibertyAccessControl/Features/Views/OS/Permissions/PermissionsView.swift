@@ -15,7 +15,10 @@ struct PermissionsView: View {
     init(onNavigate: @escaping (AnyView) -> Void = { _ in }) {
         let systemService = SystemService()
         let userService = UserService()
-        _viewModel = StateObject(wrappedValue: PermissionsVM(systemService: systemService, userService: userService))
+        _viewModel = StateObject(wrappedValue: PermissionsVM(
+            systemService: systemService,
+            userService: userService
+        ))
         self.onNavigate = onNavigate
     }
     
